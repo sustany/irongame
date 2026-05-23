@@ -583,6 +583,10 @@ export default function IronGame(){
   const m      = ex?(META[ex.name]||{}):{};
   const isWarmupSet = !!(m.warmupSet1 && setIdx === 0);
   const tgt    = ex&&!m.bw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
+
+  // Rep grid — pre-computed to avoid IIFE in JSX (Rollup prod incompatible)
+  const repTgt     = ex ? ex.targetReps : 8;
+  const repButtons = Array.from({length: 9}, (_, i) => Math.max(1, repTgt - 4) + i);
   // Snap to nearest plate-achievable weight.
   // Dumbbells: snap to nearest 2.5. Bilateral plate machines: nearest 10 from bar.
   // Everything else: nearest 5.
@@ -1460,49 +1464,41 @@ export default function IronGame(){
               No HR Data — Skip
             </button>
           </div>
-        ):(
-          {/* Rep count grid — single tap logs outcome */}
-          {(()=>{
-            const tgt = ex.targetReps;
-            const lo  = Math.max(1, tgt - 4);
-            const hi  = tgt + 5;
-            const reps = Array.from({length: hi - lo}, (_, i) => lo + i);
-            return (
-              <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
-                {reps.map(r => {
-                  const isTarget = r === tgt;
-                  const exceeded = r > tgt;
-                  const short    = r < tgt;
-                  const col  = exceeded ? C.grn : short ? "#ff6644" : C.wht;
-                  const bg   = exceeded ? "rgba(34,200,100,0.08)"
-                             : short    ? "rgba(232,38,10,0.1)"
-                             : "rgba(255,255,255,0.07)";
-                  const bdr  = exceeded ? `1px solid rgba(34,200,100,0.45)`
-                             : short    ? `1px solid rgba(232,38,10,0.45)`
-                             : `2px solid rgba(255,255,255,0.55)`;
-                  const sh   = isTarget ? "0 0 12px rgba(255,255,255,0.15)" : "none";
-                  return (
-                    <button key={r} className="t" onClick={()=>attemptReps(r)} style={{
-                      width:64, height:64, borderRadius:12,
-                      background: bg, border: bdr, boxShadow: sh,
-                      color: col, cursor:"pointer",
-                      fontFamily:"'Bebas Neue',sans-serif",
-                      fontSize: isTarget ? 30 : 24,
-                      display:"flex",flexDirection:"column",
-                      alignItems:"center",justifyContent:"center",gap:0,
-                    }}>
-                      <span>{r}</span>
-                      {isTarget && (
-                        <span style={{fontSize:8,fontFamily:"'Inter',sans-serif",
-                          fontWeight:700,letterSpacing:"0.1em",color:"rgba(255,255,255,0.45)",
-                          textTransform:"uppercase",marginTop:-2}}>target</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })()}
+        :(
+          <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
+            {repButtons.map(r => {
+              const isTarget = r === repTgt;
+              const exceeded = r > repTgt;
+              const short    = r < repTgt;
+              const col = exceeded ? C.grn : short ? "#ff6644" : C.wht;
+              const bg  = exceeded ? "rgba(34,200,100,0.08)"
+                        : short    ? "rgba(232,38,10,0.1)"
+                        : "rgba(255,255,255,0.07)";
+              const bdr = exceeded ? "1px solid rgba(34,200,100,0.45)"
+                        : short    ? "1px solid rgba(232,38,10,0.45)"
+                        : "2px solid rgba(255,255,255,0.55)";
+              const sh  = isTarget ? "0 0 12px rgba(255,255,255,0.15)" : "none";
+              return (
+                <button key={r} className="t" onClick={()=>attemptReps(r)} style={{
+                  width:64,height:64,borderRadius:12,
+                  background:bg,border:bdr,boxShadow:sh,
+                  color:col,cursor:"pointer",
+                  fontFamily:"'Bebas Neue',sans-serif",
+                  fontSize:isTarget?30:24,
+                  display:"flex",flexDirection:"column",
+                  alignItems:"center",justifyContent:"center",
+                }}>
+                  <span>{r}</span>
+                  {isTarget&&(
+                    <span style={{fontSize:8,fontFamily:"'Inter',sans-serif",
+                      fontWeight:700,letterSpacing:"0.1em",
+                      color:"rgba(255,255,255,0.45)",
+                      textTransform:"uppercase",marginTop:-2}}>target</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
         {phase==="ready"&&(
           <button className="t" onClick={()=>setShowExPicker(true)}
