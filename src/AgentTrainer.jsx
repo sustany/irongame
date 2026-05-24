@@ -588,6 +588,57 @@ export default function IronGame(){
     return () => clearInterval(id);
   }, []);
 
+  // ── URL hash routing + demo preload ───────────────────────────
+  // Hash routes: #session, #logging, #complete, #phr
+  // Demo flag:   ?demo=legs | ?demo=push | ?demo=pull
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const demo   = params.get('demo'); // 'legs' | 'push' | 'pull'
+    const hash   = window.location.hash.replace('#',''); // 'session' | 'logging' | 'complete' | 'phr'
+
+    if(!demo && !hash) return;
+
+    // Pick session type from demo param or default to legs
+    const type = (demo==='push'||demo==='pull'||demo==='legs') ? demo : 'legs';
+    const useExt = true;
+    const exs = build(type, useExt);
+
+    setSesType(type);
+    setExt(useExt);
+    setExList(exs);
+    setSessionDate(new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}));
+
+    if(hash==='complete'){
+      // Populate a realistic completed session log for result screen testing
+      const demoLog = exs.slice(0,4).flatMap((e,ei)=>
+        Array.from({length:e.sets},(_, si)=>({
+          exercise:e.name, setNum:si+1,
+          weight: (INIT_PRS[e.name]?.weight||100) - si*10,
+          reps: e.targetReps + (si===e.sets-1?1:0),
+          result: si===e.sets-1?'exceeded':'matched',
+          phr: 128 + ei*5 + si*3,
+        }))
+      );
+      setLog(demoLog);
+      setSessionStart(Date.now() - 52*60*1000);
+      setSessionEnd(Date.now());
+      setScreen('complete');
+      return;
+    }
+
+    // For session/logging/phr — start the session at exercise 1
+    setExIdx(0); setSetIdx(0); setLastRes(null); setLastWt(null);
+    setSessionStart(Date.now() - 18*60*1000); // 18 min in
+    setScreen('session');
+
+    if(hash==='logging') setPhase('logging');
+    else if(hash==='phr'){ setPhase('phr'); setPendingResult({res:'matched',wt:185,reps:10}); setPhrInput(138); }
+    else setPhase('ready');
+
+    // Clean the URL so reloads don't re-trigger
+    window.history.replaceState(null,'','/');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const elapsedStr = () => {
     if (!sessionStart) return "0";
     const ms   = (sessionEnd || Date.now()) - sessionStart;
