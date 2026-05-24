@@ -1319,6 +1319,56 @@ export default function IronGame(){
           ))}
         </div>
         <div style={{flex:1}}/>
+        <button className="t"
+          onClick={()=>{
+            // Build a plain-text session summary for the user's mail client.
+            const lines = [];
+            lines.push(`IronGame · ${sessionDate || ""}`.trim());
+            lines.push(`${sesType?.toUpperCase() || "SESSION"} · ${elapsedMin} min · Score ${fs.total}/100`);
+            lines.push("");
+            if (kcal) lines.push(`Energy: ${kcal.toLocaleString()} kcal · Avg HR ${Math.round(avgPhr)}`);
+            const workingSets = log.filter(s=>!s.warmup).length;
+            lines.push(`Sets: ${workingSets} working · ${hits.length} PRs`);
+            lines.push("");
+            lines.push("Score breakdown:");
+            lines.push(`  Muscle Development  ${fs.muscle} / 45`);
+            lines.push(`  Cardiovascular      ${fs.cv} / 15`);
+            lines.push(`  Foundational        ${fs.found} / 15`);
+            if (hasHR) {
+              lines.push("");
+              lines.push("Zone time:");
+              zoneMins.filter(z=>z.mins>0).forEach(z=>{
+                lines.push(`  ${z.label.padEnd(12)} ${z.mins}m`);
+              });
+            }
+            lines.push("");
+            lines.push("Exercise log:");
+            // Group log entries by exercise (preserve order)
+            const order = [];
+            const byEx = {};
+            log.forEach(s=>{
+              if (!byEx[s.exercise]) { byEx[s.exercise] = []; order.push(s.exercise); }
+              byEx[s.exercise].push(s);
+            });
+            order.forEach(exName=>{
+              lines.push(`  ${exName}`);
+              byEx[exName].forEach((s,i)=>{
+                const tag   = s.warmup ? " (W)" : "";
+                const prTag = !s.warmup && s.result==="exceeded" && hits.includes(s.exercise) ? " (PR)" : "";
+                const hr    = s.phr ? ` @ ${s.phr}` : "";
+                lines.push(`    ${i+1}: ${s.weight}×${s.reps}${tag}${prTag}${hr}`);
+              });
+            });
+            const subject = `IronGame · ${sessionDate || ""} · ${sesType?.toUpperCase() || ""} · ${fs.total}/100`;
+            const body = lines.join("\n");
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          }}
+          style={{width:"100%",height:48,marginBottom:10,
+            background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
+            borderRadius:10,cursor:"pointer",color:C.lt,
+            fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:"0.1em"}}>
+          Email Session
+        </button>
         <RedBtn onClick={reset}>New Game</RedBtn>
       </div>
     );
