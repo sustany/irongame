@@ -1514,24 +1514,33 @@ export default function IronGame(){
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"14px 18px",marginBottom:12,
                 boxShadow:"0 3px 14px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <SL color={C.md}>Start HR</SL>
-                  <SL color={C.md}>Volume</SL>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
-                    color:isCompound?C.red:C.wht,lineHeight:1}}>
-                    {m.tier==="P1" ? START_HR.compound_p1
-                      : isCompound ? START_HR.compound_p2
-                      : START_HR.isolation}
-                    <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
-                      fontSize:17,color:C.md,marginLeft:7}}>BPM</span>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  {/* Left — Start HR */}
+                  <div>
+                    <SL color={C.md}>Start HR</SL>
+                    <div style={{display:"flex",alignItems:"baseline",gap:7,marginTop:2}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
+                        lineHeight:1,color:isCompound?C.red:C.wht}}>
+                        {m.tier==="P1" ? START_HR.compound_p1
+                          : isCompound ? START_HR.compound_p2
+                          : START_HR.isolation}
+                      </span>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                        fontSize:13,color:C.md}}>BPM</span>
+                    </div>
                   </div>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
-                    color:C.lt,lineHeight:1,textAlign:"right"}}>
-                    {ex.repRange}
-                    <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
-                      fontSize:17,color:C.md,marginLeft:7}}>REPS</span>
+                  {/* Right — Volume */}
+                  <div style={{textAlign:"right"}}>
+                    <SL color={C.md}>Volume</SL>
+                    <div style={{display:"flex",alignItems:"baseline",gap:7,
+                      marginTop:2,justifyContent:"flex-end"}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
+                        lineHeight:1,color:C.lt}}>
+                        {ex.repRange}
+                      </span>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                        fontSize:13,color:C.md}}>REPS</span>
+                    </div>
                   </div>
                 </div>
               </div>
