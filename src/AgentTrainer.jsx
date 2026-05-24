@@ -1390,7 +1390,12 @@ export default function IronGame(){
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <SL color={isWarmupSet?"#ffb400":C.md}>
-                    {isWarmupSet?"Warm-Up Load":m.bw?"Load":m.stack?`Stack Weight · 10 lb increments`:m.dumbbell?`${adjWt} lbs${m.perArm?" / arm":""}`:describeLoad(adjWt, m.barbell?(m.barWeight||45):0, m.bilateral, m.maxPlate)}
+                    {isWarmupSet ? "Warm-Up Load"
+                      : m.bw      ? "Load"
+                      : m.stack   ? "Stack Weight · 10 lb increments"
+                      : m.dumbbell? `${adjWt} lbs${m.perArm?" / arm":""}`
+                      : m.barbell ? `Olympic Bar · ${m.barWeight||45} lbs`
+                      : "Plate Loaded"}
                   </SL>
                   {atCeiling&&(
                     <div style={{background:"rgba(255,180,0,0.15)",
