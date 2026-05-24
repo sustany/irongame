@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { searchExercises, findDuplicate } from "./exerciseLibrary";
 
 // ─────────────────────────────────────────────────────────────
 // IRON GAME — Color System
@@ -579,6 +580,7 @@ export default function IronGame(){
   const [newExName,     setNewExName]     = useState("");
   const [newExWeight,   setNewExWeight]   = useState("");
   const [newExReps,     setNewExReps]     = useState("10");
+  const [newExDuplicate,setNewExDuplicate]= useState(null); // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
 
@@ -1630,20 +1632,88 @@ export default function IronGame(){
             </div>
 
             {/* Inline new exercise form */}
-            {showNewExForm&&(
+            {showNewExForm&&(()=>{
+              const suggestions = searchExercises(newExName, 5);
+              return (
               <div style={{margin:"0 12px 10px",background:"rgba(232,38,10,0.08)",
                 border:`1px solid ${C.red}`,borderRadius:12,padding:"14px"}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                   color:C.red,letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:10}}>
                   New Exercise
                 </div>
-                <input value={newExName} onChange={e=>setNewExName(e.target.value)}
-                  placeholder="Exercise name"
+                <input value={newExName}
+                  onChange={e=>{ setNewExName(e.target.value); setNewExDuplicate(null); }}
+                  placeholder="Type exercise name…"
                   style={{width:"100%",boxSizing:"border-box",
                     fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
                     background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
                     borderRadius:8,padding:"10px 12px",color:C.wht,
                     marginBottom:8,outline:"none"}}/>
+
+                {/* Autocomplete suggestions from library */}
+                {suggestions.length>0&&newExName.length>=2&&(
+                  <div style={{background:"rgba(0,0,0,0.4)",
+                    border:`1px solid ${C.bdr}`,borderRadius:8,marginBottom:8,
+                    overflow:"hidden",maxHeight:200,overflowY:"auto"}}>
+                    {suggestions.map(s=>(
+                      <button key={s.canonical} className="t"
+                        onClick={()=>{ setNewExName(s.canonical); setNewExDuplicate(null); }}
+                        style={{width:"100%",textAlign:"left",padding:"10px 12px",
+                          background:"transparent",border:"none",cursor:"pointer",
+                          borderBottom:`1px solid ${C.bdr}`,
+                          fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
+                          color:C.wht,display:"flex",justifyContent:"space-between",
+                          alignItems:"center",gap:8}}>
+                        <span>{s.canonical}</span>
+                        <span style={{fontSize:10,color:C.md,letterSpacing:"0.05em",
+                          textTransform:"uppercase"}}>
+                          {s.primary} · {s.equip}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Duplicate warning */}
+                {newExDuplicate&&(
+                  <div style={{background:"rgba(255,180,0,0.12)",
+                    border:"1px solid rgba(255,180,0,0.4)",borderRadius:8,
+                    padding:"10px 12px",marginBottom:8,
+                    fontFamily:"'Inter',sans-serif",fontSize:13,color:"#ffb400"}}>
+                    <div style={{fontWeight:700,marginBottom:6}}>
+                      Already in your list: {newExDuplicate.name}
+                    </div>
+                    <div style={{display:"flex",gap:6}}>
+                      <button className="t"
+                        onClick={()=>{
+                          // Use the existing exercise
+                          const updated=[...exList];
+                          updated[exIdx]={...updated[exIdx],name:newExDuplicate.name};
+                          setExList(updated);
+                          setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
+                          setShowNewExForm(false);setShowExPicker(false);
+                          setNewExDuplicate(null);setNewExName("");
+                        }}
+                        style={{flex:1,background:"#ffb400",color:"#000",border:"none",
+                          borderRadius:6,padding:"8px 12px",cursor:"pointer",
+                          fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                          letterSpacing:"0.06em",textTransform:"uppercase"}}>
+                        Use Existing
+                      </button>
+                      <button className="t"
+                        onClick={()=>setNewExDuplicate(null)}
+                        style={{flex:1,background:"transparent",
+                          color:"rgba(255,180,0,0.9)",
+                          border:"1px solid rgba(255,180,0,0.5)",
+                          borderRadius:6,padding:"8px 12px",cursor:"pointer",
+                          fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                          letterSpacing:"0.06em",textTransform:"uppercase"}}>
+                        Add Anyway
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div style={{display:"flex",gap:8,marginBottom:10}}>
                   <input value={newExWeight} onChange={e=>setNewExWeight(e.target.value)}
                     placeholder="PR weight (lbs)" type="number"
@@ -1660,17 +1730,21 @@ export default function IronGame(){
                   onClick={()=>{
                     const name=newExName.trim();
                     if(!name) return;
+                    // Check fuzzy match against existing PRs
+                    if(!newExDuplicate){
+                      const dup = findDuplicate(name, Object.keys(prs));
+                      if(dup){ setNewExDuplicate(dup); return; }
+                    }
                     const wt=parseInt(newExWeight)||100;
                     const rp=parseInt(newExReps)||10;
-                    // Add to live prs state
                     setPrs(p=>({...p,[name]:{weight:wt,reps:rp}}));
-                    // Swap into current exercise slot
                     const updated=[...exList];
                     updated[exIdx]={...updated[exIdx],name,
                       repRange:"8–12",targetReps:10};
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
                     setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
+                    setNewExDuplicate(null);setNewExName("");
                   }}
                   style={{width:"100%",fontFamily:"'Bebas Neue',sans-serif",
                     fontSize:16,color:"#fff",background:C.red,border:"none",
@@ -1679,7 +1753,8 @@ export default function IronGame(){
                   Add &amp; Select
                 </button>
               </div>
-            )}
+              );
+            })()}
 
             {/* Exercise list — filtered by session type, sourced from live prs */}
             <div style={{overflowY:"auto",padding:"0 12px 32px"}}>
