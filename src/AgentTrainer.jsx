@@ -580,6 +580,7 @@ export default function IronGame(){
   const [newExName,     setNewExName]     = useState("");
   const [newExWeight,   setNewExWeight]   = useState("");
   const [newExReps,     setNewExReps]     = useState("10");
+  const [newExMaxWt,    setNewExMaxWt]    = useState("");   // gym ceiling — max available weight
   const [newExDuplicate,setNewExDuplicate]= useState(null); // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
@@ -667,6 +668,10 @@ export default function IronGame(){
     return Math.round(diff/10)*10+base;
   };
   let   adjWt  = Math.max(0, snapWt(tgt+weightAdj, m.barbell?45:0, m.bilateral, m.dumbbell, m.stack));
+  // Cap at gym ceiling if set
+  const gymMax  = prs[ex?.name]?.gymMax || null;
+  if(gymMax && adjWt > gymMax) adjWt = snapWt(gymMax, m.barbell?45:0, m.bilateral, m.dumbbell, m.stack);
+  const atCeiling = gymMax && adjWt >= gymMax;
   const fromWt = setIdx>0 ? (lastWt||0) : (m.barbell ? 45 : 0);
   const plates = ex&&!m.bw&&adjWt>0
     ? calcPlates(adjWt, fromWt, m.bilateral, m.maxPlate||45)
@@ -1343,9 +1348,19 @@ export default function IronGame(){
                 borderTop:`1px solid ${isWarmupSet?"rgba(255,180,0,0.3)":C.bdrTop}`,
                 padding:"10px 14px",marginBottom:10,
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-                <SL color={isWarmupSet?"#ffb400":C.md}>
-                  {isWarmupSet?"Warm-Up Load":m.bw?"Load":m.stack?`Stack Weight · 10 lb increments`:m.dumbbell?`${adjWt} lbs${m.perArm?" / arm":""}`:describeLoad(adjWt, m.barbell?(m.barWeight||45):0, m.bilateral, m.maxPlate)}
-                </SL>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <SL color={isWarmupSet?"#ffb400":C.md}>
+                    {isWarmupSet?"Warm-Up Load":m.bw?"Load":m.stack?`Stack Weight · 10 lb increments`:m.dumbbell?`${adjWt} lbs${m.perArm?" / arm":""}`:describeLoad(adjWt, m.barbell?(m.barWeight||45):0, m.bilateral, m.maxPlate)}
+                  </SL>
+                  {atCeiling&&(
+                    <div style={{background:"rgba(255,180,0,0.15)",
+                      border:"1px solid rgba(255,180,0,0.5)",
+                      borderRadius:4,padding:"2px 7px",
+                      fontFamily:"'Inter',sans-serif",fontWeight:700,
+                      fontSize:9,color:"#ffb400",letterSpacing:"0.1em",
+                      textTransform:"uppercase"}}>Gym Max</div>
+                  )}
+                </div>
                 {(m.bw||isWarmupSet)?(
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:46,
@@ -1614,7 +1629,7 @@ export default function IronGame(){
                 color:C.wht,letterSpacing:"0.1em"}}>Change Exercise</div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {/* + New Exercise button */}
-                <button className="t" onClick={()=>{setShowNewExForm(v=>!v);setNewExName("");setNewExWeight("");setNewExReps("10");}}
+                <button className="t" onClick={()=>{setShowNewExForm(v=>!v);setNewExName("");setNewExWeight("");setNewExReps("10");setNewExMaxWt("");}}
                   style={{fontFamily:"'Bebas Neue',sans-serif",fontWeight:700,
                     fontSize:14,color:"#fff",letterSpacing:"0.1em",
                     background:C.red,border:"none",
@@ -1714,7 +1729,7 @@ export default function IronGame(){
                   </div>
                 )}
 
-                <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{display:"flex",gap:8,marginBottom:8}}>
                   <input value={newExWeight} onChange={e=>setNewExWeight(e.target.value)}
                     placeholder="PR weight (lbs)" type="number"
                     style={{flex:2,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
@@ -1725,6 +1740,21 @@ export default function IronGame(){
                     style={{flex:1,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
                       background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
                       borderRadius:8,padding:"10px 12px",color:C.wht,outline:"none"}}/>
+                </div>
+                {/* Gym ceiling — max available weight */}
+                <input value={newExMaxWt} onChange={e=>setNewExMaxWt(e.target.value)}
+                  placeholder="Gym max (lbs) — optional but recommended"
+                  type="number"
+                  style={{width:"100%",boxSizing:"border-box",
+                    fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,
+                    background:"rgba(255,180,0,0.06)",
+                    border:`1px solid rgba(255,180,0,0.35)`,
+                    borderRadius:8,padding:"10px 12px",color:"#ffb400",
+                    outline:"none",marginBottom:10}}/>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,
+                  color:"rgba(255,180,0,0.5)",letterSpacing:"0.06em",marginBottom:12,
+                  textTransform:"uppercase",marginTop:-6}}>
+                  Max weight available at your gym for this exercise
                 </div>
                 <button className="t"
                   onClick={()=>{
@@ -1737,7 +1767,8 @@ export default function IronGame(){
                     }
                     const wt=parseInt(newExWeight)||100;
                     const rp=parseInt(newExReps)||10;
-                    setPrs(p=>({...p,[name]:{weight:wt,reps:rp}}));
+                    const mx=parseInt(newExMaxWt)||null;
+                    setPrs(p=>({...p,[name]:{weight:wt,reps:rp,...(mx?{gymMax:mx}:{})}}));
                     const updated=[...exList];
                     updated[exIdx]={...updated[exIdx],name,
                       repRange:"8–12",targetReps:10};
