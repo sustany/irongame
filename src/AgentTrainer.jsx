@@ -1464,7 +1464,7 @@ export default function IronGame(){
               No HR Data — Skip
             </button>
           </div>
-        :(
+        ):(
           <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
             {repButtons.map(r => {
               const isTarget = r === repTgt;
