@@ -633,6 +633,8 @@ export default function IronGame(){
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
   const [warmupNext, setWarmupNext] = useState(false);
+  // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
+  const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
   // Each entry can supply { eq, compound, ... } to drive equipment behavior.
   const [userMeta, setUserMeta] = useState({});
@@ -644,6 +646,12 @@ export default function IronGame(){
     const id = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Reset rep stepper to default (adaptedTarget) whenever we land on the ready phase
+  // or move to a different set/exercise. Avoids stale stepper values between sets.
+  useEffect(() => {
+    if (phase === "ready") setRepInput(null);
+  }, [phase, exIdx, setIdx]);
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -1900,43 +1908,88 @@ export default function IronGame(){
                 {repFeedback==="below"    && `${lastReps} reps — below range · check load`}
               </div>
             )}
-            <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
-              {repButtons.map(r => {
-                const isTarget   = r === adaptedTarget;
-                const aboveRange = r > rangeHi;
-                const belowRange = r < rangeLo;
-                const col = aboveRange ? C.grn : belowRange ? "#ff6644" : C.wht;
-                const bg  = aboveRange ? "rgba(34,200,100,0.08)"
-                          : belowRange ? "rgba(232,38,10,0.1)"
-                          : "rgba(255,255,255,0.07)";
-                const bdr = isTarget    ? "2px solid rgba(255,255,255,0.7)"
-                          : aboveRange  ? "1px solid rgba(34,200,100,0.45)"
-                          : belowRange  ? "1px solid rgba(232,38,10,0.45)"
-                          : "1px solid rgba(255,255,255,0.18)";
-                const sh  = isTarget ? "0 0 12px rgba(255,255,255,0.15)" : "none";
-                return (
-                  <button key={r} className="t" onClick={()=>attemptReps(r)} style={{
-                    width:64,height:64,borderRadius:12,
-                    background:bg,border:bdr,boxShadow:sh,
-                    color:col,cursor:"pointer",
-                    fontFamily:"'Bebas Neue',sans-serif",
-                    fontSize:isTarget?30:24,
-                    display:"flex",flexDirection:"column",
-                    alignItems:"center",justifyContent:"center",
-                  }}>
-                    <span>{r}</span>
-                    {isTarget&&(
-                      <span style={{fontSize:8,fontFamily:"'Inter',sans-serif",
-                        fontWeight:700,letterSpacing:"0.1em",
-                        color:"rgba(255,255,255,0.45)",
-                        textTransform:"uppercase",marginTop:-2}}>
-                        {lastReps!==null?"last":"target"}
-                      </span>
-                    )}
+            {(() => {
+              const currentReps = repInput ?? adaptedTarget;
+              const colorOf = (r) => r > rangeHi ? C.grn : r < rangeLo ? "#ff6644" : C.wht;
+              const bgOf    = (r) => r > rangeHi ? "rgba(34,200,100,0.10)"
+                                  : r < rangeLo ? "rgba(232,38,10,0.12)"
+                                  : "rgba(255,255,255,0.07)";
+              const bdrOf   = (r) => r > rangeHi ? "rgba(34,200,100,0.45)"
+                                  : r < rangeLo ? "rgba(232,38,10,0.5)"
+                                  : "rgba(255,255,255,0.22)";
+              // Quick chips at adaptedTarget ± 2, deduped, sorted, floored at 1
+              const chipSet = [...new Set([
+                Math.max(1, adaptedTarget - 2),
+                adaptedTarget,
+                adaptedTarget + 2,
+              ])].sort((a,b)=>a-b);
+              const stepBtn = {
+                width:64,height:64,borderRadius:14,
+                background:"rgba(255,255,255,0.06)",
+                border:`1px solid ${C.bdr}`,cursor:"pointer",
+                fontFamily:"'Bebas Neue',sans-serif",fontSize:34,color:C.wht,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                userSelect:"none",
+              };
+              return (
+                <>
+                  {/* Stepper row — large minus, big number, large plus */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",
+                    gap:18,marginBottom:14}}>
+                    <button className="t"
+                      onClick={()=>setRepInput(Math.max(1, currentReps - 1))}
+                      style={stepBtn}>−</button>
+                    <div style={{
+                      minWidth:120,height:96,borderRadius:16,
+                      background:bgOf(currentReps),
+                      border:`2px solid ${bdrOf(currentReps)}`,
+                      display:"flex",flexDirection:"column",
+                      alignItems:"center",justifyContent:"center"}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:64,
+                        lineHeight:1,color:colorOf(currentReps)}}>
+                        {currentReps}
+                      </div>
+                      <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                        fontSize:9,color:C.md,letterSpacing:"0.16em",
+                        textTransform:"uppercase",marginTop:2}}>
+                        Reps
+                      </div>
+                    </div>
+                    <button className="t"
+                      onClick={()=>setRepInput(Math.min(99, currentReps + 1))}
+                      style={stepBtn}>+</button>
+                  </div>
+
+                  {/* Quick chips — one-tap log at adaptedTarget ± 2 */}
+                  <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:14}}>
+                    {chipSet.map(r => (
+                      <button key={r} className="t"
+                        onClick={()=>attemptReps(r)}
+                        style={{
+                          flex:1,maxWidth:90,height:48,borderRadius:10,
+                          background:bgOf(r),border:`1px solid ${bdrOf(r)}`,
+                          color:colorOf(r),cursor:"pointer",
+                          fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                          letterSpacing:"0.04em"}}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Primary Log button — commits the stepper value */}
+                  <button className="t"
+                    onClick={()=>attemptReps(currentReps)}
+                    style={{
+                      width:"100%",height:60,borderRadius:12,cursor:"pointer",
+                      background:"linear-gradient(180deg,#e8260a,#aa1a00)",
+                      border:"none",color:"#fff",
+                      fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                      letterSpacing:"0.1em",boxShadow:`0 4px 16px ${C.redGlow}`}}>
+                    Log {currentReps} {currentReps===1?"Rep":"Reps"}
                   </button>
-                );
-              })}
-            </div>
+                </>
+              );
+            })()}
           </>
         )}
         {phase==="ready"&&(
