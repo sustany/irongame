@@ -1300,6 +1300,103 @@ export default function IronGame(){
           ))}
         </div>
 
+        {/* HR graph — per-set PHR over session, with zone bands */}
+        {(() => {
+          // Gather PHR points in chronological order
+          const phrPoints = log
+            .map((s, idx) => ({ idx, phr: s.phr, exercise: s.exercise, warmup: !!s.warmup }))
+            .filter(p => p.phr > 0);
+          if (phrPoints.length === 0) return null;
+
+          // Chart geometry
+          const VW = 320, VH = 150;
+          const padL = 28, padR = 8, padT = 6, padB = 16;
+          const plotW = VW - padL - padR;
+          const plotH = VH - padT - padB;
+
+          // Y range — span comfortably around the zones
+          const hrMin = 60, hrMax = Math.max(180, Math.max(...phrPoints.map(p => p.phr)) + 5);
+          const yOf = (hr) => padT + plotH - ((hr - hrMin) / (hrMax - hrMin)) * plotH;
+          // X — evenly distribute PHR points across the plot
+          const n = phrPoints.length;
+          const xOf = (i) => padL + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+
+          const avgPhrValue = Math.round(phrPoints.reduce((s, p) => s + p.phr, 0) / n);
+          const polylinePts = phrPoints.map((p, i) => `${xOf(i).toFixed(1)},${yOf(p.phr).toFixed(1)}`).join(" ");
+
+          // Y-axis ticks at zone boundaries (top of each zone) within range
+          const yTicks = HR_ZONES.map(z => z.lo).filter(v => v >= hrMin && v <= hrMax);
+
+          return (
+            <div style={{background:STEEL,borderRadius:12,padding:"14px 16px 12px",
+              marginBottom:14,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+              boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",
+                marginBottom:8}}>
+                <SL color={C.md}>Heart Rate</SL>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
+                  color:C.md,letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                  {n} {n===1?"SET":"SETS"} · AVG {avgPhrValue} BPM
+                </div>
+              </div>
+              <svg viewBox={`0 0 ${VW} ${VH}`} style={{width:"100%",height:"auto",display:"block"}}
+                preserveAspectRatio="none">
+                {/* Zone background bands */}
+                {HR_ZONES.map((z) => {
+                  const top    = Math.max(z.lo,  hrMin);
+                  const bottom = Math.min(z.hi === 999 ? hrMax : z.hi, hrMax);
+                  if (bottom <= top) return null;
+                  const y = yOf(bottom);
+                  const h = yOf(top) - y;
+                  return (
+                    <rect key={z.label} x={padL} y={y} width={plotW} height={h}
+                      fill={z.color} opacity="0.10" />
+                  );
+                })}
+                {/* Zone tick labels on Y axis */}
+                {yTicks.map(v => (
+                  <g key={v}>
+                    <line x1={padL} x2={VW-padR} y1={yOf(v)} y2={yOf(v)}
+                      stroke="rgba(255,255,255,0.07)" strokeWidth="0.5" />
+                    <text x={padL-4} y={yOf(v)+3} fontSize="8" fill="rgba(255,255,255,0.45)"
+                      textAnchor="end" fontFamily="'JetBrains Mono',monospace">{v}</text>
+                  </g>
+                ))}
+                {/* Polyline connecting PHR points */}
+                {n > 1 && (
+                  <polyline points={polylinePts}
+                    fill="none" stroke={C.lt} strokeWidth="1.5"
+                    strokeLinecap="round" strokeLinejoin="round" />
+                )}
+                {/* Per-set dots, colored by zone */}
+                {phrPoints.map((p, i) => {
+                  const z = getZone(p.phr);
+                  return (
+                    <circle key={i} cx={xOf(i)} cy={yOf(p.phr)} r="3"
+                      fill={z.color} stroke="#0a0a0a" strokeWidth="1" />
+                  );
+                })}
+              </svg>
+              {/* Zone legend strip */}
+              <div style={{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}}>
+                {HR_ZONES.map(z => {
+                  const inZone = phrPoints.filter(p => p.phr>=z.lo && p.phr<=z.hi).length;
+                  if (inZone === 0) return null;
+                  return (
+                    <div key={z.label} style={{display:"flex",alignItems:"center",gap:4}}>
+                      <div style={{width:6,height:6,borderRadius:3,background:z.color}}/>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:9,
+                        color:C.md,letterSpacing:"0.06em",textTransform:"uppercase"}}>
+                        {z.label} · {inZone}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         <div style={{display:"flex",gap:10,marginBottom:28}}>
           {[
             {label:"Total Sets",val:log.filter(s=>!s.warmup).length,   c:C.wht},
