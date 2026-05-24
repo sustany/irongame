@@ -260,29 +260,42 @@ const lev = (a, b) => {
   return dp[m][n];
 };
 
-const sim = (a, b) => {
-  const na = normalize(a), nb = normalize(b);
-  if (!na || !nb) return 0;
-  if (na === nb) return 1;
-  if (na.includes(nb) || nb.includes(na)) return 0.92;
-  const d = lev(na, nb);
-  const ml = Math.max(na.length, nb.length);
-  return ml ? 1 - d / ml : 0;
-};
-
 // Search the library for matches to user input. Returns top N ranked.
+// Uses RAW lowercased text first (substring), normalized only as fuzzy fallback.
+// This prevents noise-stripping from removing the very characters being typed.
 export const searchExercises = (query, n = 5) => {
-  if (!query || !query.trim()) return [];
-  const q = normalize(query);
-  if (!q) return [];
+  if (!query) return [];
+  const q = query.toLowerCase().trim();
+  if (q.length < 2) return [];
 
   const scored = EXERCISE_LIBRARY.map((e) => {
-    const canonScore = sim(query, e.canonical);
-    const aliasScore = Math.max(0, ...e.aliases.map((a) => sim(query, a)));
-    const score = Math.max(canonScore, aliasScore);
-    return { entry: e, score };
+    const candidates = [e.canonical.toLowerCase(), ...e.aliases.map(a => a.toLowerCase())];
+    let best = 0;
+    for (const t of candidates) {
+      let s = 0;
+      if (t === q)              s = 1.00;
+      else if (t.startsWith(q)) s = 0.95;
+      else if (t.includes(q))   s = 0.85;
+      else {
+        // Fuzzy: try normalized comparison as a last resort
+        const nq = normalize(q), nt = normalize(t);
+        if (nq && nt) {
+          if (nq === nt)                              s = 0.90;
+          else if (nt.startsWith(nq))                 s = 0.80;
+          else if (nt.includes(nq) || nq.includes(nt)) s = 0.70;
+          else {
+            const d  = lev(nq, nt);
+            const ml = Math.max(nq.length, nt.length);
+            const fz = ml ? 1 - d / ml : 0;
+            if (fz > 0.6) s = fz * 0.65;
+          }
+        }
+      }
+      if (s > best) best = s;
+    }
+    return { entry: e, score: best };
   })
-  .filter((x) => x.score > 0.35)
+  .filter((x) => x.score > 0.3)
   .sort((a, b) => b.score - a.score)
   .slice(0, n);
 
@@ -290,13 +303,42 @@ export const searchExercises = (query, n = 5) => {
 };
 
 // Check if user's input duplicates an exercise already in their personal list.
-// Returns the canonical match if similarity > 0.70.
+// Uses NORMALIZED comparison — strips noise words so "DB Curl" matches "Dumbbell Curl".
+// Also handles word-order variations via token sorting.
+// Returns match only when similarity is high enough to be a true duplicate.
 export const findDuplicate = (query, existingNames) => {
   if (!query || !existingNames?.length) return null;
+  const nq = normalize(query);
+  if (!nq) return null;
+  // Sort tokens for order-independent comparison
+  const tokSort = (s) => s.split(/\s+/).filter(Boolean).sort().join(" ");
+  const tq = tokSort(nq);
+
   let best = null;
   for (const name of existingNames) {
-    const s = sim(query, name);
-    if (s > 0.70 && (!best || s > best.score)) best = { name, score: s };
+    const nn = normalize(name);
+    if (!nn) continue;
+    const tn = tokSort(nn);
+
+    let score = 0;
+    if (nq === nn || tq === tn) {
+      score = 1.0;
+    } else if (nq.includes(nn) || nn.includes(nq)) {
+      const min = Math.min(nq.length, nn.length);
+      const max = Math.max(nq.length, nn.length);
+      if (min / max > 0.7) score = 0.85;
+    } else {
+      // Compare both as-is and as token-sorted
+      const dRaw    = lev(nq, nn);
+      const dSorted = lev(tq, tn);
+      const d  = Math.min(dRaw, dSorted);
+      const ml = Math.max(nq.length, nn.length);
+      score = ml ? 1 - d / ml : 0;
+    }
+
+    if (score > 0.75 && (!best || score > best.score)) {
+      best = { name, score };
+    }
   }
   return best;
 };
