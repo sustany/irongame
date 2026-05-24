@@ -190,7 +190,7 @@ const kcalPerMin = (hr, weightKg, age) =>
 // DATA
 // ─────────────────────────────────────────────────────────────
 const INIT_PRS = {
-  "LF High Row":           { weight:110,  reps:12, perArm:true },  // PR set May 19 2026
+  "High Row PL":           { weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
   "LF Incline Press":      { weight:240,  reps:10 },
   "LF Shoulder Press":     { weight:255,  reps:7  },
   "Bench Press, Smith Machine": { weight:235, reps:8 },
@@ -222,7 +222,7 @@ const INIT_PRS = {
   "Seated Calf Raise":     { weight:180,  reps:7  },
 };
 const META = {
-  "LF High Row":           { tier:"P1", prPts:8, compound:true, perArm:true, steps:[5,10,20] },
+  "High Row PL":           { tier:"P1", prPts:8, compound:true, bilateral:true, brand:"LF", brandFull:"Life Fitness" },
   "LF Incline Press":      { tier:"P1", prPts:8, compound:true,  bilateral:true  },
   "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true,  bilateral:true  },
   "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, bilateral:true },
@@ -263,7 +263,7 @@ const CATEGORY = {
          "Military Press PL Machine","Seated PL Dip Machine","LF Seated Dip",
          "HS Decline Press","Pec Deck","Cable Pushdown","Seated Lateral Raise",
          "Weighted Crunches","DB Flys","Assisted Dips"],
-  pull: ["Lat Pull-Down PL","LF High Row","LF Row","Lever Seated Row","Assisted Chin-Up",
+  pull: ["Lat Pull-Down PL","High Row PL","LF Row","Lever Seated Row","Assisted Chin-Up",
          "DB Alternating Curl","DB Hammer Curl","LF Bicep Curl",
          "Hip Thrust (Smith)","Hyperextensions 45°","Dead Hang","Captain's Chair",
          "Reverse Pec Deck"],
@@ -287,7 +287,7 @@ const TMPLS = {
   ],
   pull:[
     {name:"Lat Pull-Down PL",    sets:4,repRange:"8–10", targetReps:10,priority:true},
-    {name:"LF High Row",        sets:4,repRange:"10–12",targetReps:12,perArm:true},
+    {name:"High Row PL",        sets:4,repRange:"10–12",targetReps:12},
     {name:"LF Row",             sets:3,repRange:"8–10", targetReps:10},
     {name:"DB Alternating Curl",sets:3,repRange:"10–12",targetReps:12},
     {name:"Captain's Chair",    sets:3,repRange:"10–12",targetReps:12},
@@ -544,7 +544,7 @@ const SESSION_LOG = [
 ];
 const SESSION_EXLIST = [
   {name:"Lat Pull-Down PL",    sets:4, repRange:"8–10",  targetReps:10, priority:true},
-  {name:"LF High Row",        sets:4, repRange:"10–12", targetReps:12, perArm:true},
+  {name:"High Row PL",        sets:4, repRange:"10–12", targetReps:12},
   {name:"LF Row",             sets:3, repRange:"8–10",  targetReps:10},
   {name:"Calf Press, Linear Leg Press", sets:5, repRange:"10–15", targetReps:12, bilateral:true},
   {name:"DB Alternating Curl",sets:3, repRange:"10–12", targetReps:12},
@@ -582,7 +582,8 @@ export default function IronGame(){
   const [newExReps,     setNewExReps]     = useState("10");
   const [newExMaxWt,    setNewExMaxWt]    = useState("");   // gym ceiling — max available weight
   const [newExDuplicate,setNewExDuplicate]= useState(null);
-  const [newExPicked,   setNewExPicked]   = useState(false); // true after user selects from dropdown // {name, score} when fuzzy match found
+  const [newExPicked,   setNewExPicked]   = useState(false); // true after user selects from dropdown
+  const [showBrandInfo, setShowBrandInfo] = useState(false); // brand tooltip for LF etc. // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
 
@@ -1321,9 +1322,29 @@ export default function IronGame(){
 
             <div style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
               lineHeight:1.05,color:C.wht,
-              fontSize:ex.name.length>20?34:44,marginBottom:6}}>
+              fontSize:ex.name.length>20?34:44,marginBottom:6,
+              display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
               {ex.name}
+              {m.brand&&(
+                <button className="t" onClick={()=>setShowBrandInfo(v=>!v)}
+                  style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                    fontSize:11,color:C.md,letterSpacing:"0.1em",
+                    background:"rgba(255,255,255,0.07)",border:`1px solid ${C.bdr}`,
+                    borderRadius:4,padding:"2px 7px",cursor:"pointer",
+                    textTransform:"uppercase",lineHeight:1.6,flexShrink:0}}>
+                  {m.brand} ⓘ
+                </button>
+              )}
             </div>
+            {m.brand&&showBrandInfo&&(
+              <div style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
+                borderRadius:8,padding:"8px 12px",marginBottom:6,
+                fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
+                color:C.lt,letterSpacing:"0.04em"}}>
+                {m.brand} = {m.brandFull||m.brand}
+                {m.brand==="LF"&&" · Life Fitness plate-loaded machine. Machine photos coming soon."}
+              </div>
+            )}
             <div style={{height:1,background:`linear-gradient(90deg,${C.bdrTop},transparent)`,marginBottom:8}}/>
             {/* Set info */}
             <div style={{display:"flex",gap:18,fontFamily:"'Inter',sans-serif",
