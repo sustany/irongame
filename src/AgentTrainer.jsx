@@ -242,40 +242,53 @@ const INIT_PRS = {
   "Calf Press, Linear Leg Press": { weight:630, reps:10 },
   "Seated Calf Raise":     { weight:180,  reps:7  },
 };
+// ── Equipment type registry ──────────────────────────────────
+// Source of truth for how an exercise behaves: increment buttons, snap math,
+// whether plate badges show, whether a bar weight floor applies.
+// Every META entry MUST set `eq` to one of these keys.
+const EQUIPMENT = {
+  "plate-loaded": { steps:[10,20,30], snap:10,  bilateral:true,  showPlates:true,  hasBar:false },
+  "stack-pin":    { steps:[5,10,20],  snap:5,   bilateral:false, showPlates:false, hasBar:false },
+  "dumbbell":     { steps:[5,10,15],  snap:2.5, bilateral:false, showPlates:false, hasBar:false },
+  "barbell":      { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:true  },
+  "smith":        { steps:[10,20,30], snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
+  "bodyweight":   { steps:[],         snap:0,   bilateral:false, showPlates:false, hasBar:false },
+};
+// Helper — fetch equipment config from a META entry. Defaults to plate-loaded if missing.
+const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
+
 const META = {
-  "High Row PL":           { tier:"P1", prPts:8, compound:true, bilateral:true, brand:"LF", brandFull:"Life Fitness" },
-  "LF Incline Press":      { tier:"P1", prPts:8, compound:true,  bilateral:true  },
-  "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true,  bilateral:true  },
-  "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, bilateral:true },
-  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true, bilateral:true },
-  "Seated PL Dip Machine":       { tier:"P1", prPts:8, compound:true, bilateral:true },
-  "LF Seated Dip":         { tier:"P2", prPts:5, compound:true                  },
-  "HS Decline Press":      { tier:"P2", prPts:5, compound:true,  perSide:true    },
-  "Pec Deck":              { tier:"ISO",prPts:3                                  },
-  "Cable Pushdown":        { tier:"ISO",prPts:3                                  },
-  "Seated Lateral Raise":  { tier:"ISO",prPts:3, dumbbell:true, steps:[2.5,5,10] },
-  "Weighted Crunches":     { tier:"CORE",prPts:0, core:true                     },
-  "Captain's Chair":       { tier:"CORE",prPts:0, core:true, bw:true            },
-  // bilateral=true: plates load both sides — always add in pairs
-  // barbell=true: 45 lb bar is the floor for set 1
+  "High Row PL":           { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
+  "LF Incline Press":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, eq:"smith" },
+  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Seated PL Dip Machine":       { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Seated Dip":         { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "HS Decline Press":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true },
+  "Pec Deck":              { tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Cable Pushdown":        { tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Seated Lateral Raise":  { tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Weighted Crunches":     { tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
+  "Captain's Chair":       { tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
-  "Barbell RDL":           { tier:"P1", prPts:8, compound:true, bilateral:true, barbell:true, maxPlate:25, priority:true },
-  "Lat Pull-Down PL": { tier:"P1", prPts:8, compound:true, bilateral:true   },
-  "LF Row":                { tier:"P2", prPts:5, compound:true                  },
-  "Lever Seated Row":      { tier:"P2", prPts:5, compound:true                  },
-  "Assisted Chin-Up":      { tier:"P2", prPts:5, compound:true                  },
-  "Hyperextensions 45°":   { tier:"FND",prPts:0, mandatory:true                 },
-  "DB Alternating Curl":   { tier:"ISO",prPts:3, dumbbell:true, steps:[2.5,5,10] },
-  "DB Hammer Curl":        { tier:"ISO",prPts:3, dumbbell:true, steps:[2.5,5,10] },
-  "LF Bicep Curl":         { tier:"ISO",prPts:3, dumbbell:true, steps:[2.5,5,10] },
-  "Dead Hang":             { tier:"GRIP",prPts:0, bw:true, mandatory:true        },
-  "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true                  },
-  "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, stack:true         },
-  "Linear Hack Squat PL":            { tier:"P1", prPts:8, compound:true, bilateral:true },
-  "Leg Extension":         { tier:"ISO",prPts:3, stack:true                       },
-  "Calf Press":            { tier:"ISO",prPts:3, bilateral:true                 },
-  "Calf Press, Linear Leg Press": { tier:"ISO",prPts:3, bilateral:true },
-  "Seated Calf Raise":     { tier:"ISO",prPts:3, bilateral:true                 },
+  "Barbell RDL":           { tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
+  "Lat Pull-Down PL":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Row":                { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "Lever Seated Row":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "Assisted Chin-Up":      { tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Hyperextensions 45°":   { tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
+  "DB Alternating Curl":   { tier:"ISO",prPts:3, eq:"dumbbell" },
+  "DB Hammer Curl":        { tier:"ISO",prPts:3, eq:"dumbbell" },
+  "LF Bicep Curl":         { tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Dead Hang":             { tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
+  "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true, eq:"smith" },
+  "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Linear Hack Squat PL":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Leg Extension":         { tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Calf Press":            { tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Calf Press, Linear Leg Press": { tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Seated Calf Raise":     { tier:"ISO",prPts:3, eq:"plate-loaded" },
 };
 // Category membership controls which exercises appear in pickers per session type.
 // Exercises not listed appear under "Other" at the bottom of pickers.
@@ -620,6 +633,11 @@ export default function IronGame(){
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
   const [warmupNext, setWarmupNext] = useState(false);
+  // userMeta: META overrides for user-added exercises. Keyed by exercise name.
+  // Each entry can supply { eq, compound, ... } to drive equipment behavior.
+  const [userMeta, setUserMeta] = useState({});
+  // newExEq: equipment type chosen on the New Exercise form.
+  const [newExEq, setNewExEq] = useState("plate-loaded");
 
   // Live timer — ticks every second
   useEffect(() => {
@@ -686,10 +704,11 @@ export default function IronGame(){
   };
 
   const ex     = exList[exIdx]||null;
-  const m      = ex?(META[ex.name]||{}):{};
+  const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
   // Warm-up tag is now user-controlled via the warmupNext pill on the Set ready screen.
   const isWarmupSet = warmupNext;
-  const tgt    = ex&&!m.bw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
+  const isBw = m.eq === "bodyweight";
+  const tgt    = ex&&!isBw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
   // ── Double progression rep adaptation ──────────────────────
   // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
@@ -715,24 +734,28 @@ export default function IronGame(){
   // Rep grid buttons — 9 buttons centered on adaptedTarget
   const repTgt     = adaptedTarget;
   const repButtons = Array.from({length: 9}, (_, i) => Math.max(1, repTgt - 4) + i);
-  // Snap to nearest plate-achievable weight.
-  // Dumbbells: snap to nearest 2.5. Bilateral plate machines: nearest 10 from bar.
-  // Everything else: nearest 5.
-  const snapWt=(raw,base,bilateral,dumbbell,stack)=>{
-    if(dumbbell) return Math.round(raw/2.5)*2.5;
-    if(stack)    return Math.round(raw/10)*10;
-    if(!bilateral) return Math.round(raw/5)*5;
-    const diff=raw-base;
-    return Math.round(diff/10)*10+base;
+  // Snap to nearest equipment-achievable weight. Driven by EQUIPMENT[m.eq].snap.
+  // Bilateral plate machines snap from the bar weight (or 0 if no bar). Stack-pin
+  // and dumbbells snap from zero.
+  const snapWt = (raw, m) => {
+    const e = eqOf(m);
+    if (e.snap === 0) return 0;            // bodyweight → no load
+    if (e.bilateral) {
+      const base = e.hasBar ? 45 : 0;
+      const diff = raw - base;
+      return Math.round(diff / e.snap) * e.snap + base;
+    }
+    return Math.round(raw / e.snap) * e.snap;
   };
-  let   adjWt  = Math.max(0, snapWt(tgt+weightAdj, m.barbell?45:0, m.bilateral, m.dumbbell, m.stack));
+  let   adjWt  = Math.max(0, snapWt(tgt+weightAdj, m));
   // Cap at gym ceiling if set
   const gymMax  = prs[ex?.name]?.gymMax || null;
-  if(gymMax && adjWt > gymMax) adjWt = snapWt(gymMax, m.barbell?45:0, m.bilateral, m.dumbbell, m.stack);
+  if(gymMax && adjWt > gymMax) adjWt = snapWt(gymMax, m);
   const atCeiling = gymMax && adjWt >= gymMax;
-  const fromWt = setIdx>0 ? (lastWt||0) : (m.barbell ? 45 : 0);
-  const plates = ex&&!m.bw&&adjWt>0
-    ? calcPlates(adjWt, fromWt, m.bilateral, m.maxPlate||45)
+  const eq     = eqOf(m);
+  const fromWt = setIdx>0 ? (lastWt||0) : (eq.hasBar ? 45 : 0);
+  const plates = ex&&!isBw&&adjWt>0
+    ? calcPlates(adjWt, fromWt, eq.bilateral, m.maxPlate||45)
     : null;
   const score  = calcScore(log,prs,ext);
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
@@ -1376,7 +1399,7 @@ export default function IronGame(){
                 </span>
               )}
               {/* Warm-up pill — user-controlled. Tag THIS set as a warm-up before logging. */}
-              {phase==="ready"&&!m.bw&&(
+              {phase==="ready"&&!isBw&&(
                 <button className="t" onClick={()=>setWarmupNext(v=>!v)}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
                     color:warmupNext?"#111":"#ffb400",
@@ -1428,11 +1451,12 @@ export default function IronGame(){
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <SL color={isWarmupSet?"#ffb400":C.md}>
-                    {isWarmupSet ? "Warm-Up Load"
-                      : m.bw      ? "Load"
-                      : m.stack   ? "Stack Weight · 10 lb increments"
-                      : m.dumbbell? `${adjWt} lbs${m.perArm?" / arm":""}`
-                      : m.barbell ? `Olympic Bar · ${m.barWeight||45} lbs`
+                    {isWarmupSet      ? "Warm-Up Load"
+                      : m.eq==="bodyweight" ? "Load"
+                      : m.eq==="stack-pin"  ? "Stack Weight"
+                      : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
+                      : m.eq==="barbell"    ? `Olympic Bar · 45 lbs`
+                      : m.eq==="smith"      ? "Smith Machine"
                       : "Plate Loaded"}
                   </SL>
                   {atCeiling&&(
@@ -1444,7 +1468,7 @@ export default function IronGame(){
                       textTransform:"uppercase"}}>Gym Max</div>
                   )}
                 </div>
-                {(m.bw||isWarmupSet)?(
+                {(isBw||isWarmupSet)?(
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:46,
                       color:isWarmupSet?"rgba(255,180,0,0.85)":C.lt}}>
@@ -1463,7 +1487,7 @@ export default function IronGame(){
                       gap:10,marginBottom:8}}>
 
                       {/* LEFT: plate badges — hidden for stack machines */}
-                      {!m.stack&&plates?.action!=="none"&&plates?.plates?.length>0&&(
+                      {eq.showPlates&&plates?.action!=="none"&&plates?.plates?.length>0&&(
                         <div style={{display:"flex",flexDirection:"column",
                           gap:3,alignSelf:"center",flexShrink:0}}>
                           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
@@ -1502,7 +1526,7 @@ export default function IronGame(){
                         flexDirection:"column",gap:5,marginLeft:"auto"}}>
                         {/* Plus row — top */}
                         <div style={{display:"flex",gap:4}}>
-                          {(m.steps||[10,20,30]).map(p=>(
+                          {(m.steps||eq.steps).map(p=>(
                             <button key={`p${p}`} className="t"
                               onClick={()=>setWeightAdj(a=>a+p)}
                               style={{flex:1,fontFamily:"'Bebas Neue',sans-serif",
@@ -1517,7 +1541,7 @@ export default function IronGame(){
                         </div>
                         {/* Minus row — bottom */}
                         <div style={{display:"flex",gap:4}}>
-                          {(m.steps||[10,20,30]).map(p=>(
+                          {(m.steps||eq.steps).map(p=>(
                             <button key={`m${p}`} className="t"
                               onClick={()=>setWeightAdj(a=>a-p)}
                               style={{flex:1,fontFamily:"'Bebas Neue',sans-serif",
@@ -1566,7 +1590,7 @@ export default function IronGame(){
             <div style={{flex:1,display:"flex",flexDirection:"column",
               justifyContent:"center",alignItems:"center",gap:10}}>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,color:C.wht}}>
-                {m.bw?"Bodyweight":`${adjWt} lbs`}
+                {isBw?"Bodyweight":`${adjWt} lbs`}
               </div>
               <div style={{height:2,width:60,background:C.red}}/>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,color:C.lt}}>
@@ -1868,6 +1892,37 @@ export default function IronGame(){
                       background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
                       borderRadius:8,padding:"10px 12px",color:C.wht,outline:"none"}}/>
                 </div>
+
+                {/* Equipment-type chip row — drives increment buttons + snap math */}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,
+                    color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:6}}>
+                    Equipment type
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {[
+                      {k:"plate-loaded",l:"Plate-Loaded"},
+                      {k:"stack-pin",   l:"Stack-Pin"},
+                      {k:"dumbbell",    l:"Dumbbell"},
+                      {k:"barbell",     l:"Barbell"},
+                      {k:"smith",       l:"Smith"},
+                      {k:"bodyweight",  l:"Bodyweight"},
+                    ].map(({k,l})=>{
+                      const active = newExEq===k;
+                      return(
+                        <button key={k} className="t" onClick={()=>setNewExEq(k)}
+                          style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                            color:active?"#fff":C.lt,
+                            background:active?C.red:"rgba(255,255,255,0.05)",
+                            border:`1px solid ${active?C.red:C.bdr}`,
+                            borderRadius:7,padding:"6px 10px",cursor:"pointer",
+                            letterSpacing:"0.04em"}}>
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <button className="t"
                   onClick={()=>{
                     const name=newExName.trim();
@@ -1881,6 +1936,8 @@ export default function IronGame(){
                     const rp=parseInt(newExReps)||10;
                     const mx=parseInt(newExMaxWt)||null;
                     setPrs(p=>({...p,[name]:{weight:wt,reps:rp,...(mx?{gymMax:mx}:{})}}));
+                    // Save user-defined equipment type so increment buttons + snap math work.
+                    setUserMeta(u=>({...u,[name]:{eq:newExEq,prPts:3}}));
                     const updated=[...exList];
                     updated[exIdx]={...updated[exIdx],name,
                       repRange:"8–12",targetReps:10};
@@ -1888,6 +1945,7 @@ export default function IronGame(){
                     setSetIdx(0);setLastRes(null);setLastWt(null);
                     setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
                     setNewExDuplicate(null);setNewExName("");setWarmupNext(false);
+                    setNewExEq("plate-loaded");
                   }}
                   style={{width:"100%",fontFamily:"'Bebas Neue',sans-serif",
                     fontSize:16,color:"#fff",background:C.red,border:"none",
