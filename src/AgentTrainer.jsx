@@ -800,6 +800,58 @@ export default function IronGame(){
     setSessionStart(Date.now());
     setScreen("session");
   };
+  // ── Back navigation: undo the most recent logged set ──────────
+  // Pops the last log entry, restores setIdx/exIdx/lastWt/lastRes/warmupNext to
+  // the state immediately preceding that log. Supports cross-exercise undo:
+  // if the user already advanced to the next exercise, this rolls back to it.
+  const undoLastSet = () => {
+    if (log.length === 0) return;
+    const popped = log[log.length - 1];
+    const newLog = log.slice(0, -1);
+    setLog(newLog);
+    setWConf(null);
+    setPendingResult(null);
+    setWeightAdj(0);
+
+    // Roll PR back if the popped set had set a new PR for its exercise
+    const exMeta = META[popped.exercise] || userMeta[popped.exercise] || {};
+    if (!popped.warmup && !exMeta.bw) {
+      const currentPr = prs[popped.exercise];
+      if (currentPr && popped.weight >= currentPr.weight && popped.result !== "fell_short") {
+        // The popped set may have been the PR. Recompute from prior logs.
+        const priorBest = newLog
+          .filter(s => s.exercise === popped.exercise && !s.warmup && s.result !== "fell_short")
+          .reduce((best, s) => (s.weight > (best?.weight || 0) ? s : best), null);
+        if (priorBest && priorBest.weight < currentPr.weight) {
+          setPrs(p => ({...p, [popped.exercise]: {...p[popped.exercise],
+            weight: priorBest.weight, reps: priorBest.reps}}));
+        }
+      }
+    }
+
+    // Find which exercise+setIdx the popped entry corresponded to
+    const poppedExIdx = exList.findIndex(e => e.name === popped.exercise);
+    if (poppedExIdx === -1) { setPhase("ready"); return; }
+
+    // Count working sets for that exercise in newLog to compute restored setIdx
+    const workingDone = newLog.filter(s => s.exercise === popped.exercise && !s.warmup).length;
+    setExIdx(poppedExIdx);
+    setSetIdx(workingDone);
+
+    if (popped.warmup) {
+      // Restoring a warmup: warmupNext goes back ON, lastWt/lastRes unchanged
+      setWarmupNext(true);
+    } else {
+      setWarmupNext(false);
+      // Find last working set for this exercise in newLog for progression context
+      const priorWorking = [...newLog].reverse()
+        .find(s => s.exercise === popped.exercise && !s.warmup);
+      setLastWt(priorWorking?.weight ?? null);
+      setLastRes(priorWorking?.result ?? null);
+    }
+    setPhase("ready");
+  };
+
   const attemptReps=(reps)=>{
     // Classify against the prescribed range, not a single integer target.
     // Reps WITHIN range = matched (working as prescribed); above = exceeded; below = fell_short.
@@ -1316,12 +1368,27 @@ export default function IronGame(){
       <div style={{background:STEEL,borderBottom:`2px solid ${C.bdr}`,
         padding:"10px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",
         boxShadow:"0 2px 14px rgba(0,0,0,0.5)"}}>
-        <div>
-          {/* Label: md = #aaaaaa = 7:1 on card = readable */}
-          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
-            color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>EXERCISE</div>
-          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
-            {exIdx+1}<span style={{color:C.md}}>/{exList.length}</span>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {/* Back chevron — undoes the most recent logged set */}
+          <button className="t" onClick={undoLastSet}
+            disabled={log.length===0}
+            style={{width:32,height:32,borderRadius:8,cursor:log.length===0?"not-allowed":"pointer",
+              background:log.length===0?"transparent":"rgba(255,255,255,0.06)",
+              border:`1px solid ${log.length===0?"rgba(255,255,255,0.08)":C.bdr}`,
+              color:log.length===0?"rgba(255,255,255,0.2)":C.lt,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontFamily:"'Bebas Neue',sans-serif",fontSize:20,lineHeight:1,padding:0,
+              flexShrink:0}}
+            title={log.length===0?"Nothing to undo":"Undo last set"}>
+            ←
+          </button>
+          <div>
+            {/* Label: md = #aaaaaa = 7:1 on card = readable */}
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+              color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>EXERCISE</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
+              {exIdx+1}<span style={{color:C.md}}>/{exList.length}</span>
+            </div>
           </div>
         </div>
 
