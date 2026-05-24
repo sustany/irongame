@@ -696,8 +696,28 @@ export default function IronGame(){
   const isWarmupSet = !!(m.warmupSet1 && setIdx === 0);
   const tgt    = ex&&!m.bw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
-  // Rep grid — pre-computed to avoid IIFE in JSX (Rollup prod incompatible)
-  const repTgt     = ex ? ex.targetReps : 8;
+  // ── Double progression rep adaptation ──────────────────────
+  // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
+  const parseRange = (s) => {
+    const match = (s||"").match(/(\d+)\D+(\d+)/);
+    return match ? [parseInt(match[1]), parseInt(match[2])] : null;
+  };
+  const repRange     = ex ? parseRange(ex.repRange) : null;
+  const rangeLo      = repRange ? repRange[0] : (ex?.targetReps||8);
+  const rangeHi      = repRange ? repRange[1] : (ex?.targetReps||8);
+  // Last logged reps for this exercise in current session
+  const lastExLog    = ex ? [...log].reverse().find(s => s.exercise === ex.name) : null;
+  const lastReps     = lastExLog?.reps ?? null;
+  // Adapted target: center the grid on last rep count if available, else prescribed target
+  const adaptedTarget = lastReps !== null ? lastReps : (ex?.targetReps || 8);
+  // Feedback state for post-set message
+  const repFeedback  = lastReps === null ? null
+    : lastReps > rangeHi  ? "exceeded"   // above range → flag weight increase
+    : lastReps === rangeHi? "ceiling"     // at top → nudge toward weight increase
+    : lastReps >= rangeLo ? "within"     // within range → on track
+    : "below";                            // below range → flag load check
+  // Rep grid buttons — 9 buttons centered on adaptedTarget
+  const repTgt     = adaptedTarget;
   const repButtons = Array.from({length: 9}, (_, i) => Math.max(1, repTgt - 4) + i);
   // Snap to nearest plate-achievable weight.
   // Dumbbells: snap to nearest 2.5. Bilateral plate machines: nearest 10 from bar.
@@ -1611,40 +1631,57 @@ export default function IronGame(){
             </button>
           </div>
         ):(
-          <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
-            {repButtons.map(r => {
-              const isTarget = r === repTgt;
-              const exceeded = r > repTgt;
-              const short    = r < repTgt;
-              const col = exceeded ? C.grn : short ? "#ff6644" : C.wht;
-              const bg  = exceeded ? "rgba(34,200,100,0.08)"
-                        : short    ? "rgba(232,38,10,0.1)"
-                        : "rgba(255,255,255,0.07)";
-              const bdr = exceeded ? "1px solid rgba(34,200,100,0.45)"
-                        : short    ? "1px solid rgba(232,38,10,0.45)"
-                        : "2px solid rgba(255,255,255,0.55)";
-              const sh  = isTarget ? "0 0 12px rgba(255,255,255,0.15)" : "none";
-              return (
-                <button key={r} className="t" onClick={()=>attemptReps(r)} style={{
-                  width:64,height:64,borderRadius:12,
-                  background:bg,border:bdr,boxShadow:sh,
-                  color:col,cursor:"pointer",
-                  fontFamily:"'Bebas Neue',sans-serif",
-                  fontSize:isTarget?30:24,
-                  display:"flex",flexDirection:"column",
-                  alignItems:"center",justifyContent:"center",
-                }}>
-                  <span>{r}</span>
-                  {isTarget&&(
-                    <span style={{fontSize:8,fontFamily:"'Inter',sans-serif",
-                      fontWeight:700,letterSpacing:"0.1em",
-                      color:"rgba(255,255,255,0.45)",
-                      textTransform:"uppercase",marginTop:-2}}>target</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            {repFeedback&&(
+              <div style={{textAlign:"center",marginBottom:8,
+                fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                letterSpacing:"0.1em",textTransform:"uppercase",
+                color: repFeedback==="exceeded"||repFeedback==="ceiling" ? C.grn
+                     : repFeedback==="below" ? "#ff6644" : C.md}}>
+                {repFeedback==="exceeded" && `${lastReps} reps — above range · increase weight next session`}
+                {repFeedback==="ceiling"  && `${lastReps} reps — at ceiling · consider adding weight`}
+                {repFeedback==="within"   && `Last set: ${lastReps} reps`}
+                {repFeedback==="below"    && `${lastReps} reps — below range · check load`}
+              </div>
+            )}
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
+              {repButtons.map(r => {
+                const isTarget   = r === adaptedTarget;
+                const aboveRange = r > rangeHi;
+                const belowRange = r < rangeLo;
+                const col = aboveRange ? C.grn : belowRange ? "#ff6644" : C.wht;
+                const bg  = aboveRange ? "rgba(34,200,100,0.08)"
+                          : belowRange ? "rgba(232,38,10,0.1)"
+                          : "rgba(255,255,255,0.07)";
+                const bdr = isTarget    ? "2px solid rgba(255,255,255,0.7)"
+                          : aboveRange  ? "1px solid rgba(34,200,100,0.45)"
+                          : belowRange  ? "1px solid rgba(232,38,10,0.45)"
+                          : "1px solid rgba(255,255,255,0.18)";
+                const sh  = isTarget ? "0 0 12px rgba(255,255,255,0.15)" : "none";
+                return (
+                  <button key={r} className="t" onClick={()=>attemptReps(r)} style={{
+                    width:64,height:64,borderRadius:12,
+                    background:bg,border:bdr,boxShadow:sh,
+                    color:col,cursor:"pointer",
+                    fontFamily:"'Bebas Neue',sans-serif",
+                    fontSize:isTarget?30:24,
+                    display:"flex",flexDirection:"column",
+                    alignItems:"center",justifyContent:"center",
+                  }}>
+                    <span>{r}</span>
+                    {isTarget&&(
+                      <span style={{fontSize:8,fontFamily:"'Inter',sans-serif",
+                        fontWeight:700,letterSpacing:"0.1em",
+                        color:"rgba(255,255,255,0.45)",
+                        textTransform:"uppercase",marginTop:-2}}>
+                        {lastReps!==null?"last":"target"}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </>
         )}
         {phase==="ready"&&(
           <button className="t" onClick={()=>setShowExPicker(true)}
