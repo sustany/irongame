@@ -163,7 +163,16 @@ const IChk = ({ s = 14 }) => (
 // Format: ALPHA-MM-DD-HH-MM (UTC build time)
 // ─────────────────────────────────────────────────────────────
 const _bt = new Date(typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : Date.now());
-const BUILD_VERSION = `ALPHA-${String(_bt.getUTCMonth()+1).padStart(2,'0')}-${String(_bt.getUTCDate()).padStart(2,'0')}-${String(_bt.getUTCHours()).padStart(2,'0')}-${String(_bt.getUTCMinutes()).padStart(2,'0')}`;
+// Convert UTC → PST/PDT (UTC-7)
+const _pst = new Date(_bt.getTime() - 7 * 60 * 60 * 1000);
+const _mo  = String(_pst.getUTCMonth()+1).padStart(2,'0');
+const _dy  = String(_pst.getUTCDate()).padStart(2,'0');
+const _yr  = _pst.getUTCFullYear();
+const _hr  = _pst.getUTCHours();
+const _min = String(_pst.getUTCMinutes()).padStart(2,'0');
+const _ampm= _hr >= 12 ? 'PM' : 'AM';
+const _hr12= _hr % 12 || 12;
+const BUILD_VERSION = `ALPHA · ${_mo}/${_dy}/${_yr} · ${_hr12}:${_min} ${_ampm} PST`;
 
 // ─────────────────────────────────────────────────────────────
 // USER PROFILE — used for kcal estimation (Keytel formula).
