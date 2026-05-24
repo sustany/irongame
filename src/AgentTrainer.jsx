@@ -159,6 +159,13 @@ const IChk = ({ s = 14 }) => (
 );
 
 // ─────────────────────────────────────────────────────────────
+// VERSION — auto-stamped at build time via vite.config.js define
+// Format: ALPHA-MM-DD-HH-MM (UTC build time)
+// ─────────────────────────────────────────────────────────────
+const _bt = new Date(typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : Date.now());
+const BUILD_VERSION = `ALPHA-${String(_bt.getUTCMonth()+1).padStart(2,'0')}-${String(_bt.getUTCDate()).padStart(2,'0')}-${String(_bt.getUTCHours()).padStart(2,'0')}-${String(_bt.getUTCMinutes()).padStart(2,'0')}`;
+
+// ─────────────────────────────────────────────────────────────
 // USER PROFILE — used for kcal estimation (Keytel formula).
 // Adjust here when bodyweight / age change.
 // ─────────────────────────────────────────────────────────────
@@ -795,6 +802,13 @@ export default function IronGame(){
               ← Reset Selections
             </button>
           )}
+
+          {/* Version stamp */}
+          <div style={{textAlign:"center",marginTop:24,
+            fontFamily:"'JetBrains Mono',monospace",fontWeight:600,
+            fontSize:10,color:"rgba(255,255,255,0.18)",letterSpacing:"0.15em"}}>
+            {BUILD_VERSION}
+          </div>
         </div>
 
       {/* ── OPENER PICKER OVERLAY ────────────────────────────── */}
