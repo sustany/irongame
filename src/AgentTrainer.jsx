@@ -1378,16 +1378,18 @@ export default function IronGame(){
               </div>
             )}
             <div style={{height:1,background:`linear-gradient(90deg,${C.bdrTop},transparent)`,marginBottom:8}}/>
-            {/* Set info */}
+            {/* Set info — reps first, then set count, then PR */}
             <div style={{display:"flex",gap:18,fontFamily:"'Inter',sans-serif",
               fontWeight:700,fontSize:14,color:C.lt,alignItems:"center"}}>
               {isWarmupSet
                 ? <span style={{background:"rgba(255,180,0,0.15)",border:"1px solid rgba(255,180,0,0.4)",
                     color:"#ffb400",borderRadius:4,padding:"2px 8px",fontSize:11,
                     letterSpacing:"0.12em",textTransform:"uppercase"}}>Warm-Up · Set 1 of {ex.sets}</span>
-                : <span>Set {setIdx+1} of {ex.sets}</span>
+                : <>
+                    <span style={{color:C.wht}}>{ex.repRange} reps</span>
+                    <span style={{color:C.md}}>Set {setIdx+1} of {ex.sets}</span>
+                  </>
               }
-              <span>{ex.repRange} reps</span>
               {prs[ex.name]&&!prs[ex.name].bw&&!isWarmupSet&&(
                 <span style={{color:C.md}}>PR {prs[ex.name].weight}×{prs[ex.name].reps}</span>
               )}
@@ -1507,27 +1509,29 @@ export default function IronGame(){
                 )}
               </div>
 
-              {/* HR card */}
+              {/* HR card — Start HR and Volume on same baseline */}
               <div style={{background:STEEL,borderRadius:12,
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"14px 18px",marginBottom:12,
-                display:"flex",justifyContent:"space-between",alignItems:"center",
                 boxShadow:"0 3px 14px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-                <div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                   <SL color={C.md}>Start HR</SL>
+                  <SL color={C.md}>Volume</SL>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
-                    color:isCompound?C.red:C.wht}}>
+                    color:isCompound?C.red:C.wht,lineHeight:1}}>
                     {m.tier==="P1" ? START_HR.compound_p1
                       : isCompound ? START_HR.compound_p2
                       : START_HR.isolation}
                     <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                       fontSize:17,color:C.md,marginLeft:7}}>BPM</span>
                   </div>
-                </div>
-                <div style={{textAlign:"right"}}>
-                  <SL color={C.md}>Volume</SL>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:C.lt}}>
-                    {ex.repRange} reps
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
+                    color:C.lt,lineHeight:1,textAlign:"right"}}>
+                    {ex.repRange}
+                    <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                      fontSize:17,color:C.md,marginLeft:7}}>REPS</span>
                   </div>
                 </div>
               </div>
