@@ -261,33 +261,43 @@ const lev = (a, b) => {
 };
 
 // Search the library for matches to user input. Returns top N ranked.
-// Uses RAW lowercased text first (substring), normalized only as fuzzy fallback.
-// This prevents noise-stripping from removing the very characters being typed.
+// Strong matches require word-boundary alignment — short queries (2-3 chars)
+// won't match mid-word substrings (e.g. "du" matches "Dumbbell" but not "Hip Abduction").
+// Mid-word substring matching is only allowed for longer queries (4+ chars).
 export const searchExercises = (query, n = 5) => {
   if (!query) return [];
   const q = query.toLowerCase().trim();
   if (q.length < 2) return [];
+
+  const matchesWordStart = (text, qry) => {
+    // Split on whitespace, punctuation, and case transitions
+    const words = text.split(/[\s,()/\-_.]+/).filter(Boolean);
+    return words.some(w => w.startsWith(qry));
+  };
 
   const scored = EXERCISE_LIBRARY.map((e) => {
     const candidates = [e.canonical.toLowerCase(), ...e.aliases.map(a => a.toLowerCase())];
     let best = 0;
     for (const t of candidates) {
       let s = 0;
-      if (t === q)              s = 1.00;
-      else if (t.startsWith(q)) s = 0.95;
-      else if (t.includes(q))   s = 0.85;
+      if (t === q)                       s = 1.00;
+      else if (t.startsWith(q))          s = 0.95;
+      else if (matchesWordStart(t, q))   s = 0.90;  // any word in candidate starts with query
+      else if (q.length >= 4 && t.includes(q)) s = 0.65;  // mid-word substring only for longer queries
       else {
-        // Fuzzy: try normalized comparison as a last resort
-        const nq = normalize(q), nt = normalize(t);
-        if (nq && nt) {
-          if (nq === nt)                              s = 0.90;
-          else if (nt.startsWith(nq))                 s = 0.80;
-          else if (nt.includes(nq) || nq.includes(nt)) s = 0.70;
-          else {
-            const d  = lev(nq, nt);
-            const ml = Math.max(nq.length, nt.length);
-            const fz = ml ? 1 - d / ml : 0;
-            if (fz > 0.6) s = fz * 0.65;
+        // Fuzzy: try normalized comparison as a last resort, only for queries 3+ chars
+        if (q.length >= 3) {
+          const nq = normalize(q), nt = normalize(t);
+          if (nq && nt) {
+            if (nq === nt)                                s = 0.90;
+            else if (matchesWordStart(nt, nq))            s = 0.80;
+            else if (q.length >= 4 && nt.includes(nq))    s = 0.60;
+            else {
+              const d  = lev(nq, nt);
+              const ml = Math.max(nq.length, nt.length);
+              const fz = ml ? 1 - d / ml : 0;
+              if (fz > 0.7) s = fz * 0.55;
+            }
           }
         }
       }
@@ -295,7 +305,7 @@ export const searchExercises = (query, n = 5) => {
     }
     return { entry: e, score: best };
   })
-  .filter((x) => x.score > 0.3)
+  .filter((x) => x.score > 0.5)  // raised threshold to filter weak matches
   .sort((a, b) => b.score - a.score)
   .slice(0, n);
 
