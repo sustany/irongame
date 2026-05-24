@@ -176,10 +176,31 @@ const _hr12= _hr % 12 || 12;
 const BUILD_VERSION = `ALPHA · ${_mo}/${_dy}/${_yr} · ${_hr12}:${_min} ${_ampm} PST`;
 
 // ─────────────────────────────────────────────────────────────
-// USER PROFILE — used for kcal estimation (Keytel formula).
+// USER PROFILE — used for kcal estimation and HR zone calibration.
 // Adjust here when bodyweight / age change.
 // ─────────────────────────────────────────────────────────────
 const USER_PROFILE = { weightLb: 222, age: 56 };
+
+// ─────────────────────────────────────────────────────────────
+// HR ZONES — calibrated to user age (220 - age formula).
+// All zone thresholds, Start HR suggestions, and CRD scoring
+// derive from these values. Update USER_PROFILE.age to recalibrate.
+// ─────────────────────────────────────────────────────────────
+const MAX_HR = 220 - USER_PROFILE.age; // 164 for age 56
+const HR_ZONES = [
+  { label:"Recovery",  lo:0,                       hi:Math.round(MAX_HR*0.64), color:"#38bdf8" },
+  { label:"Fat Burn",  lo:Math.round(MAX_HR*0.65), hi:Math.round(MAX_HR*0.74), color:"#22c55e" },
+  { label:"Aerobic",   lo:Math.round(MAX_HR*0.75), hi:Math.round(MAX_HR*0.84), color:"#eab308" },
+  { label:"Threshold", lo:Math.round(MAX_HR*0.85), hi:Math.round(MAX_HR*0.94), color:"#f97316" },
+  { label:"Max Effort",lo:Math.round(MAX_HR*0.95), hi:999,                     color:"#e8260a" },
+];
+// Start HR — the HR to recover TO before beginning each set type.
+const START_HR = {
+  compound_p1: `${Math.round(MAX_HR*0.67)}–${Math.round(MAX_HR*0.72)}`,
+  compound_p2: `${Math.round(MAX_HR*0.65)}–${Math.round(MAX_HR*0.70)}`,
+  isolation:   `${Math.round(MAX_HR*0.58)}–${Math.round(MAX_HR*0.65)}`,
+};
+const getZone = (hr) => HR_ZONES.find(z => hr >= z.lo && hr <= z.hi) || HR_ZONES[0];
 
 // Keytel HR-based kcal/min for males.
 // kcal/min = (-55.0969 + 0.6309*HR + 0.1988*weight_kg + 0.2017*age) / 4.184
@@ -369,7 +390,26 @@ function calcScore(log,prs,ext){
   mu+=Math.min(18,Math.round((n/ts)*18));
   if(core) mu+=5;
   const mp=Math.min(45,mu),cp=Math.min(25,Math.round((n/ts)*25));
-  const cv=Math.min(15,10+(n>10?5:n>6?3:0));
+
+  // CRD — based on actual PHR zone quality, not set count.
+  // Z3+ (Aerobic/Threshold/Max) = full points. Z2 = partial. Z1 = minimal.
+  const phrs=log.filter(s=>s.phr>0).map(s=>s.phr);
+  let cv=0;
+  if(phrs.length>0){
+    const z3lo=Math.round(MAX_HR*0.75);
+    const z4lo=Math.round(MAX_HR*0.85);
+    const z2lo=Math.round(MAX_HR*0.65);
+    const zoneScores=phrs.map(hr=>{
+      if(hr>=z4lo) return 15;       // Threshold or Max — peak CRD
+      if(hr>=z3lo) return 12;       // Aerobic
+      if(hr>=z2lo) return 7;        // Fat Burn
+      return 3;                      // Recovery
+    });
+    cv=Math.min(15,Math.round(zoneScores.reduce((a,b)=>a+b,0)/zoneScores.length));
+  } else {
+    cv=Math.min(10,Math.round((n/ts)*10)); // fallback if no HR logged
+  }
+
   let fp=0; if(hang) fp+=8; if(hyp) fp+=7;
   if(!fp) fp=Math.min(15,Math.round((n/ts)*15));
   return {total:Math.min(100,mp+cp+cv+fp),muscle:mp,cal:cp,cv,found:fp};
@@ -1013,26 +1053,18 @@ export default function IronGame(){
     // Session duration
     const elapsedMin = sessionStart ? Math.round(((sessionEnd||Date.now())-sessionStart)/60000) : 0;
 
-    // Zone breakdown from logged PHRs
-    const ZONES=[
-      {label:"VO2 Max",  min:173, max:999, color:"#e8260a"},
-      {label:"Anaerobic",min:155, max:172, color:"#f97316"},
-      {label:"Aerobic",  min:138, max:154, color:"#eab308"},
-      {label:"Fat Burn", min:121, max:137, color:"#22c55e"},
-      {label:"Warm Up",  min:0,   max:120, color:"#38bdf8"},
-    ];
+    // Zone breakdown from logged PHRs — calibrated to MAX_HR
     const phrs=log.filter(s=>s.phr>0).map(s=>s.phr);
     const hasHR=phrs.length>0;
-    // Estimate minutes per zone: assume each set ~3 min, rest fills fat burn/warm up
     const setMin=3;
     const restMin=Math.max(0,elapsedMin-phrs.length*setMin);
-    const zoneMins=ZONES.map(z=>{
-      const setsInZone=phrs.filter(p=>p>=z.min&&p<=z.max).length;
+    const zoneMins=HR_ZONES.slice().reverse().map(z=>{
+      const setsInZone=phrs.filter(p=>p>=z.lo&&p<=z.hi).length;
       let m=setsInZone*setMin;
       if(z.label==="Fat Burn") m+=Math.round(restMin*0.6);
-      if(z.label==="Warm Up")  m+=Math.round(restMin*0.4);
+      if(z.label==="Recovery") m+=Math.round(restMin*0.4);
       return{...z,mins:m};
-    });
+    }).reverse();
     const totalZoneMin=zoneMins.reduce((s,z)=>s+z.mins,0)||1;
 
     // ── kcal estimate (Keytel) ─────────────────────────────────
@@ -1044,7 +1076,7 @@ export default function IronGame(){
     const restMinK = Math.max(0, elapsedMin - activeMin);
     const kcal = hasHR
       ? Math.round(kcalPerMin(avgPhr, weightKg, age) * activeMin
-                 + kcalPerMin(110,    weightKg, age) * restMinK)
+                 + kcalPerMin(HR_ZONES[1].lo, weightKg, age) * restMinK)  // Z2 lower boundary as rest HR
       : null;
 
     return(
@@ -1485,7 +1517,9 @@ export default function IronGame(){
                   <SL color={C.md}>Start HR</SL>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
                     color:isCompound?C.red:C.wht}}>
-                    {isCompound?"108–115":"95–110"}
+                    {m.tier==="P1" ? START_HR.compound_p1
+                      : isCompound ? START_HR.compound_p2
+                      : START_HR.isolation}
                     <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                       fontSize:17,color:C.md,marginLeft:7}}>BPM</span>
                   </div>
@@ -1539,18 +1573,26 @@ export default function IronGame(){
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,
                   color:C.red}}>BPM</div>
               </div>
-              {/* Quick-select zone anchors */}
+              {/* Quick-select — zone boundary anchors derived from MAX_HR */}
               <div style={{display:"flex",gap:6,marginBottom:10}}>
-                {[110,120,130,140,150,160,170].map(v=>(
-                  <button key={v} className="t" onClick={()=>setPhrInput(v)} style={{
-                    flex:1,fontFamily:"'Bebas Neue',sans-serif",fontSize:13,
-                    padding:"6px 0",borderRadius:7,cursor:"pointer",
-                    background: phrInput===v?"rgba(232,38,10,0.2)":"rgba(255,255,255,0.05)",
-                    border:`1px solid ${phrInput===v?C.red:C.bdr}`,
-                    color: phrInput===v?C.wht:C.md,
-                    letterSpacing:"0.04em",
-                  }}>{v}</button>
-                ))}
+                {HR_ZONES.map(z=>{
+                  const anchor = z.label==="Recovery" ? z.hi
+                    : z.label==="Max Effort" ? Math.round(MAX_HR*0.97)
+                    : Math.round((z.lo+z.hi)/2);
+                  const active = phrInput===anchor;
+                  return (
+                    <button key={z.label} className="t" onClick={()=>setPhrInput(anchor)} style={{
+                      flex:1,borderRadius:7,cursor:"pointer",padding:"5px 0",
+                      background:active?`${z.color}22`:"rgba(255,255,255,0.05)",
+                      border:`1px solid ${active?z.color:C.bdr}`,
+                      color:active?z.color:C.md,
+                      display:"flex",flexDirection:"column",alignItems:"center",gap:1,
+                    }}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:"0.04em"}}>{anchor}</span>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontSize:8,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase"}}>{z.label.split(" ")[0]}</span>
+                    </button>
+                  );
+                })}
               </div>
               {/* Fine-tune ±1 ±5 */}
               <div style={{display:"flex",gap:6}}>
