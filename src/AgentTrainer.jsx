@@ -271,7 +271,7 @@ const META = {
   "Dead Hang":             { tier:"GRIP",prPts:0, bw:true, mandatory:true        },
   "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true                  },
   "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, stack:true         },
-  "Linear Hack Squat PL":            { tier:"P1", prPts:8, compound:true, bilateral:true, warmupSet1:true },
+  "Linear Hack Squat PL":            { tier:"P1", prPts:8, compound:true, bilateral:true },
   "Leg Extension":         { tier:"ISO",prPts:3, stack:true                       },
   "Calf Press":            { tier:"ISO",prPts:3, bilateral:true                 },
   "Calf Press, Linear Leg Press": { tier:"ISO",prPts:3, bilateral:true },
@@ -352,16 +352,19 @@ function suggestW(name,si,lw,lr,prs){
   const w=pr.weight;
   // Set 1: respect pre-seeded lw (user already loaded a weight) else 68% of PR
   if(si===0) return lw&&lw>0 ? lw : Math.max(45,Math.round(w*0.68/5)*5);
-  if(si===1) return Math.round(w*0.82/5)*5;
+  // Set 2+: progress from last NON-WARMUP working set based on result.
+  // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
   if(!lw) return w;
   if(lr==="exceeded")   return Math.round(Math.min(lw+5,w*1.08)/5)*5;
   if(lr==="fell_short") return Math.round(Math.max(lw-10,w*0.75)/5)*5;
   return lw;
 }
 function calcScore(log,prs,ext){
+  // Working sets only — warmup sets must not inflate volume, PR, or set-count scoring.
+  const wlog = log.filter(s=>!s.warmup);
   let mu=0;const ph=new Set();
   let ov=0,core=false,hang=false,hyp=false;
-  log.forEach(s=>{
+  wlog.forEach(s=>{
     const m=META[s.exercise]||{},pr=prs[s.exercise];
     if(m.core) core=true;
     if(s.exercise==="Dead Hang") hang=true;
@@ -371,7 +374,7 @@ function calcScore(log,prs,ext){
     }
     if(s.result==="matched"||s.result==="exceeded") ov++;
   });
-  const n=log.length,ts=ext?20:17;
+  const n=wlog.length,ts=ext?20:17;
   if(n>0) mu+=Math.min(10,Math.round((ov/n)*10));
   mu+=Math.min(18,Math.round((n/ts)*18));
   if(core) mu+=5;
@@ -379,6 +382,7 @@ function calcScore(log,prs,ext){
 
   // CRD — based on actual PHR zone quality, not set count.
   // Z3+ (Aerobic/Threshold/Max) = full points. Z2 = partial. Z1 = minimal.
+  // Include warmup PHRs since they reflect real cardiovascular load.
   const phrs=log.filter(s=>s.phr>0).map(s=>s.phr);
   let cv=0;
   if(phrs.length>0){
@@ -612,6 +616,10 @@ export default function IronGame(){
   const [showBrandInfo, setShowBrandInfo] = useState(false); // brand tooltip for LF etc. // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
+  // warmupNext: when true, the next logged set is tagged as a warm-up.
+  // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
+  // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
+  const [warmupNext, setWarmupNext] = useState(false);
 
   // Live timer — ticks every second
   useEffect(() => {
@@ -679,7 +687,8 @@ export default function IronGame(){
 
   const ex     = exList[exIdx]||null;
   const m      = ex?(META[ex.name]||{}):{};
-  const isWarmupSet = !!(m.warmupSet1 && setIdx === 0);
+  // Warm-up tag is now user-controlled via the warmupNext pill on the Set ready screen.
+  const isWarmupSet = warmupNext;
   const tgt    = ex&&!m.bw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
   // ── Double progression rep adaptation ──────────────────────
@@ -691,8 +700,9 @@ export default function IronGame(){
   const repRange     = ex ? parseRange(ex.repRange) : null;
   const rangeLo      = repRange ? repRange[0] : (ex?.targetReps||8);
   const rangeHi      = repRange ? repRange[1] : (ex?.targetReps||8);
-  // Last logged reps for this exercise in current session
-  const lastExLog    = ex ? [...log].reverse().find(s => s.exercise === ex.name) : null;
+  // Last logged reps for this exercise in current session — SKIP warmups so warmup
+  // reps don't pollute the rep grid centering or progression math.
+  const lastExLog    = ex ? [...log].reverse().find(s => s.exercise === ex.name && !s.warmup) : null;
   const lastReps     = lastExLog?.reps ?? null;
   // Adapted target: center the grid on last rep count if available, else prescribed target
   const adaptedTarget = lastReps !== null ? lastReps : (ex?.targetReps || 8);
@@ -768,7 +778,11 @@ export default function IronGame(){
     setScreen("session");
   };
   const attemptReps=(reps)=>{
-    const res = reps > ex.targetReps ? "exceeded" : reps < ex.targetReps ? "fell_short" : "matched";
+    // Classify against the prescribed range, not a single integer target.
+    // Reps WITHIN range = matched (working as prescribed); above = exceeded; below = fell_short.
+    const res = reps > rangeHi ? "exceeded"
+              : reps < rangeLo ? "fell_short"
+              : "matched";
     if(lastWt&&lastWt>0&&Math.abs(adjWt-lastWt)/lastWt>0.5){setWConf({res,wt:adjWt,reps});return;}
     setPendingResult({res,wt:adjWt,reps});
     setPhrInput(130);
@@ -781,10 +795,19 @@ export default function IronGame(){
   };
   const doLog=(res,wt,reps,phr=null)=>{
     setWConf(null);
+    const wasWarmup = warmupNext;
     setLog(l=>[...l,{exercise:ex.name,setNum:setIdx+1,weight:wt,
-      reps:reps,result:res,...(phr?{phr}:{})}]);
-    setLastRes(res);setLastWt(wt);
+      reps:reps,result:res,...(wasWarmup?{warmup:true}:{}),...(phr?{phr}:{})}]);
     setWeightAdj(0);
+    if(wasWarmup){
+      // Warmup logged: clear the toggle, stay on the same working set index.
+      // Don't update lastWt/lastRes (those drive the next working set's prescription).
+      // Don't award PRs from warmup sets.
+      setWarmupNext(false);
+      setPhase("ready");
+      return;
+    }
+    setLastRes(res);setLastWt(wt);
     const pr=prs[ex.name];
     if(res!=="fell_short"&&pr&&!pr.bw&&wt>pr.weight){
       setPrs(p=>({...p,[ex.name]:{...p[ex.name],weight:wt,reps:ex.targetReps}}));
@@ -792,14 +815,14 @@ export default function IronGame(){
     }
     if(setIdx+1>=ex.sets){
       if(exIdx+1>=exList.length){setSessionEnd(Date.now());setScreen("complete");return;}
-      setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
+      setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);setWarmupNext(false);
     } else setSetIdx(s=>s+1);
     setPhase("ready");
   };
   const reset=()=>{
     setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
-    setSessionStart(null);setSessionEnd(null);
+    setSessionStart(null);setSessionEnd(null);setWarmupNext(false);
   };
 
   const shell={background:C.page,minHeight:"100dvh",color:C.wht,
@@ -1204,7 +1227,7 @@ export default function IronGame(){
 
         <div style={{display:"flex",gap:10,marginBottom:28}}>
           {[
-            {label:"Total Sets",val:log.length,   c:C.wht},
+            {label:"Total Sets",val:log.filter(s=>!s.warmup).length,   c:C.wht},
             {label:"PRs Hit",   val:hits.length,  c:hits.length?C.gld:C.wht},
           ].map(({label,val,c})=>(
             <div key={label} style={{flex:1,background:STEEL,borderRadius:12,
@@ -1293,7 +1316,7 @@ export default function IronGame(){
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
             color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>SETS</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
-            {log.length}<span style={{color:C.md}}>/{totS}</span>
+            {log.filter(s=>!s.warmup).length}<span style={{color:C.md}}>/{totS}</span>
           </div>
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
             color:C.md,letterSpacing:"0.06em",marginTop:1}}>
@@ -1351,6 +1374,19 @@ export default function IronGame(){
                   borderRadius:5,padding:"4px 10px",letterSpacing:"0.1em",textTransform:"uppercase"}}>
                   Mandatory
                 </span>
+              )}
+              {/* Warm-up pill — user-controlled. Tag THIS set as a warm-up before logging. */}
+              {phase==="ready"&&!m.bw&&(
+                <button className="t" onClick={()=>setWarmupNext(v=>!v)}
+                  style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
+                    color:warmupNext?"#111":"#ffb400",
+                    background:warmupNext?"#ffb400":"rgba(255,180,0,0.08)",
+                    border:`1px solid ${warmupNext?"#ffb400":"rgba(255,180,0,0.4)"}`,
+                    borderRadius:5,padding:"4px 10px",letterSpacing:"0.1em",
+                    textTransform:"uppercase",cursor:"pointer",
+                    boxShadow:warmupNext?"0 2px 10px rgba(255,180,0,0.35)":"none"}}>
+                  {warmupNext?"Warm-up ✓":"+ Warm-up"}
+                </button>
               )}
             </div>
 
@@ -1851,7 +1887,7 @@ export default function IronGame(){
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
                     setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
-                    setNewExDuplicate(null);setNewExName("");
+                    setNewExDuplicate(null);setNewExName("");setWarmupNext(false);
                   }}
                   style={{width:"100%",fontFamily:"'Bebas Neue',sans-serif",
                     fontSize:16,color:"#fff",background:C.red,border:"none",
@@ -1882,7 +1918,7 @@ export default function IronGame(){
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
-                        setWeightAdj(0);setShowExPicker(false);
+                        setWeightAdj(0);setShowExPicker(false);setWarmupNext(false);
                       }}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
