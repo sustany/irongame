@@ -2012,6 +2012,17 @@ export default function IronGame(){
             End Session
           </button>
         )}
+        {/* In-session build stamp — confirms which deploy is running. Tap to force-reload. */}
+        <div onClick={()=>{
+            if (typeof window !== 'undefined' && window.location) {
+              window.location.reload();
+            }
+          }}
+          style={{textAlign:"center",marginTop:4,padding:"4px 0",cursor:"pointer",
+            fontFamily:"'JetBrains Mono',monospace",fontWeight:600,
+            fontSize:9,color:"rgba(255,255,255,0.14)",letterSpacing:"0.12em"}}>
+          {BUILD_VERSION} · TAP TO RELOAD
+        </div>
       </div>
 
       {/* ── EXERCISE PICKER OVERLAY ───────────────────────────── */}

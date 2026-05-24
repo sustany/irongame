@@ -36,6 +36,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Force the new service worker to activate immediately on install (no waiting
+        // for all PWA windows to close). Combined with clientsClaim, this makes new
+        // deploys reachable on the next page open instead of after a full quit.
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
