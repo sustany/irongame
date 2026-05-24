@@ -581,7 +581,8 @@ export default function IronGame(){
   const [newExWeight,   setNewExWeight]   = useState("");
   const [newExReps,     setNewExReps]     = useState("10");
   const [newExMaxWt,    setNewExMaxWt]    = useState("");   // gym ceiling — max available weight
-  const [newExDuplicate,setNewExDuplicate]= useState(null); // {name, score} when fuzzy match found
+  const [newExDuplicate,setNewExDuplicate]= useState(null);
+  const [newExPicked,   setNewExPicked]   = useState(false); // true after user selects from dropdown // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
 
@@ -1629,7 +1630,7 @@ export default function IronGame(){
                 color:C.wht,letterSpacing:"0.1em"}}>Change Exercise</div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {/* + New Exercise button */}
-                <button className="t" onClick={()=>{setShowNewExForm(v=>!v);setNewExName("");setNewExWeight("");setNewExReps("10");setNewExMaxWt("");}}
+                <button className="t" onClick={()=>{setShowNewExForm(v=>!v);setNewExName("");setNewExWeight("");setNewExReps("10");setNewExMaxWt("");setNewExPicked(false);}}
                   style={{fontFamily:"'Bebas Neue',sans-serif",fontWeight:700,
                     fontSize:14,color:"#fff",letterSpacing:"0.1em",
                     background:C.red,border:"none",
@@ -1657,7 +1658,7 @@ export default function IronGame(){
                   New Exercise
                 </div>
                 <input value={newExName}
-                  onChange={e=>{ setNewExName(e.target.value); setNewExDuplicate(null); }}
+                  onChange={e=>{ setNewExName(e.target.value); setNewExDuplicate(null); setNewExPicked(false); }}
                   placeholder="Type exercise name…"
                   style={{width:"100%",boxSizing:"border-box",
                     fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
@@ -1665,14 +1666,14 @@ export default function IronGame(){
                     borderRadius:8,padding:"10px 12px",color:C.wht,
                     marginBottom:8,outline:"none"}}/>
 
-                {/* Autocomplete suggestions from library */}
-                {suggestions.length>0&&newExName.length>=2&&(
+                {/* Autocomplete suggestions — hidden once user picks one */}
+                {!newExPicked&&suggestions.length>0&&newExName.length>=2&&(
                   <div style={{background:"rgba(0,0,0,0.4)",
                     border:`1px solid ${C.bdr}`,borderRadius:8,marginBottom:8,
                     overflow:"hidden",maxHeight:200,overflowY:"auto"}}>
                     {suggestions.map(s=>(
                       <button key={s.canonical} className="t"
-                        onClick={()=>{ setNewExName(s.canonical); setNewExDuplicate(null); }}
+                        onClick={()=>{ setNewExName(s.canonical); setNewExPicked(true); setNewExDuplicate(null); }}
                         style={{width:"100%",textAlign:"left",padding:"10px 12px",
                           background:"transparent",border:"none",cursor:"pointer",
                           borderBottom:`1px solid ${C.bdr}`,
@@ -1729,6 +1730,23 @@ export default function IronGame(){
                   </div>
                 )}
 
+                {/* Gym ceiling — max available weight at this gym */}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,fontWeight:700,
+                    color:"rgba(255,180,0,0.6)",letterSpacing:"0.12em",
+                    textTransform:"uppercase",marginBottom:5}}>
+                    Gym Max (optional — max weight available at your gym)
+                  </div>
+                  <input value={newExMaxWt} onChange={e=>setNewExMaxWt(e.target.value)}
+                    placeholder="e.g. 100 for 100 lb dumbbells"
+                    type="number"
+                    style={{width:"100%",boxSizing:"border-box",
+                      fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
+                      background:"rgba(255,180,0,0.06)",
+                      border:`1px solid rgba(255,180,0,0.35)`,
+                      borderRadius:8,padding:"10px 12px",color:"#ffb400",
+                      outline:"none"}}/>
+                </div>
                 <div style={{display:"flex",gap:8,marginBottom:8}}>
                   <input value={newExWeight} onChange={e=>setNewExWeight(e.target.value)}
                     placeholder="PR weight (lbs)" type="number"
@@ -1740,21 +1758,6 @@ export default function IronGame(){
                     style={{flex:1,fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
                       background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
                       borderRadius:8,padding:"10px 12px",color:C.wht,outline:"none"}}/>
-                </div>
-                {/* Gym ceiling — max available weight */}
-                <input value={newExMaxWt} onChange={e=>setNewExMaxWt(e.target.value)}
-                  placeholder="Gym max (lbs) — optional but recommended"
-                  type="number"
-                  style={{width:"100%",boxSizing:"border-box",
-                    fontFamily:"'Inter',sans-serif",fontSize:13,fontWeight:600,
-                    background:"rgba(255,180,0,0.06)",
-                    border:`1px solid rgba(255,180,0,0.35)`,
-                    borderRadius:8,padding:"10px 12px",color:"#ffb400",
-                    outline:"none",marginBottom:10}}/>
-                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,fontWeight:600,
-                  color:"rgba(255,180,0,0.5)",letterSpacing:"0.06em",marginBottom:12,
-                  textTransform:"uppercase",marginTop:-6}}>
-                  Max weight available at your gym for this exercise
                 </div>
                 <button className="t"
                   onClick={()=>{
