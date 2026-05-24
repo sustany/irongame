@@ -344,21 +344,7 @@ function calcPlates(target, from, bilateral, maxPlate=45) {
   return { plates, action: diff>0?"add":"remove", bilateral };
 }
 // Generates "Loaded: 2×45 + 2×25 + 2×10 = 160" from adjWt + fromWt
-function describeLoad(wt, fromWt, bilateral, maxPlate=45){
-  if(!wt||wt<=0) return "Load";
-  const diff=wt-(fromWt||0);
-  if(diff<=0) return `${wt} lbs`;
-  const perSide=bilateral ? diff/2 : diff;
-  const sizes=[45,25,10,5].filter(p=>p<=(maxPlate||45));
-  const parts=[];
-  let rem=Math.round(perSide);
-  for(const p of sizes){
-    const n=Math.floor(rem/p);
-    if(n>0){parts.push(`${bilateral?n*2:n}×${p}`);rem-=n*p;}
-  }
-  const barStr=fromWt>0?`${fromWt}lb bar + `:"";
-  return "Loaded: "+barStr+parts.join(" + ");
-}
+// Removed 2026-05-24: visible plate badges replaced this text breakdown.
 
 function suggestW(name,si,lw,lr,prs){
   const pr=prs[name];
@@ -1366,10 +1352,6 @@ export default function IronGame(){
                   Mandatory
                 </span>
               )}
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
-                fontSize:11,color:C.md,letterSpacing:"0.14em",textTransform:"uppercase"}}>
-                {m.tier}
-              </span>
             </div>
 
             <div style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
@@ -1525,7 +1507,7 @@ export default function IronGame(){
                 boxShadow:"0 3px 14px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div>
-                    <SL color={C.md}>Start HR · BPM</SL>
+                    <SL color={C.md}>Start HR</SL>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
                       lineHeight:1,color:isCompound?C.red:C.wht,marginTop:2}}>
                       {m.tier==="P1" ? START_HR.compound_p1
