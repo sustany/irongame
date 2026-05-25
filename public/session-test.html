@@ -114,7 +114,7 @@ const nudge = {
   cursor: "pointer", fontFamily: F,
   display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
 };
-const lbl = { color: "#555", fontSize: 10, letterSpacing: 2, textTransform: "uppercase" };
+const lbl = { color: "#888", fontSize: 10, letterSpacing: 2, textTransform: "uppercase" };
 const SAT = "max(env(safe-area-inset-top, 0px), 0px)";
 const SAB = "max(env(safe-area-inset-bottom, 20px), 20px)";
 
@@ -172,7 +172,7 @@ function HomeScreen({ onBegin }) {
             <span style={{ color: RED, fontSize: 38, fontWeight: 700, letterSpacing: -1, lineHeight: 1 }}>IRON</span>
             <span style={{ fontSize: 38, fontWeight: 700, letterSpacing: -1, lineHeight: 1 }}>GAME</span>
           </div>
-          <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginTop: 2 }}>AI WORKOUT COACH</div>
+          <div style={{ color: "#888", fontSize: 11, letterSpacing: 3, marginTop: 2 }}>AI WORKOUT COACH</div>
         </div>
         {/* Hamburger */}
         <button onClick={() => setMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", flexDirection: "column", gap: 5, marginTop: 6 }}>
@@ -192,12 +192,12 @@ function HomeScreen({ onBegin }) {
 
       {/* Training format */}
       <div style={{ padding: "0 16px" }}>
-        <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>TRAINING FORMAT</div>
+        <div style={{ color: "#888", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>TRAINING FORMAT</div>
         <div style={{ display: "flex", gap: 10 }}>
           {[["STANDARD","65 MIN","5 EXERCISES"],["EXTENDED","70–75 MIN","6 EXERCISES"]].map(([id, time, exer]) => (
             <button key={id} onClick={() => setFormat(id)} style={{ flex: 1, background: format === id ? RED : "#1e1e1e", border: format === id ? "none" : "1px solid #2e2e2e", borderRadius: 10, padding: "14px 10px", cursor: "pointer", textAlign: "left" }}>
               <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1.5 }}>{format === id ? "⏱ " : "+ "}{id}{format === id ? " ✓" : ""}</div>
-              <div style={{ color: format === id ? "rgba(255,255,255,0.7)" : "#555", fontSize: 11, marginTop: 4 }}>{time} · {exer}</div>
+              <div style={{ color: format === id ? "rgba(255,255,255,0.85)" : "#888", fontSize: 11, marginTop: 4 }}>{time} · {exer}</div>
             </button>
           ))}
         </div>
@@ -207,7 +207,7 @@ function HomeScreen({ onBegin }) {
 
       {/* Session type */}
       <div style={{ padding: "0 16px" }}>
-        <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>SESSION TYPE</div>
+        <div style={{ color: "#888", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>SESSION TYPE</div>
         <div style={{ display: "flex", gap: 10 }}>
           {[
             { id: "PUSH", sub: "CHEST\nSHOULDERS · TRICEPS" },
@@ -217,7 +217,7 @@ function HomeScreen({ onBegin }) {
             <button key={s.id} onClick={() => setSession(s.id)} style={{ flex: 1, background: session === s.id ? RED : "#1e1e1e", border: session === s.id ? "none" : "1px solid #2e2e2e", borderRadius: 10, padding: "16px 8px 14px", cursor: "pointer", textAlign: "center", position: "relative" }}>
               {session === s.id && <div style={{ position: "absolute", top: 8, right: 8, background: "#fff", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: RED, fontWeight: 900 }}>✓</div>}
               <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1.5 }}>{s.id}</div>
-              <div style={{ color: session === s.id ? "rgba(255,255,255,0.65)" : "#555", fontSize: 9.5, marginTop: 6, lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.sub}</div>
+              <div style={{ color: session === s.id ? "rgba(255,255,255,0.8)" : "#888", fontSize: 9.5, marginTop: 6, lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.sub}</div>
             </button>
           ))}
         </div>
@@ -240,7 +240,7 @@ function HomeScreen({ onBegin }) {
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ color: "#555", fontSize: 12, letterSpacing: 1 }}>Opens with</span>
+          <span style={{ color: "#888", fontSize: 12, letterSpacing: 1 }}>Opens with</span>
           <div style={{ background: "#2a2a2a", border: "1px solid #333", borderRadius: 6, padding: "5px 12px", fontSize: 12, letterSpacing: 1 }}>{ex.exercises[0].name} <span style={{ color: RED }}>▼</span></div>
         </div>
       </div>
@@ -262,7 +262,7 @@ function HomeScreen({ onBegin }) {
         </button>
       </div>
 
-      <div style={{ textAlign: "center", color: "#333", fontSize: 10, letterSpacing: 2, paddingBottom: 16 }}>ALPHA · v0.1</div>
+      <div style={{ textAlign: "center", color: "#666", fontSize: 10, letterSpacing: 2, paddingBottom: 16 }}>ALPHA · v0.1</div>
     </div>
   );
 }
@@ -332,8 +332,8 @@ function SessionScreen({ sessionType, format, onEnd }) {
         <div style={{ padding: `max(${SAT},32px) 24px 24px`, textAlign: "center" }}>
           <div style={{ color: "#4a8a4a", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>SESSION COMPLETE</div>
           <div style={{ fontSize: 80, fontWeight: 700, lineHeight: 1 }}>{sc.tot}</div>
-          <div style={{ color: "#555", fontSize: 14, letterSpacing: 2, marginTop: 6 }}>OUT OF 100 PTS</div>
-          <div style={{ color: "#3a3a3a", fontSize: 12, letterSpacing: 1, marginTop: 6 }}>{fmt(elapsed)} · {sessionType} · {format}</div>
+          <div style={{ color: "#999", fontSize: 14, letterSpacing: 2, marginTop: 6 }}>OUT OF 100 PTS</div>
+          <div style={{ color: "#777", fontSize: 12, letterSpacing: 1, marginTop: 6 }}>{fmt(elapsed)} · {sessionType} · {format}</div>
         </div>
         <div style={{ margin: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {[["Muscle Dev", sc.mu, 45],["Intensity", sc.it, 25],["Cardio", sc.ca, 15],["Foundation", sc.fo, 15]].map(([label, val, max]) => (
@@ -343,7 +343,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
               <div style={{ height: 3, background: "#2a2a2a", borderRadius: 2, marginTop: 10 }}>
                 <div style={{ height: "100%", width: `${Math.round((val/max)*100)}%`, background: RED, borderRadius: 2 }} />
               </div>
-              <div style={{ color: "#3a3a3a", fontSize: 9, marginTop: 4 }}>/ {max}</div>
+              <div style={{ color: "#777", fontSize: 9, marginTop: 4 }}>/ {max}</div>
             </div>
           ))}
         </div>
@@ -356,7 +356,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
                 <div key={i} style={{ padding: "12px 16px", borderBottom: i < exercises.length - 1 ? "1px solid #1e1e1e" : "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ color: "#aaa", fontSize: 13, fontWeight: 700 }}>{e.name}</div>
-                    <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>{e.primary}</div>
+                    <div style={{ color: "#888", fontSize: 10, marginTop: 2 }}>{e.primary}</div>
                   </div>
                   <div style={{ color: top && top.pr ? "#4a8a4a" : "#fff", fontSize: 15, fontWeight: 700 }}>
                     {top ? `${top.weight} × ${top.reps}${top.pr ? " PR" : ""}` : "—"}
@@ -387,12 +387,12 @@ function SessionScreen({ sessionType, format, onEnd }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
             <span style={{ color: RED, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>{sessionType}</span>
-            <span style={{ color: "#444", fontSize: 12 }}> · {format}</span>
+            <span style={{ color: "#aaa", fontSize: 12 }}> · {format}</span>
           </div>
           <div style={{ color: "#666", fontSize: 14 }}>{fmt(elapsed)}</div>
           <div>
             <span style={{ color: RED, fontSize: 22, fontWeight: 700 }}>{sc.tot}</span>
-            <span style={{ color: "#444", fontSize: 12 }}> / 100</span>
+            <span style={{ color: "#aaa", fontSize: 12 }}> / 100</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -402,8 +402,8 @@ function SessionScreen({ sessionType, format, onEnd }) {
                 <div style={{ height: "100%", width: `${Math.round((val/max)*100)}%`, background: RED, borderRadius: 2, transition: "width 0.4s" }} />
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
-                <span style={{ color: "#333", fontSize: 9 }}>{label}</span>
-                <span style={{ color: "#555", fontSize: 9 }}>{val}</span>
+                <span style={{ color: "#777", fontSize: 9 }}>{label}</span>
+                <span style={{ color: "#888", fontSize: 9 }}>{val}</span>
               </div>
             </div>
           ))}
@@ -416,7 +416,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
           const cnt = allSets[i].filter(s => s.t === "W").length;
           const fin = cnt >= TARGET_SETS;
           return (
-            <button key={i} onClick={() => setExIdx(i)} style={{ flex: 1, minHeight: 44, background: i === exIdx ? RED : fin ? "#1a2a1a" : "#1e1e1e", border: i === exIdx ? "none" : fin ? "1px solid #2a4a2a" : "1px solid #2e2e2e", borderRadius: 8, color: i === exIdx ? "#fff" : fin ? "#4a8a4a" : "#555", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: F }}>
+            <button key={i} onClick={() => setExIdx(i)} style={{ flex: 1, minHeight: 44, background: i === exIdx ? RED : fin ? "#1a2a1a" : "#1e1e1e", border: i === exIdx ? "none" : fin ? "1px solid #2a4a2a" : "1px solid #2e2e2e", borderRadius: 8, color: i === exIdx ? "#fff" : fin ? "#4a8a4a" : "#aaa", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: F }}>
               {i + 1}{fin ? "✓" : ""}
             </button>
           );
@@ -428,7 +428,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ flex: 1, paddingRight: 12 }}>
             <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>{ex.name}</div>
-            <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>{ex.primary}{ex.secondary ? ` · ${ex.secondary}` : ""}</div>
+            <div style={{ color: "#888", fontSize: 12, marginTop: 4 }}>{ex.primary}{ex.secondary ? ` · ${ex.secondary}` : ""}</div>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
             <div style={lbl}>PREV BEST</div>
@@ -452,7 +452,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
       {/* Rest timer */}
       {rest !== null && (
         <div style={{ margin: "10px 16px 0", background: "#111420", border: "1px solid #252840", borderRadius: 10, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "#555", fontSize: 11, letterSpacing: 2 }}>REST</span>
+          <span style={{ color: "#999", fontSize: 11, letterSpacing: 2 }}>REST</span>
           <span style={{ color: rest < 20 ? RED : "#aaa", fontSize: 28, fontWeight: 700 }}>{fmt(rest)}</span>
           <button onClick={() => setRest(null)} style={{ background: "none", border: "1px solid #252840", borderRadius: 8, color: "#555", fontSize: 11, padding: "8px 14px", cursor: "pointer", fontFamily: F, minHeight: 44 }}>SKIP</button>
         </div>
@@ -467,7 +467,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
             <span style={{ fontSize: 30, fontWeight: 700 }}>{weight}</span>
             <button style={nudge} onClick={() => setWeight(w => w + 5)}>+5</button>
           </div>
-          <div style={{ color: "#3a3a3a", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>{plates(weight)}</div>
+          <div style={{ color: "#777", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>{plates(weight)}</div>
           {addLbl && <div style={{ color: RED, fontSize: 10, textAlign: "center", marginTop: 3, letterSpacing: 1 }}>ADD {addLbl}</div>}
         </div>
         <div style={{ flex: 1, background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, padding: 14 }}>
@@ -477,7 +477,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
             <span style={{ fontSize: 30, fontWeight: 700 }}>{reps}</span>
             <button style={nudge} onClick={() => setReps(r => r + 1)}>+</button>
           </div>
-          <div style={{ color: "#3a3a3a", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>VOL {weight * reps}</div>
+          <div style={{ color: "#777", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>VOL {weight * reps}</div>
         </div>
       </div>
 
@@ -485,7 +485,7 @@ function SessionScreen({ sessionType, format, onEnd }) {
       <div style={{ margin: "10px 16px 0", background: "#1c1c1c", border: `1px solid ${hrOk ? "#2a4a2a" : hrHigh ? "#4a1a1a" : "#2a2a2a"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={lbl}>Start HR (BPM)</div>
-          <div style={{ color: "#333", fontSize: 10, marginTop: 4, letterSpacing: 1 }}>TARGET 108–115</div>
+          <div style={{ color: "#777", fontSize: 10, marginTop: 4, letterSpacing: 1 }}>TARGET 108–115</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {hrN > 0 && <span style={{ fontSize: 11, letterSpacing: 1, color: hrOk ? "#4a8a4a" : hrHigh ? RED : "#666" }}>{hrOk ? "READY" : hrHigh ? "WAIT" : "LOW"}</span>}
@@ -506,15 +506,15 @@ function SessionScreen({ sessionType, format, onEnd }) {
       {mySets.length > 0 && (
         <div style={{ margin: "10px 16px 0", background: "#161616", border: "1px solid #1e1e1e", borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "8px 14px", borderBottom: "1px solid #1e1e1e", display: "grid", gridTemplateColumns: "38px 1fr 1fr 1fr 1fr" }}>
-            {["SET","WGT","REPS","VOL","HR"].map(h => <span key={h} style={{ color: "#2e2e2e", fontSize: 9, letterSpacing: 1, textAlign: "right" }}>{h}</span>)}
+            {["SET","WGT","REPS","VOL","HR"].map(h => <span key={h} style={{ color: "#666", fontSize: 9, letterSpacing: 1, textAlign: "right" }}>{h}</span>)}
           </div>
           {mySets.map((s, i) => (
             <div key={i} style={{ padding: "9px 14px", borderBottom: i < mySets.length - 1 ? "1px solid #1a1a1a" : "none", display: "grid", gridTemplateColumns: "38px 1fr 1fr 1fr 1fr", background: s.pr ? "rgba(74,138,74,0.08)" : "transparent" }}>
-              <span style={{ color: s.t === "W" ? "#777" : "#2e2e2e", fontSize: 11 }}>{s.t === "W" ? `W${s.n}` : "WU"}</span>
+              <span style={{ color: s.t === "W" ? "#bbb" : "#777", fontSize: 11 }}>{s.t === "W" ? `W${s.n}` : "WU"}</span>
               <span style={{ color: s.pr ? "#4a8a4a" : "#fff", fontSize: 13, fontWeight: 700, textAlign: "right" }}>{s.weight}{s.pr ? "✓" : ""}</span>
               <span style={{ color: "#888", fontSize: 13, textAlign: "right" }}>{s.reps}</span>
-              <span style={{ color: "#3a3a3a", fontSize: 12, textAlign: "right" }}>{s.vol}</span>
-              <span style={{ color: "#3a3a3a", fontSize: 12, textAlign: "right" }}>{s.hr || "—"}</span>
+              <span style={{ color: "#777", fontSize: 12, textAlign: "right" }}>{s.vol}</span>
+              <span style={{ color: "#777", fontSize: 12, textAlign: "right" }}>{s.hr || "—"}</span>
             </div>
           ))}
         </div>
@@ -522,8 +522,8 @@ function SessionScreen({ sessionType, format, onEnd }) {
 
       {/* Nav */}
       <div style={{ margin: "12px 16px 0", display: "flex", gap: 10 }}>
-        <button onClick={() => exIdx > 0 && setExIdx(exIdx - 1)} disabled={exIdx === 0} style={{ flex: 1, minHeight: 52, background: "none", border: "1px solid #222", borderRadius: 10, color: exIdx === 0 ? "#222" : "#555", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === 0 ? "default" : "pointer", fontFamily: F }}>PREV</button>
-        <button onClick={() => exIdx < exercises.length - 1 && setExIdx(exIdx + 1)} disabled={exIdx === exercises.length - 1} style={{ flex: 2, minHeight: 52, background: "#1a1a1a", border: "1px solid #222", borderRadius: 10, color: exIdx === exercises.length - 1 ? "#222" : "#888", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === exercises.length - 1 ? "default" : "pointer", fontFamily: F }}>NEXT EXERCISE</button>
+        <button onClick={() => exIdx > 0 && setExIdx(exIdx - 1)} disabled={exIdx === 0} style={{ flex: 1, minHeight: 52, background: "none", border: "1px solid #222", borderRadius: 10, color: exIdx === 0 ? "#444" : "#999", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === 0 ? "default" : "pointer", fontFamily: F }}>PREV</button>
+        <button onClick={() => exIdx < exercises.length - 1 && setExIdx(exIdx + 1)} disabled={exIdx === exercises.length - 1} style={{ flex: 2, minHeight: 52, background: "#1a1a1a", border: "1px solid #222", borderRadius: 10, color: exIdx === exercises.length - 1 ? "#444" : "#bbb", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === exercises.length - 1 ? "default" : "pointer", fontFamily: F }}>NEXT EXERCISE</button>
       </div>
 
       {/* Complete */}
