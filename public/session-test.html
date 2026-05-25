@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IronGame">
+  <title>IronGame</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body, #root { background: #111; min-height: 100dvh; }
+    body { font-family: 'Oswald', 'Arial Narrow', Impact, sans-serif; color: #fff; overflow-x: hidden; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+    button { touch-action: manipulation; -webkit-appearance: none; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const F = "'Oswald','Arial Narrow',Impact,sans-serif";
+const RED = "#E84040";
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function plates(lbs) {
+  const sizes = [45, 25, 10, 5];
+  let rem = Math.max(0, lbs), parts = [];
+  for (const p of sizes) {
+    if (rem >= p) { const n = Math.floor(rem / p); parts.push(n + "×" + p); rem -= n * p; }
+  }
+  return parts.length ? parts.join(" + ") : "—";
+}
+function addPlates(from, to) { return to > from ? plates(to - from) : null; }
+function fmt(s) { return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+
+const DAYS = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function getDate() {
+  const d = new Date();
+  return { day: DAYS[d.getDay()], date: MONTHS[d.getMonth()] + " " + d.getDate() };
+}
+
+// ── Session definitions ───────────────────────────────────────────────
+const SESSIONS = {
+  PUSH: {
+    label: "CHEST · SHOULDERS · TRICEPS",
+    exercises: [
+      { name: "Incline Press (Machine)", primary: "Chest",     secondary: "Front Delts", tW: 180, tR: 8,  pb: { w: 180, r: 8  } },
+      { name: "Military Press PL",       primary: "Shoulders", secondary: "Triceps",     tW: 180, tR: 8,  pb: { w: 180, r: 8  } },
+      { name: "Dumbbell Fly",            primary: "Chest",     secondary: null,           tW: 50,  tR: 12, pb: { w: 50,  r: 10 } },
+      { name: "Lateral Raise DB",        primary: "Shoulders", secondary: null,           tW: 30,  tR: 15, pb: { w: 30,  r: 12 } },
+      { name: "Weighted Crunches",       primary: "Core",      secondary: null,           tW: 90,  tR: 10, pb: { w: 90,  r: 10 } },
+    ]
+  },
+  PULL: {
+    label: "BACK · BICEPS · REAR DELTS",
+    exercises: [
+      { name: "Lat Pull-Down PL",  primary: "Back",       secondary: "Biceps",  tW: 200, tR: 10, pb: { w: 200, r: 9  } },
+      { name: "Row PL",            primary: "Back",       secondary: "Traps",   tW: 230, tR: 8,  pb: { w: 230, r: 8  } },
+      { name: "Bicep Curl DB",     primary: "Biceps",     secondary: null,      tW: 60,  tR: 12, pb: { w: 60,  r: 10 } },
+      { name: "Face Pull",         primary: "Rear Delts", secondary: null,      tW: 80,  tR: 15, pb: { w: 80,  r: 12 } },
+      { name: "Rear Delt Fly DB",  primary: "Rear Delts", secondary: null,      tW: 35,  tR: 12, pb: { w: 35,  r: 12 } },
+    ]
+  },
+  LEGS: {
+    label: "QUADS · HAMS · GLUTES · CALVES",
+    exercises: [
+      { name: "Hack Squat",        primary: "Quads",   secondary: "Glutes",  tW: 270, tR: 8,  pb: { w: 270, r: 8  } },
+      { name: "Leg Curl",          primary: "Hamstrings", secondary: null,   tW: 200, tR: 6,  pb: { w: 200, r: 6  } },
+      { name: "Calf Raise",        primary: "Calves",  secondary: null,      tW: 410, tR: 9,  pb: { w: 410, r: 9  } },
+      { name: "Leg Press",         primary: "Quads",   secondary: "Glutes",  tW: 360, tR: 10, pb: { w: 360, r: 10 } },
+      { name: "Weighted Crunches", primary: "Core",    secondary: null,      tW: 90,  tR: 10, pb: { w: 90,  r: 10 } },
+    ]
+  }
+};
+
+const FORMAT_META = {
+  STANDARD: { min: 65, exCount: 5 },
+  EXTENDED: { min: 75, exCount: 6 },
+};
+
+const TARGET_SETS = 3;
+
+// ── Scoring ───────────────────────────────────────────────────────────
+function calcScore(allSets, exercises) {
+  let tw = 0, mu = 0, fo = 0;
+  allSets.forEach(sets => {
+    const w = sets.filter(s => s.t === "W");
+    mu += Math.min(w.length, TARGET_SETS) * 3;
+    fo += sets.some(s => s.t === "U") ? 3 : 0;
+    tw += w.length;
+  });
+  mu = Math.min(mu, 45); fo = Math.min(fo, 15);
+  const it = Math.min(Math.round((tw / (exercises.length * TARGET_SETS)) * 25), 25);
+  const hrs = allSets.flat().filter(s => s.hr);
+  const avg = hrs.length ? hrs.reduce((a, s) => a + s.hr, 0) / hrs.length : 0;
+  const ca = avg >= 126 ? 15 : avg >= 108 ? 10 : avg > 0 ? 5 : 0;
+  return { mu, it, ca, fo, tot: mu + it + ca + fo };
+}
+
+// ── Shared nudge button style ─────────────────────────────────────────
+const nudge = {
+  background: "#2a2a2a", border: "none", borderRadius: 8,
+  color: "#fff", fontSize: 18, fontWeight: 700,
+  width: 48, height: 48, minWidth: 48,
+  cursor: "pointer", fontFamily: F,
+  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+};
+const lbl = { color: "#555", fontSize: 10, letterSpacing: 2, textTransform: "uppercase" };
+const SAT = "max(env(safe-area-inset-top, 0px), 0px)";
+const SAB = "max(env(safe-area-inset-bottom, 20px), 20px)";
+
+// ══════════════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════════════════════════════════════
+function HomeScreen({ onBegin }) {
+  const [format,  setFormat]  = useState("STANDARD");
+  const [session, setSession] = useState("PULL");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { day, date } = getDate();
+  const meta = FORMAT_META[format];
+  const ex   = SESSIONS[session];
+  const totalReps = ex.exercises.reduce((a, e) => a + e.tR * TARGET_SETS, 0);
+
+  const MENU_ITEMS = [
+    { icon: "👤", label: "Profile",          sub: "Stats, goals, body comp" },
+    { icon: "📋", label: "Session History",  sub: "Past workouts & PRs" },
+    { icon: "📈", label: "Progress",         sub: "Lift trends & body metrics" },
+    { icon: "🏋️", label: "Exercise Library", sub: "All movements & benchmarks" },
+    { icon: "⚙️",  label: "Settings",        sub: "Units, notifications, display" },
+    { icon: "ℹ️",  label: "About",           sub: "Version, credits, changelog" },
+  ];
+
+  return (
+    <div style={{ background: "#111", minHeight: "100dvh", position: "relative" }}>
+
+      {/* Drawer overlay */}
+      {menuOpen && <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50 }} />}
+
+      {/* Drawer */}
+      <div style={{ position: "fixed", top: 0, right: 0, width: "72vw", maxWidth: 300, height: "100dvh", background: "#1a1a1a", borderLeft: "1px solid #2a2a2a", zIndex: 60, transform: menuOpen ? "translateX(0)" : "translateX(110%)", transition: "transform 0.26s cubic-bezier(.4,0,.2,1)", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: RED, padding: `max(${SAT},18px) 20px 14px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 2 }}>MENU</span>
+          <button onClick={() => setMenuOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontFamily: F }}>✕</button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {MENU_ITEMS.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", borderBottom: "1px solid #222", cursor: "pointer" }}>
+              <span style={{ fontSize: 22, width: 28, textAlign: "center" }}>{item.icon}</span>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 1 }}>{item.label}</div>
+                <div style={{ color: "#666", fontSize: 11, marginTop: 2 }}>{item.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid #222", color: "#444", fontSize: 10, letterSpacing: 1 }}>ALPHA · v0.1</div>
+      </div>
+
+      {/* Top bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: `max(${SAT},18px) 20px 0` }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "baseline" }}>
+            <span style={{ color: RED, fontSize: 38, fontWeight: 700, letterSpacing: -1, lineHeight: 1 }}>IRON</span>
+            <span style={{ fontSize: 38, fontWeight: 700, letterSpacing: -1, lineHeight: 1 }}>GAME</span>
+          </div>
+          <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginTop: 2 }}>AI WORKOUT COACH</div>
+        </div>
+        {/* Hamburger */}
+        <button onClick={() => setMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "6px", display: "flex", flexDirection: "column", gap: 5, marginTop: 6 }}>
+          {[0,1,2].map(i => <div key={i} style={{ width: 26, height: 2.5, background: "#fff", borderRadius: 2 }} />)}
+        </button>
+      </div>
+
+      {/* Date badge */}
+      <div style={{ padding: "10px 20px 0", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ border: `2px solid ${RED}`, borderRadius: 6, padding: "4px 14px", textAlign: "right" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 2, lineHeight: 1.1 }}>{day}</div>
+          <div style={{ color: "#aaa", fontSize: 13, letterSpacing: 1 }}>{date}</div>
+        </div>
+      </div>
+
+      <div style={{ height: 20 }} />
+
+      {/* Training format */}
+      <div style={{ padding: "0 16px" }}>
+        <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>TRAINING FORMAT</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {[["STANDARD","65 MIN","5 EXERCISES"],["EXTENDED","70–75 MIN","6 EXERCISES"]].map(([id, time, exer]) => (
+            <button key={id} onClick={() => setFormat(id)} style={{ flex: 1, background: format === id ? RED : "#1e1e1e", border: format === id ? "none" : "1px solid #2e2e2e", borderRadius: 10, padding: "14px 10px", cursor: "pointer", textAlign: "left" }}>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1.5 }}>{format === id ? "⏱ " : "+ "}{id}{format === id ? " ✓" : ""}</div>
+              <div style={{ color: format === id ? "rgba(255,255,255,0.7)" : "#555", fontSize: 11, marginTop: 4 }}>{time} · {exer}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ height: 20 }} />
+
+      {/* Session type */}
+      <div style={{ padding: "0 16px" }}>
+        <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>SESSION TYPE</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {[
+            { id: "PUSH", sub: "CHEST\nSHOULDERS · TRICEPS" },
+            { id: "PULL", sub: "BACK · BICEPS\nREAR DELTS" },
+            { id: "LEGS", sub: "QUADS · HAMS\nGLUTES · CALVES" },
+          ].map(s => (
+            <button key={s.id} onClick={() => setSession(s.id)} style={{ flex: 1, background: session === s.id ? RED : "#1e1e1e", border: session === s.id ? "none" : "1px solid #2e2e2e", borderRadius: 10, padding: "16px 8px 14px", cursor: "pointer", textAlign: "center", position: "relative" }}>
+              {session === s.id && <div style={{ position: "absolute", top: 8, right: 8, background: "#fff", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: RED, fontWeight: 900 }}>✓</div>}
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1.5 }}>{s.id}</div>
+              <div style={{ color: session === s.id ? "rgba(255,255,255,0.65)" : "#555", fontSize: 9.5, marginTop: 6, lineHeight: 1.5, whiteSpace: "pre-line" }}>{s.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ height: 20 }} />
+
+      {/* Session preview */}
+      <div style={{ margin: "0 16px", background: "#1c1c1c", border: `1px solid ${RED}`, borderRadius: 12, padding: "16px" }}>
+        <div style={{ color: RED, fontSize: 10, letterSpacing: 3, marginBottom: 8 }}>SESSION PREVIEW</div>
+        <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: 0.5, marginBottom: 14 }}>{ex.label}</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          {[
+            `${meta.exCount} EXERCISES`,
+            `${meta.min} MIN`,
+            `${totalReps} REPS`,
+            "100 PTS",
+          ].map((pill, i) => (
+            <div key={i} style={{ background: i === 3 ? RED : "#2a2a2a", border: i === 3 ? "none" : "1px solid #333", borderRadius: 6, padding: "6px 12px", fontSize: 11, fontWeight: 700, letterSpacing: 1.5 }}>{pill}</div>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ color: "#555", fontSize: 12, letterSpacing: 1 }}>Opens with</span>
+          <div style={{ background: "#2a2a2a", border: "1px solid #333", borderRadius: 6, padding: "5px 12px", fontSize: 12, letterSpacing: 1 }}>{ex.exercises[0].name} <span style={{ color: RED }}>▼</span></div>
+        </div>
+      </div>
+
+      <div style={{ height: 24 }} />
+
+      {/* Begin button */}
+      <div style={{ padding: "0 16px" }}>
+        <button onClick={() => onBegin(session, format)} style={{ width: "100%", background: RED, border: "none", borderRadius: 10, padding: 20, color: "#fff", fontSize: 17, fontWeight: 700, letterSpacing: 3, cursor: "pointer", fontFamily: F }}>
+          BEGIN {session} SESSION
+        </button>
+      </div>
+
+      <div style={{ height: 12 }} />
+
+      <div style={{ padding: "0 16px", paddingBottom: SAB }}>
+        <button style={{ width: "100%", background: "none", border: "none", color: "#444", fontSize: 11, letterSpacing: 2, cursor: "pointer", padding: 10, fontFamily: F }}>
+          ← RESET SELECTIONS
+        </button>
+      </div>
+
+      <div style={{ textAlign: "center", color: "#333", fontSize: 10, letterSpacing: 2, paddingBottom: 16 }}>ALPHA · v0.1</div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SESSION SCREEN
+// ══════════════════════════════════════════════════════════════════════
+function SessionScreen({ sessionType, format, onEnd }) {
+  const exercises = SESSIONS[sessionType].exercises;
+  const [exIdx,   setExIdx]   = useState(0);
+  const [allSets, setAllSets] = useState(exercises.map(() => []));
+  const [weight,  setWeight]  = useState(exercises[0].tW);
+  const [reps,    setReps]    = useState(exercises[0].tR);
+  const [hr,      setHr]      = useState("");
+  const [rest,    setRest]    = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [prFlash, setPrFlash] = useState(false);
+  const [done,    setDone]    = useState(false);
+  const restRef = useRef(null);
+
+  useEffect(() => {
+    if (done) return;
+    const t = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [done]);
+
+  useEffect(() => {
+    clearTimeout(restRef.current);
+    if (rest === null || rest <= 0) { setRest(null); return; }
+    restRef.current = setTimeout(() => setRest(r => r - 1), 1000);
+    return () => clearTimeout(restRef.current);
+  }, [rest]);
+
+  useEffect(() => {
+    setWeight(exercises[exIdx].tW);
+    setReps(exercises[exIdx].tR);
+    setHr("");
+  }, [exIdx]);
+
+  const ex      = exercises[exIdx];
+  const mySets  = allSets[exIdx];
+  const working = mySets.filter(s => s.t === "W");
+  const sc      = calcScore(allSets, exercises);
+  const lastW   = working.length ? working[working.length - 1].weight : null;
+  const addLbl  = lastW !== null ? addPlates(lastW, weight) : null;
+  const allDone = allSets.every(s => s.filter(x => x.t === "W").length >= TARGET_SETS);
+  const hrN     = parseInt(hr) || 0;
+  const hrOk    = hrN >= 108 && hrN <= 115;
+  const hrHigh  = hrN > 115;
+
+  function isPR(i, w, r) { const pb = exercises[i].pb; return w > pb.w || (w === pb.w && r > pb.r); }
+
+  function logSet(type) {
+    const pr  = type === "W" && isPR(exIdx, weight, reps);
+    const cnt = mySets.filter(s => s.t === type).length;
+    const set = { t: type, n: cnt + 1, weight, reps, vol: weight * reps, hr: hrN || null, pr };
+    setAllSets(prev => prev.map((s, i) => i === exIdx ? [...s, set] : s));
+    if (pr) { setPrFlash(true); setTimeout(() => setPrFlash(false), 2800); }
+    setRest(90);
+    setHr("");
+  }
+
+  // ── Completion screen ──────────────────────────────────────────────
+  if (done) {
+    return (
+      <div style={{ background: "#111", minHeight: "100dvh", overflowY: "auto" }}>
+        <div style={{ padding: `max(${SAT},32px) 24px 24px`, textAlign: "center" }}>
+          <div style={{ color: "#4a8a4a", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>SESSION COMPLETE</div>
+          <div style={{ fontSize: 80, fontWeight: 700, lineHeight: 1 }}>{sc.tot}</div>
+          <div style={{ color: "#555", fontSize: 14, letterSpacing: 2, marginTop: 6 }}>OUT OF 100 PTS</div>
+          <div style={{ color: "#3a3a3a", fontSize: 12, letterSpacing: 1, marginTop: 6 }}>{fmt(elapsed)} · {sessionType} · {format}</div>
+        </div>
+        <div style={{ margin: "0 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {[["Muscle Dev", sc.mu, 45],["Intensity", sc.it, 25],["Cardio", sc.ca, 15],["Foundation", sc.fo, 15]].map(([label, val, max]) => (
+            <div key={label} style={{ background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, padding: 16 }}>
+              <div style={lbl}>{label}</div>
+              <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4 }}>{val}</div>
+              <div style={{ height: 3, background: "#2a2a2a", borderRadius: 2, marginTop: 10 }}>
+                <div style={{ height: "100%", width: `${Math.round((val/max)*100)}%`, background: RED, borderRadius: 2 }} />
+              </div>
+              <div style={{ color: "#3a3a3a", fontSize: 9, marginTop: 4 }}>/ {max}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ margin: "16px 16px 0" }}>
+          <div style={{ ...lbl, marginBottom: 8 }}>TOP SETS</div>
+          <div style={{ background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, overflow: "hidden" }}>
+            {exercises.map((e, i) => {
+              const top = allSets[i].filter(s => s.t === "W").reduce((b, s) => (!b || s.weight > b.weight ? s : b), null);
+              return (
+                <div key={i} style={{ padding: "12px 16px", borderBottom: i < exercises.length - 1 ? "1px solid #1e1e1e" : "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ color: "#aaa", fontSize: 13, fontWeight: 700 }}>{e.name}</div>
+                    <div style={{ color: "#444", fontSize: 10, marginTop: 2 }}>{e.primary}</div>
+                  </div>
+                  <div style={{ color: top && top.pr ? "#4a8a4a" : "#fff", fontSize: 15, fontWeight: 700 }}>
+                    {top ? `${top.weight} × ${top.reps}${top.pr ? " PR" : ""}` : "—"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ margin: "16px 16px 0", paddingBottom: SAB }}>
+          <button style={{ width: "100%", background: RED, border: "none", borderRadius: 12, padding: 20, color: "#fff", fontSize: 16, fontWeight: 700, letterSpacing: 2, cursor: "pointer", fontFamily: F, marginBottom: 10 }}>
+            SAVE SESSION
+          </button>
+          <button onClick={onEnd} style={{ width: "100%", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, padding: 14, color: "#555", fontSize: 12, letterSpacing: 2, cursor: "pointer", fontFamily: F }}>
+            BACK TO HOME
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Active session ─────────────────────────────────────────────────
+  return (
+    <div style={{ background: "#111", minHeight: "100dvh", overflowY: "auto", paddingBottom: SAB }}>
+
+      {/* Header */}
+      <div style={{ background: "#1a1a1a", padding: `max(${SAT},14px) 16px 12px`, borderBottom: "1px solid #222", position: "sticky", top: 0, zIndex: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div>
+            <span style={{ color: RED, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>{sessionType}</span>
+            <span style={{ color: "#444", fontSize: 12 }}> · {format}</span>
+          </div>
+          <div style={{ color: "#666", fontSize: 14 }}>{fmt(elapsed)}</div>
+          <div>
+            <span style={{ color: RED, fontSize: 22, fontWeight: 700 }}>{sc.tot}</span>
+            <span style={{ color: "#444", fontSize: 12 }}> / 100</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[["MUS", sc.mu, 45],["INT", sc.it, 25],["HR", sc.ca, 15],["FND", sc.fo, 15]].map(([label, val, max]) => (
+            <div key={label} style={{ flex: 1 }}>
+              <div style={{ height: 3, background: "#2a2a2a", borderRadius: 2 }}>
+                <div style={{ height: "100%", width: `${Math.round((val/max)*100)}%`, background: RED, borderRadius: 2, transition: "width 0.4s" }} />
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 3 }}>
+                <span style={{ color: "#333", fontSize: 9 }}>{label}</span>
+                <span style={{ color: "#555", fontSize: 9 }}>{val}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Exercise tabs */}
+      <div style={{ display: "flex", padding: "12px 16px", gap: 8 }}>
+        {exercises.map((e, i) => {
+          const cnt = allSets[i].filter(s => s.t === "W").length;
+          const fin = cnt >= TARGET_SETS;
+          return (
+            <button key={i} onClick={() => setExIdx(i)} style={{ flex: 1, minHeight: 44, background: i === exIdx ? RED : fin ? "#1a2a1a" : "#1e1e1e", border: i === exIdx ? "none" : fin ? "1px solid #2a4a2a" : "1px solid #2e2e2e", borderRadius: 8, color: i === exIdx ? "#fff" : fin ? "#4a8a4a" : "#555", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: F }}>
+              {i + 1}{fin ? "✓" : ""}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Exercise card */}
+      <div style={{ margin: "0 16px", background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, padding: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1, paddingRight: 12 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>{ex.name}</div>
+            <div style={{ color: "#555", fontSize: 12, marginTop: 4 }}>{ex.primary}{ex.secondary ? ` · ${ex.secondary}` : ""}</div>
+          </div>
+          <div style={{ textAlign: "right", flexShrink: 0 }}>
+            <div style={lbl}>PREV BEST</div>
+            <div style={{ color: "#888", fontSize: 16, fontWeight: 700, marginTop: 4 }}>{ex.pb.w} × {ex.pb.r}</div>
+          </div>
+        </div>
+        <div style={{ height: 1, background: "#2a2a2a", margin: "12px 0" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={lbl}>WORKING SETS</div>
+          <div style={{ color: working.length >= TARGET_SETS ? "#4a8a4a" : "#fff", fontSize: 15, fontWeight: 700 }}>{working.length} / {TARGET_SETS}</div>
+        </div>
+      </div>
+
+      {/* PR flash */}
+      {prFlash && (
+        <div style={{ margin: "10px 16px 0", background: "#0d1f0d", border: "1px solid #2a5a2a", borderRadius: 10, padding: 14, textAlign: "center", color: "#4a8a4a", fontSize: 14, fontWeight: 700, letterSpacing: 3 }}>
+          NEW PERSONAL RECORD
+        </div>
+      )}
+
+      {/* Rest timer */}
+      {rest !== null && (
+        <div style={{ margin: "10px 16px 0", background: "#111420", border: "1px solid #252840", borderRadius: 10, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ color: "#555", fontSize: 11, letterSpacing: 2 }}>REST</span>
+          <span style={{ color: rest < 20 ? RED : "#aaa", fontSize: 28, fontWeight: 700 }}>{fmt(rest)}</span>
+          <button onClick={() => setRest(null)} style={{ background: "none", border: "1px solid #252840", borderRadius: 8, color: "#555", fontSize: 11, padding: "8px 14px", cursor: "pointer", fontFamily: F, minHeight: 44 }}>SKIP</button>
+        </div>
+      )}
+
+      {/* Weight + Reps */}
+      <div style={{ margin: "10px 16px 0", display: "flex", gap: 10 }}>
+        <div style={{ flex: 1, background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, padding: 14 }}>
+          <div style={lbl}>WEIGHT (LBS)</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+            <button style={nudge} onClick={() => setWeight(w => Math.max(5, w - 5))}>−5</button>
+            <span style={{ fontSize: 30, fontWeight: 700 }}>{weight}</span>
+            <button style={nudge} onClick={() => setWeight(w => w + 5)}>+5</button>
+          </div>
+          <div style={{ color: "#3a3a3a", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>{plates(weight)}</div>
+          {addLbl && <div style={{ color: RED, fontSize: 10, textAlign: "center", marginTop: 3, letterSpacing: 1 }}>ADD {addLbl}</div>}
+        </div>
+        <div style={{ flex: 1, background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 12, padding: 14 }}>
+          <div style={lbl}>REPS</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
+            <button style={nudge} onClick={() => setReps(r => Math.max(1, r - 1))}>−</button>
+            <span style={{ fontSize: 30, fontWeight: 700 }}>{reps}</span>
+            <button style={nudge} onClick={() => setReps(r => r + 1)}>+</button>
+          </div>
+          <div style={{ color: "#3a3a3a", fontSize: 9, textAlign: "center", marginTop: 8, letterSpacing: 1 }}>VOL {weight * reps}</div>
+        </div>
+      </div>
+
+      {/* HR */}
+      <div style={{ margin: "10px 16px 0", background: "#1c1c1c", border: `1px solid ${hrOk ? "#2a4a2a" : hrHigh ? "#4a1a1a" : "#2a2a2a"}`, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={lbl}>Start HR (BPM)</div>
+          <div style={{ color: "#333", fontSize: 10, marginTop: 4, letterSpacing: 1 }}>TARGET 108–115</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {hrN > 0 && <span style={{ fontSize: 11, letterSpacing: 1, color: hrOk ? "#4a8a4a" : hrHigh ? RED : "#666" }}>{hrOk ? "READY" : hrHigh ? "WAIT" : "LOW"}</span>}
+          <input type="number" inputMode="numeric" value={hr} onChange={e => setHr(e.target.value)} placeholder="—"
+            style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 8, color: "#fff", fontSize: 24, fontWeight: 700, width: 76, textAlign: "center", padding: 8, fontFamily: F, outline: "none" }} />
+        </div>
+      </div>
+
+      {/* Log buttons */}
+      <div style={{ margin: "10px 16px 0", display: "flex", gap: 10 }}>
+        <button onClick={() => logSet("U")} style={{ background: "#1c1c1c", border: "1px solid #2a2a2a", borderRadius: 10, padding: "0 14px", height: 56, color: "#555", fontSize: 11, letterSpacing: 1.5, cursor: "pointer", fontFamily: F, whiteSpace: "nowrap" }}>WARM-UP</button>
+        <button onClick={() => logSet("W")} style={{ flex: 1, height: 56, background: working.length >= TARGET_SETS ? "#1a2a1a" : RED, border: "none", borderRadius: 10, color: working.length >= TARGET_SETS ? "#4a8a4a" : "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 1.5, cursor: "pointer", fontFamily: F }}>
+          {working.length >= TARGET_SETS ? "LOG BONUS SET" : `LOG WORKING SET ${working.length + 1}`}
+        </button>
+      </div>
+
+      {/* Set log */}
+      {mySets.length > 0 && (
+        <div style={{ margin: "10px 16px 0", background: "#161616", border: "1px solid #1e1e1e", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ padding: "8px 14px", borderBottom: "1px solid #1e1e1e", display: "grid", gridTemplateColumns: "38px 1fr 1fr 1fr 1fr" }}>
+            {["SET","WGT","REPS","VOL","HR"].map(h => <span key={h} style={{ color: "#2e2e2e", fontSize: 9, letterSpacing: 1, textAlign: "right" }}>{h}</span>)}
+          </div>
+          {mySets.map((s, i) => (
+            <div key={i} style={{ padding: "9px 14px", borderBottom: i < mySets.length - 1 ? "1px solid #1a1a1a" : "none", display: "grid", gridTemplateColumns: "38px 1fr 1fr 1fr 1fr", background: s.pr ? "rgba(74,138,74,0.08)" : "transparent" }}>
+              <span style={{ color: s.t === "W" ? "#777" : "#2e2e2e", fontSize: 11 }}>{s.t === "W" ? `W${s.n}` : "WU"}</span>
+              <span style={{ color: s.pr ? "#4a8a4a" : "#fff", fontSize: 13, fontWeight: 700, textAlign: "right" }}>{s.weight}{s.pr ? "✓" : ""}</span>
+              <span style={{ color: "#888", fontSize: 13, textAlign: "right" }}>{s.reps}</span>
+              <span style={{ color: "#3a3a3a", fontSize: 12, textAlign: "right" }}>{s.vol}</span>
+              <span style={{ color: "#3a3a3a", fontSize: 12, textAlign: "right" }}>{s.hr || "—"}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Nav */}
+      <div style={{ margin: "12px 16px 0", display: "flex", gap: 10 }}>
+        <button onClick={() => exIdx > 0 && setExIdx(exIdx - 1)} disabled={exIdx === 0} style={{ flex: 1, minHeight: 52, background: "none", border: "1px solid #222", borderRadius: 10, color: exIdx === 0 ? "#222" : "#555", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === 0 ? "default" : "pointer", fontFamily: F }}>PREV</button>
+        <button onClick={() => exIdx < exercises.length - 1 && setExIdx(exIdx + 1)} disabled={exIdx === exercises.length - 1} style={{ flex: 2, minHeight: 52, background: "#1a1a1a", border: "1px solid #222", borderRadius: 10, color: exIdx === exercises.length - 1 ? "#222" : "#888", fontSize: 12, letterSpacing: 1.5, cursor: exIdx === exercises.length - 1 ? "default" : "pointer", fontFamily: F }}>NEXT EXERCISE</button>
+      </div>
+
+      {/* Complete */}
+      {allDone && (
+        <div style={{ margin: "12px 16px 0" }}>
+          <button onClick={() => setDone(true)} style={{ width: "100%", minHeight: 60, background: "#0d1f0d", border: "1px solid #2a5a2a", borderRadius: 12, color: "#4a8a4a", fontSize: 16, fontWeight: 700, letterSpacing: 2, cursor: "pointer", fontFamily: F }}>
+            COMPLETE SESSION — {sc.tot} PTS
+          </button>
+        </div>
+      )}
+
+      <div style={{ height: 32 }} />
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ROOT — handles screen routing
+// ══════════════════════════════════════════════════════════════════════
+function App() {
+  const [screen, setScreen]  = useState("home");
+  const [sessionType, setST] = useState("PULL");
+  const [format, setFmt]     = useState("STANDARD");
+
+  function begin(type, fmt) { setST(type); setFmt(fmt); setScreen("session"); }
+  function end()             { setScreen("home"); }
+
+  if (screen === "session") return <SessionScreen sessionType={sessionType} format={format} onEnd={end} />;
+  return <HomeScreen onBegin={begin} />;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
