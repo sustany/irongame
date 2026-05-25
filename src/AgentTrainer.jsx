@@ -258,33 +258,33 @@ const EQUIPMENT = {
 const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
 
 const META = {
-  "High Row PL":           { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
-  "LF Incline Press":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, eq:"smith" },
-  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "Seated PL Dip Machine":       { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "LF Seated Dip":         { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
-  "HS Decline Press":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true },
+  "High Row PL":           { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness", warmupCue:"Activate lats + rhomboids. Scapular pulls × 10, band pull-aparts × 15." },
+  "LF Incline Press":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate pec minor + serratus. Light cable fly × 15, scapular push-ups × 10." },
+  "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, band external rotations × 10/side." },
+  "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate pecs + serratus. Push-ups × 10, scapular push-ups × 10." },
+  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, wall slides × 10." },
+  "Seated PL Dip Machine":       { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps + lower pecs. Triceps stretch × 10s/side, scapular dips × 8." },
+  "LF Seated Dip":         { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps long head. Overhead triceps stretch × 10s/side." },
+  "HS Decline Press":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true, warmupCue:"Activate lower pecs. Light press × 12, scapular push-ups × 10." },
   "Pec Deck":              { tier:"ISO",prPts:3, eq:"stack-pin" },
   "Cable Pushdown":        { tier:"ISO",prPts:3, eq:"stack-pin" },
   "Seated Lateral Raise":  { tier:"ISO",prPts:3, eq:"dumbbell" },
   "Weighted Crunches":     { tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
   "Captain's Chair":       { tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
-  "Barbell RDL":           { tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
-  "Lat Pull-Down PL":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "LF Row":                { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
-  "Lever Seated Row":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
-  "Assisted Chin-Up":      { tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Barbell RDL":           { tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true, warmupCue:"Activate hamstrings + glutes + lower back. Hip hinge × 10 bodyweight, glute bridge × 10, cat-cow × 8." },
+  "Lat Pull-Down PL":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate lats + scapular depressors. Dead hang × 15s, scapular pulls × 10." },
+  "LF Row":                { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
+  "Lever Seated Row":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
+  "Assisted Chin-Up":      { tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate lats + grip. Dead hang × 15s, scapular pulls × 10." },
   "Hyperextensions 45°":   { tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
   "DB Alternating Curl":   { tier:"ISO",prPts:3, eq:"dumbbell" },
   "DB Hammer Curl":        { tier:"ISO",prPts:3, eq:"dumbbell" },
   "LF Bicep Curl":         { tier:"ISO",prPts:3, eq:"dumbbell" },
   "Dead Hang":             { tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
-  "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true, eq:"smith" },
-  "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
-  "Linear Hack Squat PL":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate glutes. Glute bridge × 12, clamshells × 10/side, monster walks × 10 steps." },
+  "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate hamstrings. Leg swings × 10/side, light reps × 12." },
+  "Linear Hack Squat PL":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate glutes + VMO. Bodyweight squat × 15, hip circles × 10/side, leg swings × 10/side." },
   "Leg Extension":         { tier:"ISO",prPts:3, eq:"stack-pin" },
   "Calf Press":            { tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Press, Linear Leg Press": { tier:"ISO",prPts:3, eq:"plate-loaded" },
@@ -313,27 +313,27 @@ function exListForType(type, prs){
 }
 const TMPLS = {
   push:[
-    {name:"LF Incline Press",     sets:4,repRange:"8–10", targetReps:10},
-    {name:"LF Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 },
-    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10},
-    {name:"Seated Lateral Raise", sets:3,repRange:"12–15",targetReps:15},
-    {name:"Weighted Crunches",    sets:3,repRange:"8–10", targetReps:10},
+    {name:"LF Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
+    {name:"LF Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press PL Machine","Seated PL Dip Machine"]},
+    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Cable Pushdown","Seated PL Dip Machine"]},
+    {name:"Seated Lateral Raise", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
+    {name:"Weighted Crunches",    sets:3,repRange:"8–10", targetReps:10, alts:["Captain's Chair"]},
   ],
   pull:[
-    {name:"Lat Pull-Down PL",    sets:4,repRange:"8–10", targetReps:10,priority:true},
-    {name:"High Row PL",        sets:4,repRange:"10–12",targetReps:12},
-    {name:"LF Row",             sets:3,repRange:"8–10", targetReps:10},
-    {name:"DB Alternating Curl",sets:3,repRange:"10–12",targetReps:12},
-    {name:"Captain's Chair",    sets:3,repRange:"10–12",targetReps:12},
+    {name:"Lat Pull-Down PL",    sets:4,repRange:"8–10", targetReps:10,priority:true, alts:["Assisted Chin-Up","High Row PL"]},
+    {name:"High Row PL",        sets:4,repRange:"10–12",targetReps:12, alts:["LF Row","Lever Seated Row"]},
+    {name:"LF Row",             sets:3,repRange:"8–10", targetReps:10, alts:["Lever Seated Row","High Row PL"]},
+    {name:"DB Alternating Curl",sets:3,repRange:"10–12",targetReps:12, alts:["DB Hammer Curl","LF Bicep Curl"]},
+    {name:"Captain's Chair",    sets:3,repRange:"10–12",targetReps:12, alts:["Weighted Crunches"]},
     {name:"Hyperextensions 45°",sets:2,repRange:"10–12",targetReps:12,mandatory:true},
     {name:"Dead Hang",          sets:2,repRange:"max",  targetReps:37,unit:"sec",mandatory:true},
   ],
   legs:[
-    {name:"Barbell RDL",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true},
-    {name:"Linear Hack Squat PL",           sets:4,repRange:"8–10", targetReps:10},
-    {name:"Seated Leg Curl",      sets:3,repRange:"6–8",  targetReps:8 },
-    {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10},
-    {name:"Calf Press",           sets:3,repRange:"10–12",targetReps:12},
+    {name:"Barbell RDL",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true, alts:["Hip Thrust (Smith)","Seated Leg Curl"]},
+    {name:"Linear Hack Squat PL", sets:4,repRange:"8–10", targetReps:10, alts:["Leg Extension"]},
+    {name:"Seated Leg Curl",      sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
+    {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10, alts:["Linear Hack Squat PL"]},
+    {name:"Calf Press",           sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Seated Calf Raise"]},
     {name:"Hyperextensions 45°",  sets:2,repRange:"10–12",targetReps:12,mandatory:true},
   ],
 };
@@ -375,23 +375,38 @@ function suggestW(name,si,lw,lr,prs){
 function calcScore(log,prs,ext){
   // Working sets only — warmup sets must not inflate volume, PR, or set-count scoring.
   const wlog = log.filter(s=>!s.warmup);
-  let mu=0;const ph=new Set();
-  let ov=0,core=false,hang=false,hyp=false;
+
+  // MUS scoring model (max 45):
+  //   • Stimulus volume (max 27)  — sum of tier weight per non-failed working set.
+  //                                 P1 compound = 3 pts/set, P2 compound = 2, ISO = 1.
+  //                                 Replaces the old arbitrary prPts "PR bonus" which
+  //                                 fired once per exercise — now every set earns
+  //                                 stimulus credit proportional to muscle mass recruited.
+  //   • Quality (max 13)          — (matched + exceeded sets) / total sets × 13.
+  //                                 Rewards hitting rep range, not just showing up.
+  //   • Core bonus (5)            — flat add if a core movement was logged.
+  const TIER_STIM = { P1:3, P2:2, ISO:1, CORE:1, FND:0.5, GRIP:0.5 };
+  let stim = 0, ov = 0, core = false, hang = false, hyp = false;
   wlog.forEach(s=>{
-    const m=META[s.exercise]||{},pr=prs[s.exercise];
-    if(m.core) core=true;
-    if(s.exercise==="Dead Hang") hang=true;
-    if(s.exercise==="Hyperextensions 45°") hyp=true;
-    if(s.result!=="fell_short"&&pr&&!pr.bw&&s.weight>pr.weight&&!ph.has(s.exercise)){
-      ph.add(s.exercise);mu+=m.prPts||3;
+    const m = META[s.exercise] || {};
+    if (m.core) core = true;
+    if (s.exercise === "Dead Hang") hang = true;
+    if (s.exercise === "Hyperextensions 45°") hyp = true;
+    // Non-failed sets contribute stimulus weight by tier.
+    if (s.result !== "fell_short") {
+      stim += TIER_STIM[m.tier] ?? 1;
     }
-    if(s.result==="matched"||s.result==="exceeded") ov++;
+    if (s.result === "matched" || s.result === "exceeded") ov++;
   });
-  const n=wlog.length,ts=ext?20:17;
-  if(n>0) mu+=Math.min(10,Math.round((ov/n)*10));
-  mu+=Math.min(18,Math.round((n/ts)*18));
-  if(core) mu+=5;
-  const mp=Math.min(45,mu),cp=Math.min(25,Math.round((n/ts)*25));
+  const n  = wlog.length;
+  const ts = ext ? 20 : 17;
+  const stimPts = Math.min(27, Math.round(stim));
+  const qualPts = n > 0 ? Math.min(13, Math.round((ov/n)*13)) : 0;
+  const corePts = core ? 5 : 0;
+  const mp = Math.min(45, stimPts + qualPts + corePts);
+
+  // CAL — set-count proxy until iCardio kcal data lands at session end.
+  const cp = Math.min(25, Math.round((n/ts)*25));
 
   // CRD — based on actual PHR zone quality, not set count.
   // Z3+ (Aerobic/Threshold/Max) = full points. Z2 = partial. Z1 = minimal.
@@ -539,7 +554,7 @@ function Preview({type, extended, opener, onPickOpener}){
         color:C.wht,lineHeight:1,marginBottom:12}}>{p.muscles}</div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
         {[`${n} EXERCISES`, dur,
-          `${TMPLS[type].slice(0,n).reduce((s,e)=>s+e.sets*e.targetReps,0)} REPS`
+          `${TMPLS[type].slice(0,n).reduce((s,e)=>s+e.sets,0)} SETS`
         ].map(lbl=>(
           <span key={lbl} style={{
             fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
@@ -1578,22 +1593,29 @@ export default function IronGame(){
 
       {/* Sub-score bars */}
       <div style={{display:"flex",background:C.card,borderBottom:`1px solid ${C.bdr}`}}>
-        {[{l:"MUS",v:score.muscle,m:45},{l:"CAL",v:score.cal,m:25},
-          {l:"CRD",v:score.cv,m:15},{l:"FND",v:score.found,m:15}].map(({l,v,m},i)=>(
+        {[{l:"MUS",v:score.muscle,m:45,pending:false},
+          {l:"CAL",v:score.cal,m:25,pending:true},
+          {l:"CRD",v:score.cv,m:15,pending:false},
+          {l:"FND",v:score.found,m:15,pending:false}].map(({l,v,m,pending},i)=>(
           <div key={l} style={{flex:1,padding:"5px 4px 7px",textAlign:"center",
             borderRight:i<3?`1px solid ${C.bdr}`:"none"}}>
             <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:9,
               color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}}>{l}</div>
-            {/* Score values: white, always readable */}
+            {/* CAL is a proxy during session — actual kcal only available on results from iCardio.
+                Show em-dash to avoid presenting a fabricated number as live data. */}
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:15,color:v>=m?C.grn:C.wht}}>{v}</div>
+              fontSize:15,color: pending ? C.md : (v>=m?C.grn:C.wht)}}>
+              {pending ? "—" : v}
+            </div>
             <div style={{background:C.inner,height:4,margin:"3px 6px 0",borderRadius:2,
               border:`1px solid ${C.bdr}`}}>
               <div style={{
-                background:v>=m
-                  ?"linear-gradient(90deg,#22dd66,#15993f)"
-                  :"linear-gradient(90deg,#e8260a,#aa1a00)",
-                height:"100%",width:`${(v/m)*100}%`,borderRadius:1,
+                background: pending
+                  ? `repeating-linear-gradient(45deg,${C.bdr},${C.bdr} 2px,transparent 2px,transparent 4px)`
+                  : (v>=m
+                    ?"linear-gradient(90deg,#22dd66,#15993f)"
+                    :"linear-gradient(90deg,#e8260a,#aa1a00)"),
+                height:"100%",width: pending ? "100%" : `${(v/m)*100}%`,borderRadius:1,
               }}/>
             </div>
           </div>
@@ -1665,6 +1687,23 @@ export default function IronGame(){
 
           {phase==="ready"?(
             <>
+              {/* Warm-up activation cue — visible only when user has tagged this set as warm-up AND exercise has a cue */}
+              {isWarmupSet&&m.warmupCue&&(
+                <div style={{background:"rgba(255,180,0,0.08)",
+                  border:"1px solid rgba(255,180,0,0.3)",
+                  borderRadius:10,padding:"10px 14px",marginBottom:10,
+                  display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                    color:"#ffb400",letterSpacing:"0.18em",
+                    textTransform:"uppercase",flexShrink:0,marginTop:2}}>
+                    Activation
+                  </div>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
+                    color:C.lt,lineHeight:1.45,letterSpacing:"0.02em"}}>
+                    {m.warmupCue}
+                  </div>
+                </div>
+              )}
               {/* Load card */}
               <div style={{background:STEEL,borderRadius:12,
                 border:`1px solid ${isWarmupSet?"rgba(255,180,0,0.2)":C.bdr}`,
@@ -2239,6 +2278,11 @@ export default function IronGame(){
             <div style={{overflowY:"auto",padding:"0 12px 32px"}}>
               {(()=>{
                 const {inCat,outCat}=exListForType(sesType,prs);
+                // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
+                const slotAlts = (TMPLS[sesType]?.[exIdx]?.alts || [])
+                  .filter(n => prs[n]); // skip alts not in PR list
+                const altSet = new Set(slotAlts);
+                const inCatRemaining = inCat.filter(n => !altSet.has(n));
                 const renderEx=(name,tag)=>{
                   const pr=prs[name];
                   const isCurrent=exList[exIdx]?.name===name;
@@ -2284,7 +2328,22 @@ export default function IronGame(){
                 };
                 return(
                   <>
-                    {inCat.map(n=>renderEx(n,null))}
+                    {slotAlts.length>0&&(
+                      <>
+                        <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                          color:C.red,letterSpacing:"0.22em",textTransform:"uppercase",
+                          padding:"8px 4px 6px"}}>
+                          Recommended Alternatives
+                        </div>
+                        {slotAlts.map(n=>renderEx(n,"ALT"))}
+                        <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                          color:C.md,letterSpacing:"0.22em",textTransform:"uppercase",
+                          padding:"14px 4px 6px"}}>
+                          All {sesType.charAt(0).toUpperCase()+sesType.slice(1)} Exercises
+                        </div>
+                      </>
+                    )}
+                    {inCatRemaining.map(n=>renderEx(n,null))}
                   </>
                 );
               })()}
