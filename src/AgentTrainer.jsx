@@ -247,11 +247,11 @@ const INIT_PRS = {
 // whether plate badges show, whether a bar weight floor applies.
 // Every META entry MUST set `eq` to one of these keys.
 const EQUIPMENT = {
-  "plate-loaded": { steps:[10,20,30], snap:10,  bilateral:true,  showPlates:true,  hasBar:false },
+  "plate-loaded": { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
   "stack-pin":    { steps:[5,10,20],  snap:5,   bilateral:false, showPlates:false, hasBar:false },
   "dumbbell":     { steps:[5,10,15],  snap:2.5, bilateral:false, showPlates:false, hasBar:false },
   "barbell":      { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:true  },
-  "smith":        { steps:[10,20,30], snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
+  "smith":        { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
   "bodyweight":   { steps:[],         snap:0,   bilateral:false, showPlates:false, hasBar:false },
 };
 // Helper — fetch equipment config from a META entry. Defaults to plate-loaded if missing.
