@@ -202,8 +202,26 @@ const START_HR = {
 };
 const getZone = (hr) => HR_ZONES.find(z => hr >= z.lo && hr <= z.hi) || HR_ZONES[0];
 
-// Keytel HR-based kcal/min for males.
-// kcal/min = (-55.0969 + 0.6309*HR + 0.1988*weight_kg + 0.2017*age) / 4.184
+// ─────────────────────────────────────────────────────────────
+// KCAL ESTIMATE — MET-based hybrid (Ainsworth Compendium 2011)
+// Corrects Keytel over-estimation for resistance training with
+// rest intervals. Uses LBM not total bodyweight (more accurate
+// for muscular athletes). Adds 7% EPOC afterburn adjustment.
+// Display as range ±15% to reflect estimation uncertainty.
+// MET: >70% threshold sets = 6.5, >30% = 6.0, else = 5.5
+// ─────────────────────────────────────────────────────────────
+const LBM_LB = 196; // DEXA lean body mass — update after each scan
+const kcalEstimate = ({ durationMin, totalSets, setsInThreshold }) => {
+  const weightKg   = LBM_LB / 2.205;
+  const threshFrac = totalSets > 0 ? setsInThreshold / totalSets : 0;
+  const MET        = threshFrac > 0.7 ? 6.5 : threshFrac > 0.3 ? 6.0 : 5.5;
+  const zMod       = 1.0 + (0.10 * threshFrac);
+  const epoc       = 1.07;
+  const total      = (MET * weightKg * 3.5 / 200) * durationMin * zMod * epoc;
+  const margin     = Math.round(total * 0.15);
+  return { est: Math.round(total), low: Math.round(total - margin), high: Math.round(total + margin) };
+};
+// Legacy single-value helper retained for any remaining callers
 const kcalPerMin = (hr, weightKg, age) =>
   Math.max(0, (-55.0969 + 0.6309*hr + 0.1988*weightKg + 0.2017*age) / 4.184);
 
@@ -1194,17 +1212,16 @@ export default function IronGame(){
     }).reverse();
     const totalZoneMin=zoneMins.reduce((s,z)=>s+z.mins,0)||1;
 
-    // ── kcal estimate (Keytel) ─────────────────────────────────
-    // Active set min at avg PHR; rest min at recovery HR ~110.
-    const weightKg = USER_PROFILE.weightLb / 2.205;
-    const age      = USER_PROFILE.age;
-    const avgPhr   = hasHR ? phrs.reduce((a,b)=>a+b,0)/phrs.length : 0;
-    const activeMin= Math.min(elapsedMin, phrs.length * setMin);
-    const restMinK = Math.max(0, elapsedMin - activeMin);
-    const kcal = hasHR
-      ? Math.round(kcalPerMin(avgPhr, weightKg, age) * activeMin
-                 + kcalPerMin(HR_ZONES[1].lo, weightKg, age) * restMinK)  // Z2 lower boundary as rest HR
+    // ── kcal estimate (MET-based hybrid, Ainsworth 2011) ──────
+    // LBM-based, zone-fraction-weighted, EPOC-adjusted.
+    // Displayed as range ±15% to reflect estimation uncertainty.
+    const avgPhr       = hasHR ? phrs.reduce((a,b)=>a+b,0)/phrs.length : 0;
+    const z4lo         = HR_ZONES[3].lo;
+    const setsInThresh = phrs.filter(h => h >= z4lo).length;
+    const kcalRange    = hasHR
+      ? kcalEstimate({ durationMin: elapsedMin, totalSets: phrs.length, setsInThreshold: setsInThresh })
       : null;
+    const kcal = kcalRange ? kcalRange.est : null;
 
     return(
       <div style={{...shell,padding:"40px 20px 36px"}}>
@@ -1284,14 +1301,14 @@ export default function IronGame(){
               </span>
               <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,
                 color:kcal?C.gld:C.md,letterSpacing:"0.02em"}}>
-                {kcal?kcal.toLocaleString():"—"}
+                {kcalRange?`~${kcalRange.est.toLocaleString()}`:"—"}
                 <span style={{fontSize:13,color:C.md,marginLeft:6,letterSpacing:"0.1em"}}>KCAL</span>
               </span>
             </div>
             <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:11,
               color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",marginTop:2}}>
-              {kcal
-                ? `Est · Avg HR ${Math.round(avgPhr)} · ${elapsedMin} min`
+              {kcalRange
+                ? `~${kcalRange.low.toLocaleString()}–${kcalRange.high.toLocaleString()} kcal range · ${elapsedMin} min · MET-based`
                 : `No HR data logged`}
             </div>
           </div>
