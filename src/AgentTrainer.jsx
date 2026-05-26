@@ -1593,7 +1593,11 @@ export default function IronGame(){
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
             color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>SETS</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
-            {log.filter(s=>!s.warmup).length}<span style={{color:C.md}}>/{totS}</span>
+            {log.filter(s=>!s.warmup).length}
+            {(phase==="logging"||phase==="phr")&&!isWarmupSet&&(
+              <span style={{color:C.red,fontSize:22,lineHeight:1}}>+</span>
+            )}
+            <span style={{color:C.md}}>/{totS}</span>
           </div>
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
             color:C.md,letterSpacing:"0.06em",marginTop:1}}>
