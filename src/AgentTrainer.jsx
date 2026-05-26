@@ -2308,10 +2308,15 @@ export default function IronGame(){
                     <button key={name} className="t"
                       onClick={()=>{
                         if(isCurrent){setShowExPicker(false);return;}
+                        // Pull sets/repRange/targetReps from the session template
+                        // so switching to RDL (4 sets) from a 3-set substitute
+                        // correctly uses 4 sets — not the substitute's count.
+                        const tmplEntry=(TMPLS[sesType]||[]).find(e=>e.name===name);
                         const updated=[...exList];
                         updated[exIdx]={...updated[exIdx],name,
-                          repRange: META[name]?.compound?"6–10":"10–15",
-                          targetReps: META[name]?.compound?8:12,
+                          sets:       tmplEntry?.sets       ?? updated[exIdx].sets,
+                          repRange:   tmplEntry?.repRange   ?? (META[name]?.compound?"6–10":"10–15"),
+                          targetReps: tmplEntry?.targetReps ?? (META[name]?.compound?8:12),
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
