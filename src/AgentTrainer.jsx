@@ -381,8 +381,10 @@ function suggestW(name,si,lw,lr,prs){
   const pr=prs[name];
   if(!pr||pr.bw) return 0;
   const w=pr.weight;
-  // Set 1: respect pre-seeded lw (user already loaded a weight) else 68% of PR
-  if(si===0) return lw&&lw>0 ? lw : Math.max(45,Math.round(w*0.68/5)*5);
+  // Set 1: auto-load to last session's working weight (PR).
+  // If user already adjusted weight this session (lw>0), respect that.
+  // 68% warmup ramp is no longer used — user controls warmup via + Warm-Up toggle.
+  if(si===0) return lw&&lw>0 ? lw : w;
   // Set 2+: progress from last NON-WARMUP working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
   if(!lw) return w;
@@ -1725,6 +1727,31 @@ export default function IronGame(){
                   </div>
                 </div>
               )}
+              {/* Last session reference — shown at exercise open (setIdx===0) only */}
+              {setIdx===0&&!isWarmupSet&&prs[ex.name]&&!prs[ex.name].bw&&(
+                <div style={{background:"rgba(255,255,255,0.04)",
+                  border:`1px solid ${C.bdr}`,
+                  borderTop:"1px solid rgba(255,255,255,0.09)",
+                  borderRadius:10,padding:"8px 14px",marginBottom:10,
+                  display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                    color:C.md,letterSpacing:"0.16em",textTransform:"uppercase"}}>
+                    Last Session
+                  </div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                    color:C.lt,letterSpacing:"0.04em"}}>
+                    {prs[ex.name].weight}
+                    <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                      fontSize:11,color:C.md,letterSpacing:"0.1em",margin:"0 4px"}}>×</span>
+                    {prs[ex.name].reps}
+                    <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,
+                      fontSize:11,color:C.md,letterSpacing:"0.06em",marginLeft:5}}>
+                      {prs[ex.name].unit==="sec"?"sec":"lbs"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Load card */}
               <div style={{background:STEEL,borderRadius:12,
                 border:`1px solid ${isWarmupSet?"rgba(255,180,0,0.2)":C.bdr}`,
