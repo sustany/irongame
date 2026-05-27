@@ -771,12 +771,14 @@ export default function IronGame(){
   const musicNext = () => {
     const next=(trackIdx+1)%shuffled.length;
     setTrackIdx(next);
-    setIsPlaying(false);
+    window.open(`https://www.youtube.com/watch?v=${shuffled[next].ytId}`,'_blank');
+    setIsPlaying(true);
   };
   const musicPrev = () => {
     const prev=(trackIdx-1+shuffled.length)%shuffled.length;
     setTrackIdx(prev);
-    setIsPlaying(false);
+    window.open(`https://www.youtube.com/watch?v=${shuffled[prev].ytId}`,'_blank');
+    setIsPlaying(true);
   };
   const musicAddTrack = async () => {
     const id=extractYTId(addTrackUrl);
