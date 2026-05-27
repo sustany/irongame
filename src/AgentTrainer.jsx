@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { searchExercises, findDuplicate } from "./exerciseLibrary";
 
 // ─────────────────────────────────────────────────────────────
@@ -174,6 +174,21 @@ const _min = String(_pst.getUTCMinutes()).padStart(2,'0');
 const _ampm= _hr >= 12 ? 'PM' : 'AM';
 const _hr12= _hr % 12 || 12;
 const BUILD_VERSION = `ALPHA · ${_mo}/${_dy}/${_yr} · ${_hr12}:${_min} ${_ampm} PST`;
+
+// ─────────────────────────────────────────────────────────────
+// WORKOUT PLAYLIST — add songs via the + button during a session.
+// ytId = last 11 chars of a YouTube URL (?v=XXXXXXXXXXX)
+// ─────────────────────────────────────────────────────────────
+const DEFAULT_PLAYLIST = [
+  { title:"Thunderstruck",   artist:"AC/DC",        ytId:"v2AC41dglnM" },
+  { title:"You're The Voice",artist:"John Farnham", ytId:"qpd2NFAkCkY" },
+  { title:"Simply The Best", artist:"Tina Turner",  ytId:"GC5E8ie2pdM" },
+];
+function shuffleArr(a){ return [...a].sort(()=>Math.random()-0.5); }
+function extractYTId(url){
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  return m?m[1]:null;
+}
 
 // ─────────────────────────────────────────────────────────────
 // USER PROFILE — used for kcal estimation and HR zone calibration.
@@ -692,6 +707,22 @@ export default function IronGame(){
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
   const [warmupNext, setWarmupNext] = useState(false);
   const [warmedMuscles,setWarmedMuscles] = useState(new Set()); // muscles warmed this session
+
+  // ── Music player state ────────────────────────────────────
+  const [playlist,      setPlaylist]     = useState(() => {
+    try { const s=localStorage.getItem('ig_playlist'); return s?JSON.parse(s):DEFAULT_PLAYLIST; }
+    catch { return DEFAULT_PLAYLIST; }
+  });
+  const [shuffled,      setShuffled]     = useState(()=>shuffleArr(DEFAULT_PLAYLIST));
+  const [trackIdx,      setTrackIdx]     = useState(0);
+  const [isPlaying,     setIsPlaying]    = useState(false);
+  const [showAddTrack,  setShowAddTrack] = useState(false);
+  const [addTrackUrl,   setAddTrackUrl]  = useState("");
+  const [addTrackStatus,setAddTrackStatus]=useState(""); // "loading"|"ok"|"error"
+  const ytPlayerRef  = useRef(null);
+  const ytReadyRef   = useRef(false);
+  const shuffledRef  = useRef(shuffled); // stable ref to avoid stale closures
+  shuffledRef.current = shuffled;
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -724,6 +755,100 @@ export default function IronGame(){
       setWarmupNext(true);
     }
   }, [exIdx, log.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  // ── YouTube IFrame API init ───────────────────────────────
+  useEffect(() => {
+    const initPlayer = () => {
+      if (!document.getElementById('yt-player-hidden')) return;
+      ytPlayerRef.current = new window.YT.Player('yt-player-hidden', {
+        height:'1', width:'1',
+        playerVars:{ autoplay:0, controls:0, playsinline:1, rel:0 },
+        events:{
+          onReady:()=>{ ytReadyRef.current=true; },
+          onStateChange:(e)=>{
+            setIsPlaying(e.data===1);
+            // Auto-advance when track ends
+            if(e.data===0){
+              setTrackIdx(prev=>{
+                const next=(prev+1)%shuffledRef.current.length;
+                setTimeout(()=>{
+                  if(ytReadyRef.current)
+                    ytPlayerRef.current.loadVideoById(shuffledRef.current[next].ytId);
+                },300);
+                return next;
+              });
+            }
+          }
+        }
+      });
+    };
+    if(window.YT&&window.YT.Player){ initPlayer(); return; }
+    window.onYouTubeIframeAPIReady=initPlayer;
+    if(!document.querySelector('script[src*="iframe_api"]')){
+      const s=document.createElement('script');
+      s.src='https://www.youtube.com/iframe_api';
+      document.head.appendChild(s);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist playlist to localStorage when it changes
+  useEffect(()=>{
+    try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
+  },[playlist]);
+
+  // Music helpers
+  const musicPlay = () => {
+    if(!ytReadyRef.current) return;
+    const track = shuffled[trackIdx];
+    if(isPlaying){ ytPlayerRef.current.pauseVideo(); }
+    else {
+      // If nothing loaded yet, load first track
+      try{
+        const state=ytPlayerRef.current.getPlayerState();
+        if(state===-1||state===5){ ytPlayerRef.current.loadVideoById(track.ytId); }
+        ytPlayerRef.current.playVideo();
+      }catch{}
+    }
+  };
+  const musicNext = () => {
+    const next=(trackIdx+1)%shuffled.length;
+    setTrackIdx(next);
+    if(ytReadyRef.current){
+      ytPlayerRef.current.loadVideoById(shuffled[next].ytId);
+      if(isPlaying) ytPlayerRef.current.playVideo();
+    }
+  };
+  const musicPrev = () => {
+    const prev=(trackIdx-1+shuffled.length)%shuffled.length;
+    setTrackIdx(prev);
+    if(ytReadyRef.current){
+      ytPlayerRef.current.loadVideoById(shuffled[prev].ytId);
+      if(isPlaying) ytPlayerRef.current.playVideo();
+    }
+  };
+  const musicAddTrack = async () => {
+    const id=extractYTId(addTrackUrl);
+    if(!id){ setAddTrackStatus("error"); return; }
+    setAddTrackStatus("loading");
+    try{
+      const r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+      const d=await r.json();
+      const newTrack={ title:d.title||"Unknown", artist:d.author_name||"", ytId:id };
+      setPlaylist(p=>[...p,newTrack]);
+      setShuffled(p=>[...p,newTrack]); // append to current shuffled order too
+      setAddTrackUrl("");
+      setShowAddTrack(false);
+      setAddTrackStatus("ok");
+    }catch{
+      // Fallback if oEmbed fails — add with URL as title
+      const id2=extractYTId(addTrackUrl);
+      if(id2){
+        const newTrack={ title:"Track "+id2.slice(-4), artist:"", ytId:id2 };
+        setPlaylist(p=>[...p,newTrack]);
+        setShuffled(p=>[...p,newTrack]);
+        setAddTrackUrl(""); setShowAddTrack(false); setAddTrackStatus("");
+      } else { setAddTrackStatus("error"); }
+    }
+  };
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -873,6 +998,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -883,6 +1009,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -2137,6 +2264,117 @@ export default function IronGame(){
             Change Exercise
           </button>
         )}
+        {/* ── Hidden YouTube player (audio only) ── */}
+        <div id="yt-player-hidden" style={{position:"absolute",width:1,height:1,opacity:0,pointerEvents:"none"}}/>
+
+        {/* ── Music bar ─────────────────────────────────────── */}
+        {screen==="session"&&(
+          <div style={{borderTop:`1px solid ${C.bdr}`,marginTop:8,paddingTop:8}}>
+            {/* Track info + controls */}
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0"}}>
+              {/* Track name */}
+              <div style={{flex:1,overflow:"hidden"}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:1}}>
+                  {isPlaying?"▶ Now Playing":"Music"}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
+                  color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                  {shuffled[trackIdx]
+                    ? `${shuffled[trackIdx].artist?shuffled[trackIdx].artist+" – ":""}${shuffled[trackIdx].title}`
+                    : "No tracks"}
+                </div>
+              </div>
+              {/* Controls */}
+              <div style={{display:"flex",gap:4,flexShrink:0}}>
+                {/* Prev */}
+                <button className="t" onClick={musicPrev}
+                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
+                    background:C.card,color:C.lt,fontSize:16,cursor:"pointer",
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  ◀
+                </button>
+                {/* Play/Pause */}
+                <button className="t" onClick={musicPlay}
+                  style={{width:38,height:38,borderRadius:8,
+                    border:`1px solid ${isPlaying?C.red:C.bdr}`,
+                    background:isPlaying?"rgba(232,38,10,0.15)":C.card,
+                    color:isPlaying?C.red:C.lt,fontSize:16,cursor:"pointer",
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  {isPlaying?"⏸":"▶"}
+                </button>
+                {/* Next */}
+                <button className="t" onClick={musicNext}
+                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
+                    background:C.card,color:C.lt,fontSize:16,cursor:"pointer",
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  ▶▶
+                </button>
+                {/* Add track */}
+                <button className="t" onClick={()=>{setShowAddTrack(v=>!v);setAddTrackUrl("");setAddTrackStatus("");}}
+                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
+                    background:showAddTrack?"rgba(255,255,255,0.08)":C.card,
+                    color:C.md,fontSize:18,fontWeight:700,cursor:"pointer",
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  +
+                </button>
+              </div>
+            </div>
+            {/* Track count indicator */}
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
+              color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",
+              textAlign:"center",marginBottom:showAddTrack?6:0}}>
+              {trackIdx+1} / {shuffled.length} · SHUFFLED
+            </div>
+            {/* Add track input */}
+            {showAddTrack&&(
+              <div style={{background:C.inner,borderRadius:10,padding:"10px 12px",
+                border:`1px solid ${C.bdr}`,marginTop:4}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                  color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:6}}>
+                  Paste YouTube URL
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input
+                    value={addTrackUrl}
+                    onChange={e=>{setAddTrackUrl(e.target.value);setAddTrackStatus("");}}
+                    placeholder="https://youtube.com/watch?v=..."
+                    style={{flex:1,background:"rgba(255,255,255,0.06)",
+                      border:`1px solid ${addTrackStatus==="error"?C.red:C.bdr}`,
+                      borderRadius:7,padding:"7px 10px",color:C.wht,
+                      fontFamily:"'Inter',sans-serif",fontSize:12,outline:"none"}}
+                  />
+                  <button className="t" onClick={musicAddTrack}
+                    disabled={addTrackStatus==="loading"}
+                    style={{padding:"7px 14px",borderRadius:7,cursor:"pointer",
+                      border:`1px solid ${C.red}`,
+                      background:addTrackStatus==="loading"?"rgba(232,38,10,0.1)":"rgba(232,38,10,0.2)",
+                      color:C.red,fontFamily:"'Inter',sans-serif",
+                      fontWeight:700,fontSize:12,letterSpacing:"0.06em"}}>
+                    {addTrackStatus==="loading"?"…":"Add"}
+                  </button>
+                </div>
+                {addTrackStatus==="error"&&(
+                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                    color:C.red,marginTop:4}}>
+                    Not a valid YouTube URL — check and try again
+                  </div>
+                )}
+                {addTrackStatus==="ok"&&(
+                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                    color:C.grn,marginTop:4}}>
+                    Track added to playlist ✓
+                  </div>
+                )}
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,
+                  color:"rgba(255,255,255,0.2)",marginTop:6,lineHeight:1.5}}>
+                  {playlist.length} track{playlist.length!==1?"s":""} in playlist · saved automatically
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {phase==="ready"&&(
           <button className="t" onClick={()=>{setSessionEnd(Date.now());setScreen("complete");}}
             style={{width:"100%",height:38,background:"transparent",
