@@ -229,36 +229,36 @@ const kcalPerMin = (hr, weightKg, age) =>
 // DATA
 // ─────────────────────────────────────────────────────────────
 const INIT_PRS = {
-  "High Row PL":           { weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
-  "LF Incline Press":      { weight:240,  reps:10 },
-  "LF Shoulder Press":     { weight:255,  reps:7  },
-  "Bench Press, Smith Machine": { weight:235, reps:8 },
-  "Military Press PL Machine":  { weight:180, reps:8 },
-  "Seated PL Dip Machine":       { weight:320, reps:10},
-  "LF Seated Dip":         { weight:290,  reps:10 },
-  "HS Decline Press":      { weight:90,   reps:9  },
-  "Pec Deck":              { weight:230,  reps:12 },
-  "Cable Pushdown":        { weight:80,   reps:14 },
-  "Seated Lateral Raise":  { weight:37.5, reps:15 },
-  "Weighted Crunches":     { weight:120,  reps:6  },
-  "Captain's Chair":       { weight:0,    reps:12, bw:true },
-  "Barbell RDL":           { weight:225,  reps:6  },
-  "Lat Pull-Down PL": { weight:240,  reps:10 },
-  "LF Row":                { weight:240,  reps:10 },
-  "Lever Seated Row":      { weight:360,  reps:10 },
-  "Assisted Chin-Up":      { weight:172,  reps:8  },
-  "Hyperextensions 45°":   { weight:90,   reps:11 },
-  "DB Alternating Curl":   { weight:45,   reps:10 },
-  "DB Hammer Curl":        { weight:42.5, reps:12 },
-  "LF Bicep Curl":         { weight:90,   reps:10 },
-  "Dead Hang":             { weight:0,    reps:37, bw:true, unit:"sec" },
-  "Hip Thrust (Smith)":    { weight:275,  reps:10 },
-  "Seated Leg Curl":       { weight:285,  reps:8  },
-  "Linear Hack Squat PL":  { weight:230,  reps:10 },
-  "Leg Extension":         { weight:260,  reps:10 },
-  "Calf Press":            { weight:680,  reps:12 },
-  "Calf Press, Linear Leg Press": { weight:630, reps:10 },
-  "Seated Calf Raise":     { weight:180,  reps:7  },
+  "High Row PL":           { muscle:"back", weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
+  "LF Incline Press":      { muscle:"chest", weight:240,  reps:10 },
+  "LF Shoulder Press":     { muscle:"shoulders", weight:255,  reps:7  },
+  "Bench Press, Smith Machine": { muscle:"chest", weight:235, reps:8 },
+  "Military Press PL Machine":  { muscle:"shoulders", weight:180, reps:8 },
+  "Seated PL Dip Machine":       { muscle:"chest", weight:320, reps:10},
+  "LF Seated Dip":         { muscle:"chest", weight:290,  reps:10 },
+  "HS Decline Press":      { muscle:"chest", weight:90,   reps:9  },
+  "Pec Deck":              { muscle:"chest", weight:230,  reps:12 },
+  "Cable Pushdown":        { muscle:"triceps", weight:80,   reps:14 },
+  "Seated Lateral Raise":  { muscle:"shoulders", weight:37.5, reps:15 },
+  "Weighted Crunches":     { muscle:"abs", weight:120,  reps:6  },
+  "Captain's Chair":       { muscle:"abs", weight:0,    reps:12, bw:true },
+  "Barbell RDL":           { muscle:"hamstrings", weight:225,  reps:6  },
+  "Lat Pull-Down PL": { muscle:"lats", weight:240,  reps:10 },
+  "LF Row":                { muscle:"back", weight:240,  reps:10 },
+  "Lever Seated Row":      { muscle:"back", weight:360,  reps:10 },
+  "Assisted Chin-Up":      { muscle:"lats", weight:172,  reps:8  },
+  "Hyperextensions 45°":   { muscle:"lower_back", weight:90,   reps:11 },
+  "DB Alternating Curl":   { muscle:"biceps", weight:45,   reps:10 },
+  "DB Hammer Curl":        { muscle:"biceps", weight:42.5, reps:12 },
+  "LF Bicep Curl":         { muscle:"biceps", weight:90,   reps:10 },
+  "Dead Hang":             { muscle:"lats", weight:0,    reps:37, bw:true, unit:"sec" },
+  "Hip Thrust (Smith)":    { muscle:"hamstrings", weight:275,  reps:10 },
+  "Seated Leg Curl":       { muscle:"hamstrings", weight:285,  reps:8  },
+  "Linear Hack Squat PL":  { muscle:"quads", weight:230,  reps:10 },
+  "Leg Extension":         { muscle:"quads", weight:260,  reps:10 },
+  "Calf Press":            { muscle:"calves", weight:680,  reps:12 },
+  "Calf Press, Linear Leg Press": { muscle:"calves", weight:630, reps:10 },
+  "Seated Calf Raise":     { muscle:"calves", weight:180,  reps:7  },
 };
 // ── Equipment type registry ──────────────────────────────────
 // Source of truth for how an exercise behaves: increment buttons, snap math,
@@ -276,37 +276,37 @@ const EQUIPMENT = {
 const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
 
 const META = {
-  "High Row PL":           { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness", warmupCue:"Activate lats + rhomboids. Scapular pulls × 10, band pull-aparts × 15." },
-  "LF Incline Press":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate pec minor + serratus. Light cable fly × 15, scapular push-ups × 10." },
-  "LF Shoulder Press":     { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, band external rotations × 10/side." },
-  "Bench Press, Smith Machine": { tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate pecs + serratus. Push-ups × 10, scapular push-ups × 10." },
-  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, wall slides × 10." },
-  "Seated PL Dip Machine":       { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps + lower pecs. Triceps stretch × 10s/side, scapular dips × 8." },
-  "LF Seated Dip":         { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps long head. Overhead triceps stretch × 10s/side." },
-  "HS Decline Press":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true, warmupCue:"Activate lower pecs. Light press × 12, scapular push-ups × 10." },
-  "Pec Deck":              { tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Cable Pushdown":        { tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Seated Lateral Raise":  { tier:"ISO",prPts:3, eq:"dumbbell" },
-  "Weighted Crunches":     { tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
-  "Captain's Chair":       { tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
+  "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness", warmupCue:"Activate lats + rhomboids. Scapular pulls × 10, band pull-aparts × 15." },
+  "LF Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate pec minor + serratus. Light cable fly × 15, scapular push-ups × 10." },
+  "LF Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, band external rotations × 10/side." },
+  "Bench Press, Smith Machine": { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate pecs + serratus. Push-ups × 10, scapular push-ups × 10." },
+  "Military Press PL Machine":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, wall slides × 10." },
+  "Seated PL Dip Machine":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps + lower pecs. Triceps stretch × 10s/side, scapular dips × 8." },
+  "LF Seated Dip":         { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps long head. Overhead triceps stretch × 10s/side." },
+  "HS Decline Press":      { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true, warmupCue:"Activate lower pecs. Light press × 12, scapular push-ups × 10." },
+  "Pec Deck":              { muscle:"chest", tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Cable Pushdown":        { muscle:"triceps", tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Seated Lateral Raise":  { muscle:"shoulders", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Weighted Crunches":     { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
+  "Captain's Chair":       { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
-  "Barbell RDL":           { tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true, warmupCue:"Activate hamstrings + glutes + lower back. Hip hinge × 10 bodyweight, glute bridge × 10, cat-cow × 8." },
-  "Lat Pull-Down PL":      { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate lats + scapular depressors. Dead hang × 15s, scapular pulls × 10." },
-  "LF Row":                { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
-  "Lever Seated Row":      { tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
-  "Assisted Chin-Up":      { tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate lats + grip. Dead hang × 15s, scapular pulls × 10." },
-  "Hyperextensions 45°":   { tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
-  "DB Alternating Curl":   { tier:"ISO",prPts:3, eq:"dumbbell" },
-  "DB Hammer Curl":        { tier:"ISO",prPts:3, eq:"dumbbell" },
-  "LF Bicep Curl":         { tier:"ISO",prPts:3, eq:"dumbbell" },
-  "Dead Hang":             { tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
-  "Hip Thrust (Smith)":    { tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate glutes. Glute bridge × 12, clamshells × 10/side, monster walks × 10 steps." },
-  "Seated Leg Curl":       { tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate hamstrings. Leg swings × 10/side, light reps × 12." },
-  "Linear Hack Squat PL":  { tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate glutes + VMO. Bodyweight squat × 15, hip circles × 10/side, leg swings × 10/side." },
-  "Leg Extension":         { tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Calf Press":            { tier:"ISO",prPts:3, eq:"plate-loaded" },
-  "Calf Press, Linear Leg Press": { tier:"ISO",prPts:3, eq:"plate-loaded" },
-  "Seated Calf Raise":     { tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Barbell RDL":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true, warmupCue:"Activate hamstrings + glutes + lower back. Hip hinge × 10 bodyweight, glute bridge × 10, cat-cow × 8." },
+  "Lat Pull-Down PL":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate lats + scapular depressors. Dead hang × 15s, scapular pulls × 10." },
+  "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
+  "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
+  "Assisted Chin-Up":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate lats + grip. Dead hang × 15s, scapular pulls × 10." },
+  "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
+  "DB Alternating Curl":   { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "LF Bicep Curl":         { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Dead Hang":             { muscle:"lats", tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
+  "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate glutes. Glute bridge × 12, clamshells × 10/side, monster walks × 10 steps." },
+  "Seated Leg Curl":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate hamstrings. Leg swings × 10/side, light reps × 12." },
+  "Linear Hack Squat PL":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate glutes + VMO. Bodyweight squat × 15, hip circles × 10/side, leg swings × 10/side." },
+  "Leg Extension":         { muscle:"quads", tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Calf Press":            { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Seated Calf Raise":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
 };
 // Category membership controls which exercises appear in pickers per session type.
 // Exercises not listed appear under "Other" at the bottom of pickers.
@@ -392,6 +392,29 @@ function suggestW(name,si,lw,lr,prs){
   if(lr==="fell_short") return Math.round(Math.max(lw-10,w*0.75)/5)*5;
   return lw;
 }
+// ─────────────────────────────────────────────────────────────
+// AUTO WARM-UP RULES
+// Returns how many warm-up sets should be auto-tagged for a given
+// exercise position in the session.
+//
+// Rule 1: First exercise of session → always 2 warm-up sets
+// Rule 2: New muscle group, shoulders → always 1 (joint protection)
+// Rule 3: New muscle group, isolation (non-shoulder) → 1
+// Rule 4: New muscle group, compound non-shoulder → 0 (general warmth assumed)
+// Rule 5: Muscle already warmed → 0
+// ─────────────────────────────────────────────────────────────
+function getAutoWarmupSets(exIdx, exList, warmedMuscles, META) {
+  if (exIdx === 0) return 2;
+  const name   = exList[exIdx]?.name;
+  const meta   = META[name] || {};
+  const muscle = meta.muscle;
+  if (!muscle) return 0;
+  if (warmedMuscles.has(muscle)) return 0;
+  if (muscle === "shoulders") return 1;
+  if (!meta.compound) return 1;
+  return 0;
+}
+
 function calcScore(log,prs,ext){
   // Working sets only — warmup sets must not inflate volume, PR, or set-count scoring.
   const wlog = log.filter(s=>!s.warmup);
@@ -668,6 +691,7 @@ export default function IronGame(){
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
   const [warmupNext, setWarmupNext] = useState(false);
+  const [warmedMuscles,setWarmedMuscles] = useState(new Set()); // muscles warmed this session
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -687,6 +711,19 @@ export default function IronGame(){
   useEffect(() => {
     if (phase === "ready") setRepInput(null);
   }, [phase, exIdx, setIdx]);
+
+  // Auto warm-up: set warmupNext=true when rules say this set should be a warm-up.
+  // Fires when exercise changes or a set is logged (log.length changes).
+  // User can always override by tapping the pill.
+  useEffect(() => {
+    if (phase !== "ready" || !ex) return;
+    const autoNeeded  = getAutoWarmupSets(exIdx, exList, warmedMuscles, META);
+    const warmupDone  = log.filter(s => s.exercise === ex.name && s.warmup).length;
+    const workingDone = log.filter(s => s.exercise === ex.name && !s.warmup).length;
+    if (workingDone === 0 && warmupDone < autoNeeded) {
+      setWarmupNext(true);
+    }
+  }, [exIdx, log.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -750,6 +787,12 @@ export default function IronGame(){
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
   // Warm-up tag is now user-controlled via the warmupNext pill on the Set ready screen.
   const isWarmupSet = warmupNext;
+  // Auto-warmup count for display on the pill
+  const autoWarmupNeeded = ex ? getAutoWarmupSets(exIdx, exList, warmedMuscles, META) : 0;
+  const autoWarmupDone   = ex ? log.filter(s => s.exercise === ex.name && s.warmup).length : 0;
+  const autoWarmupLabel  = autoWarmupNeeded > 0 && autoWarmupDone < autoWarmupNeeded
+    ? ` ${autoWarmupDone + 1}/${autoWarmupNeeded}`
+    : "";
   const isBw = m.eq === "bodyweight";
   const tgt    = ex&&!isBw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
@@ -829,7 +872,7 @@ export default function IronGame(){
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
-    setLastRes(null);setLastWt(null);setPhase("ready");
+    setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -839,7 +882,7 @@ export default function IronGame(){
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
-    setLastRes(null);setLastWt(null);setPhase("ready");
+    setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -925,6 +968,11 @@ export default function IronGame(){
       setPhase("ready");
       return;
     }
+    // Mark muscle group as warmed on first working set for this exercise
+    const exMetaM = META[ex.name] || {};
+    if (exMetaM.muscle) {
+      setWarmedMuscles(prev => new Set([...prev, exMetaM.muscle]));
+    }
     setLastRes(res);setLastWt(wt);
     const pr=prs[ex.name];
     if(res!=="fell_short"&&pr&&!pr.bw&&wt>pr.weight){
@@ -940,7 +988,7 @@ export default function IronGame(){
   const reset=()=>{
     setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
-    setSessionStart(null);setSessionEnd(null);setWarmupNext(false);
+    setSessionStart(null);setSessionEnd(null);setWarmupNext(false);setWarmedMuscles(new Set());
   };
 
   const shell={background:C.page,minHeight:"100dvh",color:C.wht,
@@ -1675,7 +1723,7 @@ export default function IronGame(){
                     borderRadius:5,padding:"4px 10px",letterSpacing:"0.1em",
                     textTransform:"uppercase",cursor:"pointer",
                     boxShadow:warmupNext?"0 2px 10px rgba(255,180,0,0.35)":"none"}}>
-                  {warmupNext?"Warm-up ✓":"+ Warm-up"}
+                  {warmupNext ? `Warm-Up${autoWarmupLabel} ✓` : autoWarmupNeeded > 0 ? `+ Warm-Up${autoWarmupLabel}` : "+ Warm-Up"}
                 </button>
               )}
             </div>
