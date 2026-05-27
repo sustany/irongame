@@ -2046,6 +2046,16 @@ export default function IronGame(){
 
       {/* BOTTOM — THUMB ZONE */}
       <div style={{padding:"14px 18px 42px",background:C.page,borderTop:`2px solid ${C.bdr}`}}>
+        {phase==="ready"&&(
+          <button className="t" onClick={()=>setShowExPicker(true)}
+            style={{width:"100%",height:42,background:"transparent",
+              border:`1px solid ${C.bdr}`,borderRadius:10,
+              fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
+              color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",
+              marginBottom:10,cursor:"pointer"}}>
+            Change Exercise
+          </button>
+        )}
         {phase==="ready"?(
           <RedBtn onClick={()=>setPhase("logging")} h={70}>
             {isWarmupSet ? "Begin Warm-Up" : `Begin Set ${setIdx+1}`}
@@ -2209,18 +2219,6 @@ export default function IronGame(){
             })()}
           </>
         )}
-        {phase==="ready"&&(
-          <button className="t" onClick={()=>setShowExPicker(true)}
-            style={{width:"100%",height:42,background:"transparent",
-              border:`1px solid ${C.bdr}`,borderRadius:10,
-              fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
-              color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",
-              marginTop:10,cursor:"pointer"}}>
-            Change Exercise
-          </button>
-        )}
-
-
         {/* ── Music bar ─────────────────────────────────────── */}
         {screen==="session"&&(
           <div style={{borderTop:`1px solid ${C.bdr}`,marginTop:8,paddingTop:8}}>
@@ -2354,7 +2352,7 @@ export default function IronGame(){
           }}
           style={{textAlign:"center",marginTop:4,padding:"4px 0",cursor:"pointer",
             fontFamily:"'JetBrains Mono',monospace",fontWeight:600,
-            fontSize:9,color:"rgba(255,255,255,0.14)",letterSpacing:"0.12em"}}>
+            fontSize:9,color:"rgba(255,255,255,0.45)",letterSpacing:"0.12em"}}>
           {BUILD_VERSION} · TAP TO RELOAD
         </div>
       </div>
