@@ -1229,7 +1229,7 @@ export default function IronGame(){
 
           {/* SESSION TYPE — second choice */}
           <div style={{marginBottom:18}}>
-            <SL>Session Type</SL>
+            <SL>Session Type (click to preview)</SL>
             <div style={{display:"flex",gap:10}}>
               <TypeCard type="push" label="Push"
                 muscles={"Chest\nShoulders · Triceps"}
@@ -1244,18 +1244,14 @@ export default function IronGame(){
           </div>
 
           {/* PREVIEW */}
-          <div style={{marginBottom:28}}>
-            {sesType?<Preview type={sesType} extended={ext}
-              opener={customOpener}
-              onPickOpener={()=>setShowOpenerPicker(true)}
-            />:(
-              <div style={{border:`1px dashed ${C.bdr}`,borderRadius:12,padding:"24px",
-                textAlign:"center",fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:14,
-                color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",background:C.inner}}>
-                Select session type to preview
-              </div>
-            )}
-          </div>
+          {sesType&&(
+            <div style={{marginBottom:28}}>
+              <Preview type={sesType} extended={ext}
+                opener={customOpener}
+                onPickOpener={()=>setShowOpenerPicker(true)}
+              />
+            </div>
+          )}
           <div style={{flex:1}}/>
 
           <RedBtn onClick={()=>launch(["pull","legs"].includes(sesType))} disabled={!ready}>
