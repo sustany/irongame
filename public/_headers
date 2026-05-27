@@ -3,9 +3,11 @@
 
 /
   Cache-Control: no-cache, no-store, must-revalidate
+  Clear-Site-Data: "cache", "storage"
 
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
+  Clear-Site-Data: "cache", "storage"
 
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
