@@ -2387,7 +2387,14 @@ export default function IronGame(){
         )}
         {/* In-session build stamp — confirms which deploy is running. Tap to force-reload. */}
         <div onClick={()=>{
-            if (typeof window !== 'undefined' && window.location) {
+            // Force-unregister service worker so next load fetches fresh files
+            if('serviceWorker' in navigator){
+              navigator.serviceWorker.getRegistrations().then(regs=>{
+                Promise.all(regs.map(r=>r.unregister())).then(()=>{
+                  window.location.reload();
+                });
+              });
+            } else {
               window.location.reload();
             }
           }}
