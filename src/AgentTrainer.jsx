@@ -1838,36 +1838,7 @@ export default function IronGame(){
         </div>
       </div>
 
-      {/* Sub-score bars */}
-      <div style={{display:"flex",background:C.card,borderBottom:`1px solid ${C.bdr}`}}>
-        {[{l:"MUS",v:score.muscle,m:45,pending:false},
-          {l:"CAL",v:score.cal,m:25,pending:true},
-          {l:"CRD",v:score.cv,m:15,pending:false},
-          {l:"FND",v:score.found,m:15,pending:false}].map(({l,v,m,pending},i)=>(
-          <div key={l} style={{flex:1,padding:"5px 4px 7px",textAlign:"center",
-            borderRight:i<3?`1px solid ${C.bdr}`:"none"}}>
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:9,
-              color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:2}}>{l}</div>
-            {/* CAL is a proxy during session — actual kcal only available on results from iCardio.
-                Show em-dash to avoid presenting a fabricated number as live data. */}
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:15,color: pending ? C.md : (v>=m?C.grn:C.wht)}}>
-              {pending ? "—" : v}
-            </div>
-            <div style={{background:C.inner,height:4,margin:"3px 6px 0",borderRadius:2,
-              border:`1px solid ${C.bdr}`}}>
-              <div style={{
-                background: pending
-                  ? `repeating-linear-gradient(45deg,${C.bdr},${C.bdr} 2px,transparent 2px,transparent 4px)`
-                  : (v>=m
-                    ?"linear-gradient(90deg,#22dd66,#15993f)"
-                    :"linear-gradient(90deg,#e8260a,#aa1a00)"),
-                height:"100%",width: pending ? "100%" : `${(v/m)*100}%`,borderRadius:1,
-              }}/>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Sub-score bars removed — C1: shown on complete screen only */}
 
       {/* Exercise content */}
       {ex&&(
@@ -2153,10 +2124,7 @@ export default function IronGame(){
           /* ── PHR ENTRY ───────────────────────────────────── */
           <div>
             <div style={{marginBottom:14}}>
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                color:C.md,letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:6}}>
-                Peak Heart Rate · Set {pendingResult?setIdx+1:""}
-              </div>
+
               {/* BPM display */}
               <div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:12}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:80,
@@ -2202,13 +2170,7 @@ export default function IronGame(){
             <RedBtn onClick={()=>confirmPhr(phrInput)} h={64}>
               Log Set — {phrInput} BPM
             </RedBtn>
-            <button className="t" onClick={()=>confirmPhr(null)}
-              style={{width:"100%",height:36,background:"transparent",border:"none",
-                fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
-                color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",
-                marginTop:6,cursor:"pointer"}}>
-              No HR Data — Skip
-            </button>
+
           </div>
         ):(
           <>
