@@ -1688,17 +1688,22 @@ export default function IronGame(){
         padding:"10px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",
         boxShadow:"0 2px 14px rgba(0,0,0,0.5)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          {/* Back chevron — undoes the most recent logged set */}
-          <button className="t" onClick={undoLastSet}
-            disabled={log.length===0}
-            style={{width:32,height:32,borderRadius:8,cursor:log.length===0?"not-allowed":"pointer",
-              background:log.length===0?"transparent":"rgba(255,255,255,0.06)",
-              border:`1px solid ${log.length===0?"rgba(255,255,255,0.08)":C.bdr}`,
-              color:log.length===0?"rgba(255,255,255,0.2)":C.lt,
+          {/* Back chevron — phase-aware: cancels current logging/phr, undoes last logged set, or returns to setup */}
+          <button className="t"
+            onClick={()=>{
+              if(phase==="phr"){setPendingResult(null);setPhase("ready");setWeightAdj(0);return;}
+              if(phase==="logging"){setPhase("ready");setWeightAdj(0);return;}
+              if(log.length>0){undoLastSet();return;}
+              setScreen("setup");
+            }}
+            style={{width:36,height:36,borderRadius:8,cursor:"pointer",
+              background:"rgba(255,255,255,0.10)",
+              border:`1px solid ${C.bdrTop}`,
+              color:C.wht,
               display:"flex",alignItems:"center",justifyContent:"center",
-              fontFamily:"'Bebas Neue',sans-serif",fontSize:20,lineHeight:1,padding:0,
+              fontFamily:"'Bebas Neue',sans-serif",fontSize:22,lineHeight:1,padding:0,
               flexShrink:0}}
-            title={log.length===0?"Nothing to undo":"Undo last set"}>
+            title="Back">
             ←
           </button>
           <div>
