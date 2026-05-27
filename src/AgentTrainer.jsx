@@ -173,7 +173,7 @@ const _hr  = _pst.getUTCHours();
 const _min = String(_pst.getUTCMinutes()).padStart(2,'0');
 const _ampm= _hr >= 12 ? 'PM' : 'AM';
 const _hr12= _hr % 12 || 12;
-const BUILD_VERSION = `ALPHA · ${_mo}/${_dy}/${_yr} · ${_hr12}:${_min} ${_ampm} PST`;
+const BUILD_VERSION = `${_mo}/${_dy} · ${_hr12}:${_min}${_ampm}`;
 
 // ─────────────────────────────────────────────────────────────
 // WORKOUT PLAYLIST — add songs via the + button during a session.
@@ -1189,11 +1189,25 @@ export default function IronGame(){
             </button>
           )}
 
-          {/* Version stamp */}
-          <div style={{textAlign:"center",marginTop:24,
-            fontFamily:"'JetBrains Mono',monospace",fontWeight:600,
-            fontSize:10,color:"rgba(255,255,255,0.18)",letterSpacing:"0.15em"}}>
-            {BUILD_VERSION}
+          {/* Version stamp — tap to force-reload */}
+          <div onClick={()=>{
+              if('serviceWorker' in navigator){
+                navigator.serviceWorker.getRegistrations().then(regs=>{
+                  Promise.all(regs.map(r=>r.unregister())).then(()=>window.location.reload());
+                });
+              } else { window.location.reload(); }
+            }}
+            style={{marginTop:20,padding:"10px 16px",cursor:"pointer",
+              background:"rgba(255,255,255,0.10)",
+              border:"1px solid rgba(255,255,255,0.30)",
+              borderRadius:10,textAlign:"center"}}>
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
+              fontSize:10,color:"rgba(255,255,255,0.55)",letterSpacing:"0.18em",
+              textTransform:"uppercase",marginBottom:2}}>TAP TO RELOAD</div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
+              fontSize:16,color:"#ffffff",letterSpacing:"0.06em"}}>
+              {BUILD_VERSION}
+            </div>
           </div>
         </div>
 
