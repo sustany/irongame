@@ -742,6 +742,11 @@ export default function IronGame(){
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.replace(window.location.pathname + '?v=' + Date.now());
       });
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data && e.data.type === 'SW_RELOAD') {
+          window.location.replace(window.location.pathname + '?v=' + Date.now());
+        }
+      });
     }
   }, []);
 

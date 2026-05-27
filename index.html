@@ -19,6 +19,19 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(regs){
+          if(regs.length>0){
+            Promise.all(regs.map(function(r){return r.unregister();})).then(function(){
+              (window.caches?caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k);}));}):Promise.resolve()).then(function(){
+                window.location.replace(location.pathname+'?v='+Date.now());
+              });
+            });
+          }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
