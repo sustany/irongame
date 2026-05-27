@@ -1254,9 +1254,11 @@ export default function IronGame(){
           )}
           <div style={{flex:1}}/>
 
-          <RedBtn onClick={()=>launch(["pull","legs"].includes(sesType))} disabled={!ready}>
-            {ready?`Begin ${sesType.charAt(0).toUpperCase()+sesType.slice(1)} Session`:"Select Session Type"}
-          </RedBtn>
+          {ready&&(
+            <RedBtn onClick={()=>launch(["pull","legs"].includes(sesType))}>
+              {`Begin ${sesType.charAt(0).toUpperCase()+sesType.slice(1)} Session`}
+            </RedBtn>
+          )}
 
 
           {/* Reset — only shows after selections made */}
