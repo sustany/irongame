@@ -2337,9 +2337,8 @@ export default function IronGame(){
             End Session
           </button>
         )}
-        {/* In-session build stamp — confirms which deploy is running. Tap to force-reload. */}
+        {/* In-session build stamp — tap to force-reload to latest build */}
         <div onClick={()=>{
-            // Force-unregister service worker so next load fetches fresh files
             if('serviceWorker' in navigator){
               navigator.serviceWorker.getRegistrations().then(regs=>{
                 Promise.all(regs.map(r=>r.unregister())).then(()=>{
@@ -2350,13 +2349,20 @@ export default function IronGame(){
               window.location.reload();
             }
           }}
-          style={{textAlign:"center",marginTop:8,padding:"7px 12px",cursor:"pointer",
-            fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-            fontSize:12,color:"#ffffff",letterSpacing:"0.08em",
-            background:"rgba(255,255,255,0.10)",
-            border:"1px solid rgba(255,255,255,0.2)",
-            borderRadius:8}}>
-          {BUILD_VERSION} · TAP TO RELOAD
+          style={{marginTop:12,padding:"10px 16px",cursor:"pointer",
+            background:"rgba(255,255,255,0.12)",
+            border:"1px solid rgba(255,255,255,0.35)",
+            borderRadius:10,
+            display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
+            fontSize:11,color:"rgba(255,255,255,0.6)",letterSpacing:"0.18em",
+            textTransform:"uppercase"}}>
+            TAP TO RELOAD
+          </div>
+          <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
+            fontSize:14,color:"#ffffff",letterSpacing:"0.06em"}}>
+            {BUILD_VERSION}
+          </div>
         </div>
       </div>
 
