@@ -759,24 +759,24 @@ export default function IronGame(){
   },[playlist]);
 
   // ── Music helpers ─────────────────────────────────────────
-  // iOS requires the user to tap DIRECTLY on the YouTube iframe for audio.
-  // ▶ toggles the visible YouTube player. Skip buttons change the track —
-  // the iframe remounts via key prop and the user taps YouTube's play button.
+  // YouTube audio in iOS web apps is fundamentally blocked regardless of
+  // embed technique. Solution: open YouTube directly — iOS keeps audio
+  // running when user switches back to IronGame. Same pattern as Peloton.
   const musicPlay = () => {
-    setShowPlayer(v => !v);
-    setIsPlaying(v => !v);
+    const track = shuffled[trackIdx];
+    if (!track) return;
+    window.open(`https://www.youtube.com/watch?v=${track.ytId}`, '_blank');
+    setIsPlaying(true);
   };
   const musicNext = () => {
     const next=(trackIdx+1)%shuffled.length;
     setTrackIdx(next);
-    setShowPlayer(true);
-    setIsPlaying(true);
+    setIsPlaying(false);
   };
   const musicPrev = () => {
     const prev=(trackIdx-1+shuffled.length)%shuffled.length;
     setTrackIdx(prev);
-    setShowPlayer(true);
-    setIsPlaying(true);
+    setIsPlaying(false);
   };
   const musicAddTrack = async () => {
     const id=extractYTId(addTrackUrl);
@@ -2217,21 +2217,7 @@ export default function IronGame(){
             Change Exercise
           </button>
         )}
-        {/* ── YouTube player — visible strip, user taps YouTube's play button ── */}
-        {showPlayer&&shuffled[trackIdx]&&(
-          <div style={{borderRadius:10,overflow:"hidden",marginBottom:6}}>
-            <iframe
-              key={shuffled[trackIdx].ytId}
-              src={`https://www.youtube.com/embed/${shuffled[trackIdx].ytId}?rel=0&modestbranding=1&playsinline=1`}
-              width="100%"
-              height="180"
-              allow="autoplay; encrypted-media"
-              allowFullScreen={false}
-              style={{border:"none",display:"block"}}
-              title="workout-music"
-            />
-          </div>
-        )}
+
 
         {/* ── Music bar ─────────────────────────────────────── */}
         {screen==="session"&&(
@@ -2242,7 +2228,7 @@ export default function IronGame(){
               <div style={{flex:1,overflow:"hidden"}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:1}}>
-                  {showPlayer?"▶ Now Playing":"Music — tap ▶ to load"}
+                  {isPlaying?"♪ Playing in YouTube":"Music"}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
                   color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
@@ -2263,11 +2249,11 @@ export default function IronGame(){
                 {/* Play/Pause */}
                 <button className="t" onClick={musicPlay}
                   style={{width:38,height:38,borderRadius:8,
-                    border:`1px solid ${isPlaying?C.red:C.bdr}`,
-                    background:isPlaying?"rgba(232,38,10,0.15)":C.card,
-                    color:isPlaying?C.red:C.lt,fontSize:16,cursor:"pointer",
+                    border:`1px solid ${C.red}`,
+                    background:"rgba(232,38,10,0.18)",
+                    color:C.red,fontSize:16,cursor:"pointer",
                     display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {showPlayer?"⏹":"▶"}
+                  {"▶"}
                 </button>
                 {/* Next */}
                 <button className="t" onClick={musicNext}
