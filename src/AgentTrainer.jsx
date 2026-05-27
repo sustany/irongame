@@ -2350,9 +2350,12 @@ export default function IronGame(){
               window.location.reload();
             }
           }}
-          style={{textAlign:"center",marginTop:4,padding:"4px 0",cursor:"pointer",
-            fontFamily:"'JetBrains Mono',monospace",fontWeight:600,
-            fontSize:9,color:"rgba(255,255,255,0.45)",letterSpacing:"0.12em"}}>
+          style={{textAlign:"center",marginTop:8,padding:"7px 12px",cursor:"pointer",
+            fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
+            fontSize:12,color:"#ffffff",letterSpacing:"0.08em",
+            background:"rgba(255,255,255,0.10)",
+            border:"1px solid rgba(255,255,255,0.2)",
+            borderRadius:8}}>
           {BUILD_VERSION} · TAP TO RELOAD
         </div>
       </div>
