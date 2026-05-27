@@ -2179,23 +2179,21 @@ export default function IronGame(){
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,
                   color:C.red}}>BPM</div>
               </div>
-              {/* Quick-select — zone boundary anchors derived from MAX_HR */}
-              <div style={{display:"flex",gap:6,marginBottom:10}}>
-                {HR_ZONES.map(z=>{
-                  const anchor = z.label==="Recovery" ? z.hi
-                    : z.label==="Max Effort" ? Math.round(MAX_HR*0.97)
-                    : Math.round((z.lo+z.hi)/2);
-                  const active = phrInput===anchor;
+              {/* Quick-select — clean increments of 10 (80–140 BPM), zone-tinted */}
+              <div style={{display:"flex",gap:4,marginBottom:10}}>
+                {[80,90,100,110,120,130,140].map(v=>{
+                  const zone = HR_ZONES.find(z=>v>=z.lo&&v<=z.hi) || HR_ZONES[0];
+                  const active = phrInput===v;
                   return (
-                    <button key={z.label} className="t" onClick={()=>setPhrInput(anchor)} style={{
+                    <button key={v} className="t" onClick={()=>setPhrInput(v)} style={{
                       flex:1,borderRadius:7,cursor:"pointer",padding:"5px 0",
-                      background:active?`${z.color}22`:"rgba(255,255,255,0.05)",
-                      border:`1px solid ${active?z.color:C.bdr}`,
-                      color:active?z.color:C.md,
+                      background:active?`${zone.color}22`:"rgba(255,255,255,0.05)",
+                      border:`1px solid ${active?zone.color:C.bdr}`,
+                      color:active?zone.color:C.md,
                       display:"flex",flexDirection:"column",alignItems:"center",gap:1,
                     }}>
-                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:"0.04em"}}>{anchor}</span>
-                      <span style={{fontFamily:"'Inter',sans-serif",fontSize:8,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase"}}>{z.label.split(" ")[0]}</span>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:"0.04em"}}>{v}</span>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontSize:8,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase"}}>{zone.label.split(" ")[0]}</span>
                     </button>
                   );
                 })}
