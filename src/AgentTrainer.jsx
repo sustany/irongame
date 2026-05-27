@@ -1265,12 +1265,18 @@ export default function IronGame(){
           )}
 
           {/* Version stamp — tap to force-reload */}
-          <div onClick={()=>{
-              if('serviceWorker' in navigator){
-                navigator.serviceWorker.getRegistrations().then(regs=>{
-                  Promise.all(regs.map(r=>r.unregister())).then(()=>window.location.reload());
-                });
-              } else { window.location.reload(); }
+          <div onClick={async()=>{
+              try{
+                if('serviceWorker' in navigator){
+                  const regs=await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map(r=>r.unregister()));
+                }
+                if('caches' in window){
+                  const keys=await caches.keys();
+                  await Promise.all(keys.map(k=>caches.delete(k)));
+                }
+              }catch(e){}
+              window.location.replace(window.location.pathname+'?v='+Date.now());
             }}
             style={{marginTop:20,padding:"10px 16px",cursor:"pointer",
               background:"rgba(255,255,255,0.10)",
@@ -2389,16 +2395,18 @@ export default function IronGame(){
           </button>
         )}
         {/* In-session build stamp — tap to force-reload to latest build */}
-        <div onClick={()=>{
-            if('serviceWorker' in navigator){
-              navigator.serviceWorker.getRegistrations().then(regs=>{
-                Promise.all(regs.map(r=>r.unregister())).then(()=>{
-                  window.location.reload();
-                });
-              });
-            } else {
-              window.location.reload();
-            }
+        <div onClick={async()=>{
+            try{
+              if('serviceWorker' in navigator){
+                const regs=await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map(r=>r.unregister()));
+              }
+              if('caches' in window){
+                const keys=await caches.keys();
+                await Promise.all(keys.map(k=>caches.delete(k)));
+              }
+            }catch(e){}
+            window.location.replace(window.location.pathname+'?v='+Date.now());
           }}
           style={{marginTop:12,padding:"10px 16px",cursor:"pointer",
             background:"rgba(255,255,255,0.12)",
