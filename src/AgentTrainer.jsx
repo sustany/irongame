@@ -1907,17 +1907,12 @@ export default function IronGame(){
                       textTransform:"uppercase"}}>Gym Max</div>
                   )}
                 </div>
-                {(isBw||isWarmupSet)?(
+                {isBw?(
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:46,
                       color:isWarmupSet?"rgba(255,180,0,0.85)":C.lt}}>
-                      {isWarmupSet?"Bodyweight":""}{prs[ex.name]?.unit==="sec"?`/ ${prs[ex.name].reps} sec`:""}
+                      {prs[ex.name]?.unit==="sec"?`/ ${prs[ex.name].reps} sec`:""}
                     </div>
-                    {isWarmupSet&&(
-                      <div style={{fontFamily:"'Inter',sans-serif",fontSize:12,fontWeight:600,
-                        color:"rgba(255,180,0,0.5)",letterSpacing:"0.1em",textTransform:"uppercase",
-                        marginTop:2}}>Sled only · No plates</div>
-                    )}
                   </div>
                 ):(
                   <>
