@@ -719,10 +719,7 @@ export default function IronGame(){
   const [showAddTrack,  setShowAddTrack] = useState(false);
   const [addTrackUrl,   setAddTrackUrl]  = useState("");
   const [addTrackStatus,setAddTrackStatus]=useState(""); // "loading"|"ok"|"error"
-  const ytPlayerRef  = useRef(null);
-  const ytReadyRef   = useRef(false);
-  const shuffledRef  = useRef(shuffled); // stable ref to avoid stale closures
-  shuffledRef.current = shuffled;
+  const [ytSrc, setYtSrc] = useState(""); // iframe src — set on play, cleared on pause
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -755,75 +752,39 @@ export default function IronGame(){
       setWarmupNext(true);
     }
   }, [exIdx, log.length]); // eslint-disable-line react-hooks/exhaustive-deps
-  // ── YouTube IFrame API init ───────────────────────────────
-  useEffect(() => {
-    const initPlayer = () => {
-      if (!document.getElementById('yt-player-hidden')) return;
-      ytPlayerRef.current = new window.YT.Player('yt-player-hidden', {
-        height:'1', width:'1',
-        playerVars:{ autoplay:0, controls:0, playsinline:1, rel:0 },
-        events:{
-          onReady:()=>{ ytReadyRef.current=true; },
-          onStateChange:(e)=>{
-            setIsPlaying(e.data===1);
-            // Auto-advance when track ends
-            if(e.data===0){
-              setTrackIdx(prev=>{
-                const next=(prev+1)%shuffledRef.current.length;
-                setTimeout(()=>{
-                  if(ytReadyRef.current)
-                    ytPlayerRef.current.loadVideoById(shuffledRef.current[next].ytId);
-                },300);
-                return next;
-              });
-            }
-          }
-        }
-      });
-    };
-    if(window.YT&&window.YT.Player){ initPlayer(); return; }
-    window.onYouTubeIframeAPIReady=initPlayer;
-    if(!document.querySelector('script[src*="iframe_api"]')){
-      const s=document.createElement('script');
-      s.src='https://www.youtube.com/iframe_api';
-      document.head.appendChild(s);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // ── YouTube iframe src builder ────────────────────────────
+  // iOS allows autoplay when src is set directly from a user gesture (onClick).
+  // This avoids the IFrame API which iOS blocks for programmatic playVideo().
+  const buildYTSrc = (ytId) =>
+    `https://www.youtube.com/embed/${ytId}?autoplay=1&playsinline=1&rel=0&controls=0&modestbranding=1`;
 
   // Persist playlist to localStorage when it changes
   useEffect(()=>{
     try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
   },[playlist]);
 
-  // Music helpers
+  // Music helpers — src-swap approach works on iOS Safari
   const musicPlay = () => {
-    if(!ytReadyRef.current) return;
-    const track = shuffled[trackIdx];
-    if(isPlaying){ ytPlayerRef.current.pauseVideo(); }
-    else {
-      // If nothing loaded yet, load first track
-      try{
-        const state=ytPlayerRef.current.getPlayerState();
-        if(state===-1||state===5){ ytPlayerRef.current.loadVideoById(track.ytId); }
-        ytPlayerRef.current.playVideo();
-      }catch{}
+    if(ytSrc){
+      // Pause: remove iframe (stops audio)
+      setYtSrc(""); setIsPlaying(false);
+    } else {
+      // Play: set src with autoplay=1 from user gesture — iOS allows this
+      setYtSrc(buildYTSrc(shuffled[trackIdx].ytId));
+      setIsPlaying(true);
     }
   };
   const musicNext = () => {
     const next=(trackIdx+1)%shuffled.length;
     setTrackIdx(next);
-    if(ytReadyRef.current){
-      ytPlayerRef.current.loadVideoById(shuffled[next].ytId);
-      if(isPlaying) ytPlayerRef.current.playVideo();
-    }
+    setYtSrc(buildYTSrc(shuffled[next].ytId));
+    setIsPlaying(true);
   };
   const musicPrev = () => {
     const prev=(trackIdx-1+shuffled.length)%shuffled.length;
     setTrackIdx(prev);
-    if(ytReadyRef.current){
-      ytPlayerRef.current.loadVideoById(shuffled[prev].ytId);
-      if(isPlaying) ytPlayerRef.current.playVideo();
-    }
+    setYtSrc(buildYTSrc(shuffled[prev].ytId));
+    setIsPlaying(true);
   };
   const musicAddTrack = async () => {
     const id=extractYTId(addTrackUrl);
@@ -998,7 +959,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setYtSrc("");
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -1009,7 +970,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setYtSrc("");
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -2264,8 +2225,20 @@ export default function IronGame(){
             Change Exercise
           </button>
         )}
-        {/* ── Hidden YouTube player (audio only) ── */}
-        <div id="yt-player-hidden" style={{position:"absolute",width:1,height:1,opacity:0,pointerEvents:"none"}}/>
+        {/* ── YouTube audio player — src set from user gesture, iOS compatible ── */}
+        <div style={{height:1,overflow:"hidden",width:"100%"}}>
+          {ytSrc&&(
+            <iframe
+              key={ytSrc}
+              src={ytSrc}
+              width="100%"
+              height="200"
+              allow="autoplay; encrypted-media"
+              style={{border:"none"}}
+              title="workout-audio"
+            />
+          )}
+        </div>
 
         {/* ── Music bar ─────────────────────────────────────── */}
         {screen==="session"&&(
