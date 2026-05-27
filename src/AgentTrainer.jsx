@@ -736,6 +736,15 @@ export default function IronGame(){
     return () => clearInterval(id);
   }, []);
 
+  // Auto-reload when a new service worker takes control (e.g. selfDestroying SW)
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.replace(window.location.pathname + '?v=' + Date.now());
+      });
+    }
+  }, []);
+
   // Derive ext (5 vs 6 exercises) from time-constrained mode + departure time
   useEffect(()=>{
     if(!tcMode){setExt(false);return;}
