@@ -719,7 +719,7 @@ export default function IronGame(){
   const [showAddTrack,  setShowAddTrack] = useState(false);
   const [addTrackUrl,   setAddTrackUrl]  = useState("");
   const [addTrackStatus,setAddTrackStatus]=useState(""); // "loading"|"ok"|"error"
-  const [ytSrc, setYtSrc] = useState(""); // iframe src — set on play, cleared on pause
+  const [showPlayer, setShowPlayer] = useState(false); // show/hide YouTube player strip
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -753,37 +753,29 @@ export default function IronGame(){
     }
   }, [exIdx, log.length]); // eslint-disable-line react-hooks/exhaustive-deps
   // ── YouTube iframe src builder ────────────────────────────
-  // iOS allows autoplay when src is set directly from a user gesture (onClick).
-  // This avoids the IFrame API which iOS blocks for programmatic playVideo().
-  const buildYTSrc = (ytId) =>
-    `https://www.youtube.com/embed/${ytId}?autoplay=1&playsinline=1&rel=0&controls=0&modestbranding=1`;
-
   // Persist playlist to localStorage when it changes
   useEffect(()=>{
     try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
   },[playlist]);
 
-  // Music helpers — src-swap approach works on iOS Safari
+  // ── Music helpers ─────────────────────────────────────────
+  // iOS requires the user to tap DIRECTLY on the YouTube iframe for audio.
+  // ▶ toggles the visible YouTube player. Skip buttons change the track —
+  // the iframe remounts via key prop and the user taps YouTube's play button.
   const musicPlay = () => {
-    if(ytSrc){
-      // Pause: remove iframe (stops audio)
-      setYtSrc(""); setIsPlaying(false);
-    } else {
-      // Play: set src with autoplay=1 from user gesture — iOS allows this
-      setYtSrc(buildYTSrc(shuffled[trackIdx].ytId));
-      setIsPlaying(true);
-    }
+    setShowPlayer(v => !v);
+    setIsPlaying(v => !v);
   };
   const musicNext = () => {
     const next=(trackIdx+1)%shuffled.length;
     setTrackIdx(next);
-    setYtSrc(buildYTSrc(shuffled[next].ytId));
+    setShowPlayer(true);
     setIsPlaying(true);
   };
   const musicPrev = () => {
     const prev=(trackIdx-1+shuffled.length)%shuffled.length;
     setTrackIdx(prev);
-    setYtSrc(buildYTSrc(shuffled[prev].ytId));
+    setShowPlayer(true);
     setIsPlaying(true);
   };
   const musicAddTrack = async () => {
@@ -959,7 +951,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setYtSrc("");
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -970,7 +962,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setYtSrc("");
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -2225,20 +2217,21 @@ export default function IronGame(){
             Change Exercise
           </button>
         )}
-        {/* ── YouTube audio player — src set from user gesture, iOS compatible ── */}
-        <div style={{height:1,overflow:"hidden",width:"100%"}}>
-          {ytSrc&&(
+        {/* ── YouTube player — visible strip, user taps YouTube's play button ── */}
+        {showPlayer&&shuffled[trackIdx]&&(
+          <div style={{borderRadius:10,overflow:"hidden",marginBottom:6}}>
             <iframe
-              key={ytSrc}
-              src={ytSrc}
+              key={shuffled[trackIdx].ytId}
+              src={`https://www.youtube.com/embed/${shuffled[trackIdx].ytId}?rel=0&modestbranding=1&playsinline=1`}
               width="100%"
-              height="200"
+              height="180"
               allow="autoplay; encrypted-media"
-              style={{border:"none"}}
-              title="workout-audio"
+              allowFullScreen={false}
+              style={{border:"none",display:"block"}}
+              title="workout-music"
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* ── Music bar ─────────────────────────────────────── */}
         {screen==="session"&&(
@@ -2249,7 +2242,7 @@ export default function IronGame(){
               <div style={{flex:1,overflow:"hidden"}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:1}}>
-                  {isPlaying?"▶ Now Playing":"Music"}
+                  {showPlayer?"▶ Now Playing":"Music — tap ▶ to load"}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
                   color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
@@ -2274,7 +2267,7 @@ export default function IronGame(){
                     background:isPlaying?"rgba(232,38,10,0.15)":C.card,
                     color:isPlaying?C.red:C.lt,fontSize:16,cursor:"pointer",
                     display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {isPlaying?"⏸":"▶"}
+                  {showPlayer?"⏹":"▶"}
                 </button>
                 {/* Next */}
                 <button className="t" onClick={musicNext}
