@@ -676,6 +676,7 @@ export default function IronGame(){
   const [ext,       setExt]       = useState(false);
   const [tcMode,    setTcMode]    = useState(true);
   const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
+  const [genWarmup, setGenWarmup] = useState(false);
   const [exList,    setExList]    = useState([]);
   const [exIdx,     setExIdx]     = useState(0);
   const [setIdx,    setSetIdx]    = useState(0);
@@ -1221,10 +1222,38 @@ export default function IronGame(){
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
-                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return a<55?'→ 4 exercises · 14 sets':a<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
+                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a-(genWarmup?5:0);return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
                 </div>
               </div>
             )}
+          </div>
+
+          {/* GENERAL WARM-UP — 3-5 min treadmill before session */}
+          <div style={{marginBottom:18}}>
+            <button className="t" onClick={()=>setGenWarmup(g=>!g)} style={{
+              width:"100%",minHeight:54,borderRadius:12,padding:"10px 14px",cursor:"pointer",
+              background:genWarmup?STEEL_SEL:STEEL,
+              border:`1px solid ${genWarmup?C.red:C.bdr}`,
+              borderTop:`1px solid ${genWarmup?"#f03010":C.bdrTop}`,
+              boxShadow:genWarmup?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+              display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:24,height:24,borderRadius:6,
+                background:genWarmup?"rgba(255,255,255,0.18)":"rgba(255,255,255,0.04)",
+                border:`1px solid ${genWarmup?"rgba(255,255,255,0.4)":C.bdr}`,
+                display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {genWarmup&&<IChk s={14} style={{color:"#fff"}}/>}
+              </div>
+              <div style={{flex:1,textAlign:"left"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:"0.08em",color:C.wht,lineHeight:1}}>
+                  Treadmill Warm-Up
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:genWarmup?"rgba(255,255,255,0.78)":C.md,letterSpacing:"0.08em",
+                  textTransform:"uppercase",marginTop:3}}>
+                  3–5 min before session
+                </div>
+              </div>
+            </button>
           </div>
 
           {/* SESSION TYPE — second choice */}
@@ -1263,7 +1292,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setGenWarmup(false); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
