@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: true,
       registerType: 'autoUpdate',
       selfDestroying: true,
       includeAssets: ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
