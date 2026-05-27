@@ -674,6 +674,8 @@ export default function IronGame(){
   const [screen,    setScreen]    = useState("setup");
   const [sesType,   setSesType]   = useState(null);
   const [ext,       setExt]       = useState(false);
+  const [tcMode,    setTcMode]    = useState(true);
+  const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
   const [exList,    setExList]    = useState([]);
   const [exIdx,     setExIdx]     = useState(0);
   const [setIdx,    setSetIdx]    = useState(0);
@@ -733,6 +735,15 @@ export default function IronGame(){
     const id = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Derive ext (5 vs 6 exercises) from time-constrained mode + departure time
+  useEffect(()=>{
+    if(!tcMode){setExt(false);return;}
+    const[h,m]=depTime.split(':').map(Number);
+    const dep=new Date();dep.setHours(h,m,0,0);
+    const avail=Math.max(0,Math.round((dep-Date.now())/60000));
+    setExt(avail>=65);
+  },[tcMode,depTime]);
 
   // Reset rep stepper to default (adaptedTarget) whenever we land on the ready phase
   // or move to a different set/exercise. Avoids stale stepper values between sets.
@@ -1127,15 +1138,79 @@ export default function IronGame(){
             </div>
           </div>
 
-          {/* FORMAT — first choice */}
+          {/* FORMAT — time constrained vs flexible */}
           <div style={{marginBottom:18}}>
             <SL>Training Format</SL>
-            <div style={{display:"flex",gap:10}}>
-              <FmtCard label="Standard" sub="65 min · 5 exercises"
-                Icon={IClk} val={false} selected={ext} onClick={setExt}/>
-              <FmtCard label="Extended" sub="70–75 min · 6 exercises"
-                Icon={IPlus} val={true} selected={ext} onClick={setExt}/>
+            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
+              {/* Time Constrained */}
+              <button className="t" onClick={()=>setTcMode(true)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
+                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
+                </div>
+              </button>
+              {/* Flexible */}
+              <button className="t" onClick={()=>setTcMode(false)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:!tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${!tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${!tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:!tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IPlus s={16} style={{color:!tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Flexible</span>
+                  {!tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  Optimize for best stimulus
+                </div>
+              </button>
             </div>
+            {/* Departure time picker — only in TC mode */}
+            {tcMode&&(
+              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+                borderRadius:10,padding:"12px 14px",
+                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
+                  I need to leave by
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <input type="time" value={depTime}
+                    onChange={e=>setDepTime(e.target.value)}
+                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
+                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
+                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                      lineHeight:1,color:C.red}}>
+                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
+                    </div>
+                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
+                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return a<55?'→ 4 exercises · 14 sets':a<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* SESSION TYPE — second choice */}
@@ -1176,7 +1251,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})(); }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
