@@ -34,4 +34,5 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 **Open questions:**
 - Is warm-up load scaling already in `src/AgentTrainer.jsx` and broken, or never wired? Determines bug-fix vs feature -> drives daily-cap classification (A2) and SMOKE_TEST §5 gate (A1).
 **Session opens with:** "IronGame — warm-up load suggestion. Confirm live app state, then diff src/AgentTrainer.jsx warm-up prescription logic. Report bug-vs-feature before touching anything."
-**Status:** OPEN
+**Resolution (2026-05-28, laptop Cowork):** NOT a bug — reclassified to FEATURE. The 68% warm-up load ramp was deliberately removed (`suggestW`, AgentTrainer.jsx L401-402: "68% warmup ramp is no longer used — user controls warmup via + Warm-Up toggle"). Current design: warm-up sets are tagged (excluded from volume/PR/scoring, L434-435) but display the working load, reps, and HR; user dials plates down manually. App is in a valid testing state as-is. Feature backlog: optional auto-scaled warm-up prescription (ramp %, easier rep target, lower start-HR, interaction with manual plate control) — requires a design check-in before build.
+**Status:** RESOLVED 2026-05-28 (reclassified bug -> feature backlog; app valid for testing)
