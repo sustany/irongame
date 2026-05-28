@@ -24,6 +24,22 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-05-28 — Live test session after warm-up weight fix
+**From:** laptop Cowork    **To:** iPhone Chat
+**Payload:**
+- Pre-test fix shipped: `8666026` — warm-up pre-set now shows working load (e.g. 240 lb for Incline Press) instead of 0. User dials plates down manually from working load. 1-line change, smoke-tested, pushed to main.
+- Netlify auto-deploy triggered on push. Hard-reload PWA before starting session.
+- Prior session (2026-05-27) context: C0/C1/C2 clutter removals already shipped (`f9f5f60`). Back button live. Warm-up cue (muscle activation text) displays on warm-up pre-set screen. PHR screen clean — no skip link, no "PEAK HEART RATE" label.
+- SMOKE_TEST.md is the non-negotiable pre-commit gate for any session-screen change.
+- Daily cap (Rule A3): 0 feature changes used today (warm-up fix classified as bug fix, exempt).
+**Artifacts:** commit `8666026` (sustany/irongame main)
+**Open questions:**
+- What session type is today's test (Push / Pull / Legs)?
+- Does warm-up pre-set now correctly show working load after deploy?
+- Any new regressions observed mid-session? → capture as handoff payload back to laptop.
+**Session opens with:** "IronGame — post-fix live test 2026-05-28. Read top OPEN entry in LOG.md (GitHub sustany/irongame), confirm app loaded fresh (hard-reload), then start session."
+**Status:** OPEN
+
 ## 2026-05-28 — Warm-up set shows working load, not a scaled warm-up
 **From:** iPhone Chat    **To:** laptop Cowork
 **Payload:**
