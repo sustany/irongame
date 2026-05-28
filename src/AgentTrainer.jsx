@@ -900,7 +900,7 @@ export default function IronGame(){
     ? ` ${autoWarmupDone + 1}/${autoWarmupNeeded}`
     : "";
   const isBw = m.eq === "bodyweight";
-  const tgt    = ex&&!isBw&&!isWarmupSet?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
+  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
   // ── Double progression rep adaptation ──────────────────────
   // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
