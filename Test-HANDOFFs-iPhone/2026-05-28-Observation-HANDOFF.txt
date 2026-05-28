@@ -1,0 +1,23 @@
+IRONGAME — COWORK SESSION OPENER (paste this into the laptop Cowork "IronGame" project to continue)
+
+Context: continuing from the 2026-05-28 iPhone Chat Push test session. The full handoff is the top OPEN entry in 06_Handover/session-logs/LOG.md (GitHub: sustany/irongame). A standalone copy is the companion file IronGame_Handoff_2026-05-28_Push.md.
+
+Do this, in order:
+
+1. Confirm live app state. Clone/pull sustany/irongame main, confirm latest commit, hard-reload the Netlify PWA. State which device is active.
+
+2. Read the top OPEN entry in 06_Handover/session-logs/LOG.md before touching anything.
+
+3. Ship B-CAT1 (HIGH, bug fix, cap-exempt): audit CATEGORY (push/pull/legs) against INIT_PRS + META in src/AgentTrainer.jsx. Add seeds for orphans — confirmed: DB Flys, Assisted Dips (push), Reverse Pec Deck (pull). Pass SMOKE_TEST §3. Ships alone per A3.
+
+4. Ship B-INC1 (HIGH, bug fix, cap-exempt): consolidated 2.5 lb increment fix across dumbbell + stack equipment (fix the per-equipment steps array). Pass SMOKE_TEST §1b + §1c. Ships alone per A3.
+
+5. HOLD for my decision (do not build):
+   - Q-PULLEY1: log the stack SETTING vs. EFFECTIVE resistance (pulley ratio)?
+   - F-ATT1: cable attachment selection (feature — counts vs 4/day cap).
+
+6. Migrate section B (merch M1–M6, coach app PROD1, snap-to-log F1) to 00_Strategy/. Ask me whether to use one file or split.
+
+7. INFRA1 (server scaling assessment) is scheduled for this weekend — leave parked unless I open it.
+
+Rules in force: state device; clickable https:// links; full file paths; explain acronyms; lead with next action; per change state time+risk+rollback; no design changes without check-in; GitHub canonical; SMOKE_TEST gate blocks any failing push; classify every change as feature or bug fix in the reply header.
