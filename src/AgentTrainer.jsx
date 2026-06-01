@@ -1127,7 +1127,7 @@ export default function IronGame(){
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:66,
                 letterSpacing:"0.05em",lineHeight:1}}>
                 <span style={{color:C.red}}>IRON</span>
-                <span style={{color:C.wht}}>GAME</span>
+                <span style={{color:C.wht}}>Q</span>
               </div>
               <div style={{textAlign:"right",paddingTop:8}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,
