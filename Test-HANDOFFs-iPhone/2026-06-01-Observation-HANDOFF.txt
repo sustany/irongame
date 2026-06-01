@@ -1,0 +1,111 @@
+2026-06-01 — IRONQ iPHONE APP-TEST OBSERVATIONS (PULL day)
+Session: ~06:42–08:15 PT. Mode: log-only (not TP). Confirmed app name = IronQ.
+Screens observed: High Row PL (160x12 target), Seated Cable Row (175x8-12), Torso Rotation/Obliques (105x10). HR ~120-130 (aerobic).
+NOTE: no source files modified this session — observations/decisions only.
+
+------------------------------------------------------------
+APP ITEMS (src/AgentTrainer.jsx)
+------------------------------------------------------------
+
+[NAME1] CORRECTION / cap-exempt / HIGH
+Name inconsistent across three surfaces (rename commit d8da3f9 incomplete):
+ - wordmark renders "IRON GAME"  -> L1129-30 (<span>IRON</span><span>GAME</span>)
+ - export + email subject "Iron Quant" -> L1731, L1767
+ - index.html <title> + apple-mobile-web-app-title "IRON QUANT" -> L11, L18
+Canonical = IronQ. Unify ALL: wordmark, export/subject, index.html title+meta, public/manifest*, comment headers, LOG title.
+No open questions — proceed.
+
+[F-WARM1] FEATURE / design check-in
+(a) feedback detecting/confirming GENERAL (cardio) warm-up complete; (b) session-level warm-up SUGGESTION from the day's full planned schedule.
+Distinct from parked "auto-scaled warm-up prescription" (load ramp) and shipped per-exercise warmupCue strings.
+OPEN: completion trigger = auto-detect (HealthKit/iCardio/in-app timer) vs explicit "done" tap; scope = session-only vs session+per-exercise (session precedence).
+
+[F-CONFIRM1] FIX/safeguard / likely cap-exempt / MED-HIGH
+End Session (L~2426) ends on single tap, no confirm. TAP TO RELOAD (in-session build stamp L~2436) unregisters SWs + clears caches + location.replace, no confirm.
+Reload is the higher risk: with no persistence, an accidental tap wipes the in-progress session.
+Reuse wConf modal (>50% weight-change confirm) pattern. PERSIST1 makes reload non-destructive -> downgrades this.
+OPEN: styled modal vs interim native confirm; reload copy generic vs "discards in-progress session"; permanent vs interim-until-Dexie.
+
+[F-MUSIC1] FEATURE cosmetic / design check-in
+Remove "Music" label (conditional: shows "♪ Playing in YouTube" when playing, L~2305). Add note icon LEFT of player box. Artist row 1, title row 2.
+Data already split: DEFAULT_PLAYLIST = {title, artist, ytId}; currently concatenated "artist – title" (L~2320s). Pure render change.
+OPEN: remove label both states (lose "Playing in YouTube") vs keep indicator; note icon static vs animated when playing.
+
+[F-SETNUM1] FIX/consistency / likely cap-exempt
+LOG SET button (L2216) shows "Log Set — {phr} BPM" with no set number. BEGIN button already shows "Begin Set {setIdx+1}" / "Begin Warm-Up" (L2168). Mirror it (~1 line).
+OPEN: format/placement; warm-up = no number ("Log Warm-Up").
+
+------------------------------------------------------------
+PERSISTENCE
+------------------------------------------------------------
+State: session log/state in-memory only (HANDOFF #1). Playlist already persists via localStorage (ig_playlist, L715/784) -> bridge pattern proven in-file.
+[PERSIST1] DIRECTIVE (Christian, 2026-06-01): after laptop handoff, build interim localStorage bridge for session state (log/prs/sesType/exList/exIdx/setIdx/sessionStart) + "Resume session?" prompt on mount (not auto-jump; avoids gotcha #13). ~30 min, single commit, clean rip-out for Dexie.
+[PERSIST2] Dexie (top priority): core 3-5h (+migration 1-2h); history view +3-4h; PR trend +2-3h. OPEN: core-only vs +history+trend.
+
+------------------------------------------------------------
+PRODUCT / STRATEGY  (-> 00_Strategy/)
+------------------------------------------------------------
+[MON1] Earn-Back commitment-device membership — RESOLVES M2 earned-reward economics.
+ $20/mo = STAKE not fee; earned back as merch if commitment met; forfeits fund compliant members' merch (self-funding pool).
+ Rules: 5 workout days/[cycle]; never miss >2 in a row; makeup option; 3 strikes = forfeit period's merch.
+ FLAG legal: pooled forfeit-to-winners can trip gaming/sweepstakes/lottery reg (stickK routes forfeits to charity to avoid). Needs counsel.
+ FLAG econ/mission: margin scales with member FAILURE — tension with the app's training purpose.
+ OPEN params: cycle; strike triggers (5-day vs >2-in-row vs both); makeup mechanics+window; strike reset (monthly vs rolling); reward value (=$20 vs up-to vs fixed item); forfeit destination (members vs margin vs split).
+ John forward drafted in originating chat.
+
+[MON1-IP] IP of the membership/marketing process.
+ Pure marketing/business method largely unprotectable post-Alice. Layered moat: trademark/brand (name "Earn-Back" + trade dress); trade secret (forfeit-rate/economics calibration, anti-gaming, retention — NDA incl. John+devs); patent ONLY if technical novelty (verification method) ~$15-30k+, 2-4yr; copyright (materials); REAL moat = network effects (pool improves w/ scale) + brand + execution.
+ OPEN: jurisdiction; technical novelty?; goal (offensive vs FTO); what stays secret; budget.
+
+[LEVEL1] Level system + display (extends M2).
+ 1 continuous month = level 1, etc. Display ALPHANUMERIC, no raw "37"; letter+number encoding.
+ Protect encoding via trademark/trade-dress + trade-secret algo.
+ OPEN: continuity rule on forfeit month (reset/freeze/skip); legible (A12>A2 readable) vs insider/opaque; same code all merch vs shirt-specific.
+
+[LADDER1] Tiered reward ladder (extends M1/M2).
+ Higher-value milestone items at higher levels (L10 = custom prestige water bottle).
+ OPEN: is monthly earn-back merch SEPARATE from milestone rewards (two streams on one $20)? — changes MON1 economics.
+
+[AUTH1] Authenticity tech = M3 (lost-and-found = M5, locked, default anonymous in-app relay).
+ NFT (on-chain; collectible/transferable/public provenance; aligns DeFi thesis + DID-chair brand) vs signed-ID (centralized, cheaper; covers own/verify/retrieve).
+ OPEN for Karl: on-chain a strategic/brand requirement, or is verifiable authenticity the real goal (-> signed-ID).
+
+[PRICE1] Pricing + signup + Apple fee (MON1-related).
+ Apple IAP/commission (30%, 15% SBP) applies to DIGITAL subs; PHYSICAL goods/services EXEMPT -> physical-merch-club characterization may avoid Apple's cut even in-app; web signup is the other lever.
+ NOTE: US external-payment/anti-steering rules shifted in 2025 (Epic) — verify current 2026 specifics before quoting numbers.
+ $20 placeholder; finalize after MON1 economics.
+ MEMBER vs USER: define two-tier boundary (free app user vs paying member; commitment device members-only; app free as funnel).
+
+[EQUIP1] IronQ workout equipment — NEW product category.
+ Visualize improved equipment designs -> preorders -> determine MOQ/breakeven (unit cost vs tooling amortization vs preorder volume).
+ App-CONNECTED machines (auto-log and/or auto-program) = differentiator + patent hook.
+ IP: hardware STRONGLY protectable (design patents ~$2k ea, utility if novel, connected-system patent) — inverse of MON1.
+ FLAG: hardware-manufacturing pivot (capital/inventory/QC/liability/safety standards); preorder = right de-risker; its own business.
+ OPEN: "device for hand cleans" = HANG-CLEAN machine vs HYGIENE/hand-cleaning device (clarify); integration depth (log vs program vs both); stage (concept-viz vs specs/manufacturer).
+
+[DESIGN1] Icon/design-system session + "zero chrome words" objective.
+ Standardize all icons for conformity. Foundation: Iron Crest (IconPush/Pull/Legs SVGs) + generate-icons.html.
+ Claude can produce: full current-labels inventory (worklist) + icon list.
+ "Three design directions" BLOCKED on Christian's app-icon GRADIENT HEX CODES + label inventory. Everything flows from app icon.
+ FLAG: "zero words" achievable for CHROME labels only; content (exercise names, song artist/title, dates) + numbers resist iconification -> target = "zero chrome labels."
+ OPEN: scope (chrome-only vs +content); sequencing (label inventory now vs hold for gradient-first session).
+
+------------------------------------------------------------
+MEETING — Karl Soliman, TOMORROW
+------------------------------------------------------------
+Dependency order: (1) MON1 economics first; (2) LADDER1 two-stream; (3) LEVEL1 continuity/display; (4) AUTH1 NFT-vs-ID; (5) PRICE1 Apple + member-vs-user.
+Pending from Christian: meeting length; Karl product/economics vs legal/IP.
+Deliverable: one-page Karl brief + John forward once key answers in.
+
+------------------------------------------------------------
+HOUSEKEEPING (laptop-side; DESTRUCTIVE — confirm first)
+------------------------------------------------------------
+[HK1] Folder consolidation: stray "Irongame" (one word) + possibly "iron face game" — NOT in repo, laptop/Obsidian-side.
+ At handoff: list precisely -> consolidate under IronQ -> create 02_Equipment/. Confirm exact names + target before merge/delete.
+
+------------------------------------------------------------
+PENDING EXTERNAL INPUTS
+------------------------------------------------------------
+- App-icon gradient hex codes (DESIGN1).
+- Current 2026 Apple IAP/external-payment rules (PRICE1).
+- Karl meeting answers (MON1/LADDER1/LEVEL1/AUTH1/PRICE1 params).
