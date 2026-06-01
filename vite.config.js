@@ -14,8 +14,8 @@ export default defineConfig({
       selfDestroying: true,
       includeAssets: ['apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'IRONGAME',
-        short_name: 'IRONGAME',
+        name: 'IRON QUANT',
+        short_name: 'IRON QUANT',
         description: 'AI-powered gamified workout coach. Target: 100 pts.',
         theme_color: '#e8260a',
         background_color: '#0a0a0a',

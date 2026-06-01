@@ -1728,7 +1728,7 @@ export default function IronGame(){
           onClick={()=>{
             // Build a plain-text session summary for the user's mail client.
             const lines = [];
-            lines.push(`IronGame · ${sessionDate || ""}`.trim());
+            lines.push(`Iron Quant · ${sessionDate || ""}`.trim());
             lines.push(`${sesType?.toUpperCase() || "SESSION"} · ${elapsedMin} min · Score ${fs.total}/100`);
             lines.push("");
             if (kcal) lines.push(`Energy: ${kcal.toLocaleString()} kcal · Avg HR ${Math.round(avgPhr)}`);
@@ -1764,7 +1764,7 @@ export default function IronGame(){
                 lines.push(`    ${i+1}: ${s.weight}×${s.reps}${tag}${prTag}${hr}`);
               });
             });
-            const subject = `IronGame · ${sessionDate || ""} · ${sesType?.toUpperCase() || ""} · ${fs.total}/100`;
+            const subject = `Iron Quant · ${sessionDate || ""} · ${sesType?.toUpperCase() || ""} · ${fs.total}/100`;
             const body = lines.join("\n");
             window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
           }}
