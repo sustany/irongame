@@ -1304,6 +1304,7 @@ export default function IronGame(){
 
           {/* Version stamp — tap to force-reload */}
           <div onClick={async()=>{
+              if(!window.confirm('Reload to the latest build now?')) return;
               try{
                 if('serviceWorker' in navigator){
                   const regs=await navigator.serviceWorker.getRegistrations();
@@ -2432,6 +2433,7 @@ export default function IronGame(){
         )}
         {/* In-session build stamp — tap to force-reload to latest build */}
         <div onClick={async()=>{
+            if(!window.confirm('Reload to the latest build? Your current session and logged sets will be lost.')) return;
             try{
               if('serviceWorker' in navigator){
                 const regs=await navigator.serviceWorker.getRegistrations();
