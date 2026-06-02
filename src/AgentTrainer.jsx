@@ -1123,7 +1123,7 @@ export default function IronGame(){
           <div style={{marginBottom:30}}>
             {/* Logo left — day/date upper right */}
             <div style={{display:"flex",alignItems:"flex-start",
-              justifyContent:"space-between",marginBottom:4}}>
+              justifyContent:"space-between",marginBottom:2}}>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:66,
                 letterSpacing:"0.05em",lineHeight:1}}>
                 <span style={{color:C.red}}>IRON</span>
@@ -1138,15 +1138,15 @@ export default function IronGame(){
                 </svg>
               </div>
             </div>
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
-              color:C.md,letterSpacing:"0.16em",textTransform:"uppercase",marginBottom:6}}>
-              {dayName} &middot; {dateStr}
-            </div>
             <Div/>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:12,
                 color:C.md,letterSpacing:"0.2em",textTransform:"uppercase"}}>
                 SCIENCE + AI = RESULTS
+              </div>
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+                color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",whiteSpace:"nowrap"}}>
+                {dayName} &middot; {dateStr}
               </div>
             </div>
           </div>
