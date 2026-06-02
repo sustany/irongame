@@ -1138,6 +1138,10 @@ export default function IronGame(){
                 </svg>
               </div>
             </div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+              color:C.md,letterSpacing:"0.16em",textTransform:"uppercase",marginBottom:6}}>
+              {dayName} &middot; {dateStr}
+            </div>
             <Div/>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:12,
@@ -1199,10 +1203,6 @@ export default function IronGame(){
               <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 borderRadius:10,padding:"12px 14px",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,
-                  color:C.wht,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6}}>
-                  {dayName} &middot; {dateStr}
-                </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                   color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
                   I need to leave by
