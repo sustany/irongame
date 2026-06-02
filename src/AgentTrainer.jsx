@@ -1145,7 +1145,7 @@ export default function IronGame(){
                 SCIENCE + AI = RESULTS
               </div>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
-                color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",whiteSpace:"nowrap"}}>
+                color:"#eab308",letterSpacing:"0.12em",textTransform:"uppercase",whiteSpace:"nowrap"}}>
                 {dayName} &middot; {dateStr}
               </div>
             </div>
