@@ -1,0 +1,66 @@
+2026-06-02 — IRONQ iPHONE SESSION (LEGS day) — RAW HANDOFF
+Live: https://iron-q.netlify.app   HEAD 2777f5e   build green, tree clean.
+
+==================== SHIPPED LIVE ====================
+c947197  NAME1 wordmark IRON GAME -> IRONQ (IRON red, Q white)
+b2d3914  NAME1 PWA naming IRON QUANT -> IRON Q (apple-mobile-web-app-title, <title>, manifest)
+9b332b0  Tagline "AI Workout Coach" -> "SCIENCE + AI = RESULTS"
+b06e140  Header: date -> placeholder hamburger; date moved to leave-by card label
+1c34844  Header: always-on date line above red rule (both modes); removed dup leave-by label
+2744a4f  Header: removed "TARGET: 100 PTS" text (scoring logic intact)
+9663abf  Header: date right-aligned onto tagline row; red rule moved up under IRONQ (gap 2px)
+3614757  Setup: removed "Training Format" label (selector logic intact)
+3e0630b  Header: date color -> amber/gold #eab308
+2777f5e  Reload confirm() on both TAP TO RELOAD buttons (F-CONFIRM1)
+
+NAME1 leftovers (not yet done): export/email subject "Iron Quant" (L1731,L1769); IRONGAME comment headers + LOG title.
+
+==================== QUEUED (priority order) ====================
+[1] PERSIST1 — localStorage bridge. TOP PRIORITY.
+    No persistence (in-memory only). autoUpdate+skipWaiting+clientsClaim + controllerchange listener (L742-748)
+    => ANY deploy mid-session auto-reloads & wipes the log (no tap needed). DO NOT deploy during active session until fixed.
+    Serialize log/prs/sesType/exList/exIdx/setIdx/sessionStart -> localStorage; rehydrate via "Resume session?" prompt.
+    Playlist already does this (ig_playlist L715/784). ~30 min.
+
+[2] DUP1 — leg-curl false-positive [BUG, cap-exempt] ~10-15 min.
+    exerciseLibrary.js NOISE regex L238 strips stance words seated|lying|standing|prone|kneeling.
+    normalize("Lying Leg Curl")=normalize("Seated Leg Curl")="leg curl" -> findDuplicate 1.0 -> false dup.
+    Picked Lying Leg Curl (real, L137), got Seated Leg Curl (285x8). Hits all stance pairs.
+    FIX: remove stance words from NOISE; keep equipment/brand noise. Verify DB Curl≈Dumbbell Curl still matches.
+    Note: Lying Leg Curl enters as NEW exercise (library only, not progression DB) — +New collects weight, expected.
+
+[3] DUP2 — ADD ANYWAY loop [BUG] ~10 min.
+    L2568 ADD ANYWAY only setNewExDuplicate(null); next ADD&SELECT re-runs findDuplicate (guard L2647) -> re-blocks.
+    Can never "add anyway", only USE EXISTING (wrong exercise). FIX: ADD ANYWAY performs the add directly.
+    Also: USE EXISTING (L2552-2560) discards entered weight/reps/equip/gymMax — ok for true dup; DUP1 stops false positives.
+
+[4] REPS-COMPLETED removal + SET x/xx [session-screen, §2/§3] — NEEDS ANSWERS.
+    Remove "Reps completed" label L2145 (CSS-uppercased). Add per-exercise SET count: data exists (ex.sets + setIdx).
+    PENDING: per-exercise confirm (header already shows session-total)? "SET" or bare? placement (where REPS COMPLETED was)?
+    Ships alone + §5.
+
+[5] BACK button on rep-logging screen [session-screen] ~15 min.
+    Functional BACK before TAP TO RELOAD. Logic exists: header arrow on logging does setPhase("ready") (L1827-1830).
+    Decision: mirror arrow (->pre-set) vs further back (prev set/exercise). Christian leaning mirror. Ships alone + §5.
+
+[6] End Session confirm (other half F-CONFIRM1) — confirm() on L2425.
+
+[7] F-MUSIC1 + F-WARM1 — HOLD for design-check-in answers (see 2026-06-01 entry).
+
+==================== CARRIED (2026-06-01 entry) ====================
+MON1 / MON1-IP / LEVEL1 / LADDER1 / AUTH1 / PRICE1 / EQUIP1 / DESIGN1 / HK1 / Karl meeting prep.
+
+==================== OPEN QUESTIONS (Christian) ====================
+- SET x/xx format + placement (item 4)
+- DUP1+DUP2 bundle or DUP1 only
+- BACK button behavior (mirror vs further back)
+- F-MUSIC1 / F-WARM1 design answers
+- App-icon gradient hex codes (DESIGN1); Karl meeting length + product-vs-legal
+
+==================== LOCKED ====================
+Name IronQ: wordmark IRONQ (IRON red/Q white); icon label + title IRON Q.
+Tagline: SCIENCE + AI = RESULTS.
+Header: IRONQ + hamburger placeholder; red rule directly under; tagline left + amber/gold date #eab308 right;
+  no TARGET text; no "Training Format" label; date always-on both modes.
+Reload confirm: interim native confirm() (styled-modal upgrade optional).
+Live URL: iron-q.netlify.app.

@@ -24,6 +24,56 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-06-02 — iPhone session: header/brand build-out shipped LIVE + bug analyses + queue
+**From:** iPhone Chat (live in-gym app test, LEGS day Jun 2)    **To:** laptop Cowork
+**Live URL CHANGED:** app now at **https://iron-q.netlify.app** (was gleaming-unicorn-62a4bb…). HEAD = `2777f5e`. All commits below built clean (`npm run build`) and passed SMOKE §5 (header/setup = no session-screen render items; the one session-screen touch (reload confirm) was additive only).
+
+### A. SHIPPED LIVE today (verify on iron-q.netlify.app)
+Locked decisions: app name **IronQ** (on-screen wordmark **IRONQ** = IRON red + Q white; icon label + browser title = **IRON Q**). Tagline **SCIENCE + AI = RESULTS** (locked). Header now: IRONQ + ☰ placeholder · red rule directly beneath · tagline left + date right.
+
+| Commit | Change |
+|---|---|
+| `c947197` | NAME1 wordmark: IRON GAME → **IRONQ** on screen (IRON red, Q white) |
+| `b2d3914` | NAME1 PWA naming: IRON QUANT → **IRON Q** in apple-mobile-web-app-title, `<title>`, manifest name/short_name |
+| `9b332b0` | Tagline: "AI Workout Coach" → **SCIENCE + AI = RESULTS** |
+| `b06e140` | Header: date block → **placeholder hamburger ☰** (no action wired); date moved to leave-by card label |
+| `1c34844` | Header: **always-on date line** above red rule (both modes); removed duplicate date label from leave-by card |
+| `2744a4f` | Header: removed **"TARGET: 100 PTS"** text only (100-pt scoring logic intact) |
+| `9663abf` | Header: **date right-aligned** onto tagline row; **red rule moved up** under IRONQ (gap → 2px) |
+| `3614757` | Setup: removed **"Training Format"** label text (TC/Flexible selector logic intact) |
+| `3e0630b` | Header: **date color → amber/gold `#eab308`** (distinct from gray tagline) |
+| `2777f5e` | **Reload confirm()** guard on BOTH TAP TO RELOAD buttons (F-CONFIRM1). In-session copy warns session loss. §7 bundling justified (one root cause). |
+
+NAME1 status: wordmark + PWA naming + tagline done. **Still leftover:** session export / email subject lines say "Iron Quant" (AgentTrainer L1731, L1769) and internal comment headers / LOG title say IRONGAME — sweep to IronQ on the next pass.
+
+### B. QUEUED — build next (priority order)
+1. **PERSIST1 — localStorage bridge. TOP PRIORITY / blocking-grade.** App has NO session persistence (in-memory only). Worse than first thought: PWA uses `registerType:'autoUpdate'` + `skipWaiting` + `clientsClaim` + a `controllerchange` listener (AgentTrainer L742-748) that **force-reloads the running app the moment a new SW activates**. So ANY deploy mid-session auto-reloads and wipes the in-progress log — no tap required. **Do not deploy during an active session until this lands.** Fix = serialize `log`/`prs`/`sesType`/`exList`/`exIdx`/`setIdx`/`sessionStart` to localStorage + rehydrate via a "Resume session?" prompt (avoids gotcha #13). Pattern already proven in-file by the playlist (`ig_playlist`, L715/784). ~30 min.
+2. **DUP1 — leg-curl false-positive duplicate. [BUG, cap-exempt] ~10-15 min.** ROOT CAUSE: `src/exerciseLibrary.js` `NOISE` regex (L238) strips STANCE words `seated|lying|standing|prone|kneeling`. So normalize("Lying Leg Curl") = normalize("Seated Leg Curl") = "leg curl" → `findDuplicate` scores 1.0 → false "Already in your list: Seated Leg Curl." User picked **Lying Leg Curl** (real library entry L137), got **Seated Leg Curl** (existing, 285×8). Affects all stance pairs (leg curls, calf raises, presses). FIX: remove the stance words from NOISE (keep equipment/brand noise: machine, pl, bb, db, cable, smith, hs, lf, nautilus, articles). Verify "DB Curl"≈"Dumbbell Curl" still matches. Note: Lying Leg Curl will enter as a NEW exercise (only in library, not progression DB) — +New form collects starting weight, expected.
+3. **DUP2 — "ADD ANYWAY" loop. [BUG] ~10 min.** The duplicate-warning's ADD ANYWAY button (AgentTrainer L2568) only does `setNewExDuplicate(null)`; the next ADD & SELECT re-runs `findDuplicate` (guard `if(!newExDuplicate)`, L2647-2649) and re-blocks → you can never "add anyway," only USE EXISTING (wrong exercise). FIX: make ADD ANYWAY perform the add directly (bypass the re-check). Also note: USE EXISTING (L2552-2560) silently discards the user's entered weight/reps/equip/gymMax — acceptable for a true dup, but DUP1 stops it ambushing false positives.
+4. **REPS-COMPLETED removal + SET x/xx. [session-screen, §3/§2] — needs answers.** Remove the "Reps completed" label (AgentTrainer L2145, CSS-uppercased). Add per-exercise set count — data exists (`ex.sets` + `setIdx` → `SET {setIdx+1}/{ex.sets}`). PENDING from Christian: (a) confirm x/xx = current/total sets for THIS exercise (header already shows session-total "SETS x/yy"); (b) "SET" word or bare "2/3"; (c) placement = where REPS COMPLETED sat (under Target) or elsewhere. Ships alone (session-screen) w/ §5 report.
+5. **BACK button on rep-logging screen. [session-screen] ~15 min.** Functional BACK before the TAP TO RELOAD section. Logic already exists — header arrow on logging phase does `setPhase("ready")` (L1827-1830). New button just triggers the same. Decision: mirror header arrow (→ pre-set screen) vs go further back (prev set/exercise). Christian leaning mirror. Ships alone w/ §5.
+6. **End Session confirm — other half of F-CONFIRM1.** Add confirm() to End Session button (L2425, `setSessionEnd();setScreen("complete")`). Same pattern as reload confirm.
+7. **F-MUSIC1** (relayout: remove "Music" label/keep playing indicator, note icon left, artist row1 / title row2 — data already split) and **F-WARM1** (warm-up completion feedback + day-schedule warm-up suggestion) — both need the design-check-in answers from the 2026-06-01 entry before building.
+
+### C. CARRIED from 2026-06-01 entry (still open — see that entry for detail)
+Product/strategy: **MON1** (Earn-Back commitment membership) + **MON1-IP**, **LEVEL1**, **LADDER1**, **AUTH1** (=M3), **PRICE1** (Apple physical-goods characterization; verify current 2026 IAP rules), **EQUIP1** (IronQ connected equipment), **DESIGN1** (icon system + "zero chrome words"; blocked on gradient hex codes). **HK1** (laptop folder consolidation → IronQ + new `02_Equipment/`). **Karl Soliman meeting** prep (dependency order: MON1 economics → LADDER1 → LEVEL1 → AUTH1 → PRICE1).
+
+### D. OPEN QUESTIONS pending from Christian
+- SET x/xx: per-exercise confirm + "SET" vs bare + placement (item B4).
+- DUP fixes: bundle DUP1+DUP2 or DUP1 only (Christian asked; default = both).
+- BACK button behavior: mirror arrow vs further-back (B5).
+- F-MUSIC1 / F-WARM1 design-check-in answers (06-01 entry).
+- Karl meeting length + whether he's product/economics or legal/IP; app-icon gradient hex codes (DESIGN1).
+
+### E. PRACTICES that held this session
+Build gate ran on every code push (`npm run build` green before push). SMOKE §5 reported per session-screen-adjacent change. Native `confirm()` chosen as interim for reload (styled-modal upgrade optional later). Pushes were HELD during the live workout because of the auto-reload/no-persistence wipe risk (item B1) — resumed only at end of session.
+
+**Artifacts:** iPhone screenshots remain in originating chat (LEG PRESS / LINEAR HACK SQUAT logging screens; CHANGE EXERCISE 3-screen sequence; header iterations; Netlify + GitHub views; PAT setup; header-layout preview HTML at /mnt/user-data/outputs/ironq-header-layouts.html — not committed).
+**Session opens with:** "Read the 2026-06-02 OPEN entry. Ship PERSIST1 FIRST (removes the session-wipe risk), then DUP1+DUP2, then SET x/xx + BACK button + End Session confirm. Hold F-MUSIC1/F-WARM1 for design-check-in answers. Sweep remaining NAME1 leftovers (export/subject 'Iron Quant', comment headers). Then HK1 folder consolidation (confirm names first)."
+**Status:** OPEN
+
+---
+
 ## 2026-06-01 — iPhone app-test session (PULL day): naming error + app backlog + product/strategy capture
 **From:** iPhone Chat (live in-gym app test, ~06:42–08:15 PT)    **To:** laptop Cowork
 **Session context:** Log-only app test (not TP, not a project-logged training session). Confirmed product name is **IronQ** (the word "iron" + capital "Q") — NOT "Iron Quant." Pull day. Observed screens: High Row PL (160×12 target), Seated Cable Row (175×8–12), Torso Rotation Machine / Obliques (105×10). HR ~120–130 (aerobic). No source files were modified this session — notes/decisions only, so the build gate was not triggered for this commit.
