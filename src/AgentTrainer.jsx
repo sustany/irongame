@@ -1129,15 +1129,13 @@ export default function IronGame(){
                 <span style={{color:C.red}}>IRON</span>
                 <span style={{color:C.wht}}>Q</span>
               </div>
-              <div style={{textAlign:"right",paddingTop:8}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,
-                  letterSpacing:"0.08em",lineHeight:1,color:C.wht}}>
-                  {dayName}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:14,
-                  color:C.md,letterSpacing:"0.04em",marginTop:3}}>
-                  {dateStr}
-                </div>
+              {/* Hamburger menu — placeholder, no action wired yet */}
+              <div style={{paddingTop:12,paddingLeft:12,cursor:"pointer"}} role="button" aria-label="Menu">
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none" aria-hidden="true">
+                  <rect y="0" width="28" height="3" rx="1.5" fill={C.wht}/>
+                  <rect y="8.5" width="28" height="3" rx="1.5" fill={C.wht}/>
+                  <rect y="17" width="28" height="3" rx="1.5" fill={C.wht}/>
+                </svg>
               </div>
             </div>
             <Div/>
@@ -1201,6 +1199,10 @@ export default function IronGame(){
               <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 borderRadius:10,padding:"12px 14px",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,
+                  color:C.wht,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6}}>
+                  {dayName} &middot; {dateStr}
+                </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                   color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
                   I need to leave by
