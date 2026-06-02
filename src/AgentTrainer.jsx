@@ -1153,7 +1153,6 @@ export default function IronGame(){
 
           {/* FORMAT — time constrained vs flexible */}
           <div style={{marginBottom:18}}>
-            <SL>Training Format</SL>
             <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
               {/* Time Constrained */}
               <button className="t" onClick={()=>setTcMode(true)} style={{
