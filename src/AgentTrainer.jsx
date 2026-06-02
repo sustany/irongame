@@ -1144,7 +1144,7 @@ export default function IronGame(){
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:12,
                 color:C.md,letterSpacing:"0.2em",textTransform:"uppercase"}}>
-                AI Workout Coach
+                SCIENCE + AI = RESULTS
               </div>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,
                 color:C.red,letterSpacing:"0.1em"}}>
