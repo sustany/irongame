@@ -1148,10 +1148,6 @@ export default function IronGame(){
                 color:C.md,letterSpacing:"0.2em",textTransform:"uppercase"}}>
                 SCIENCE + AI = RESULTS
               </div>
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,
-                color:C.red,letterSpacing:"0.1em"}}>
-                TARGET: 100 PTS
-              </div>
             </div>
           </div>
 
