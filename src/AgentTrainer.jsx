@@ -671,27 +671,34 @@ const SESSION_EXLIST = [
 // MAIN APP
 // ─────────────────────────────────────────────────────────────
 export default function IronGame(){
+  // PERSIST1 — hydrate session state from localStorage on mount
+  const _saved = (() => {
+    try { const s = localStorage.getItem('ig_session'); return s ? JSON.parse(s) : null; }
+    catch { return null; }
+  })();
+
   const [screen,    setScreen]    = useState("setup");
-  const [sesType,   setSesType]   = useState(null);
+  const [sesType,   setSesType]   = useState(()=> _saved?.sesType   ?? null);
+  const [showResume, setShowResume] = useState(()=> !!(_saved?.sesType && (_saved?.log?.length > 0 || _saved?.exIdx > 0)));
   const [ext,       setExt]       = useState(false);
   const [tcMode,    setTcMode]    = useState(true);
   const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
   const [genWarmup, setGenWarmup] = useState(false);
-  const [exList,    setExList]    = useState([]);
-  const [exIdx,     setExIdx]     = useState(0);
-  const [setIdx,    setSetIdx]    = useState(0);
+  const [exList,    setExList]    = useState(()=> _saved?.exList    ?? []);
+  const [exIdx,     setExIdx]     = useState(()=> _saved?.exIdx     ?? 0);
+  const [setIdx,    setSetIdx]    = useState(()=> _saved?.setIdx    ?? 0);
   const [phase,     setPhase]     = useState("ready");
-  const [prs,       setPrs]       = useState(INIT_PRS);
-  const [log,       setLog]       = useState([]);
-  const [lastRes,   setLastRes]   = useState(null);
-  const [lastWt,    setLastWt]    = useState(null);
+  const [prs,       setPrs]       = useState(()=> _saved?.prs       ?? INIT_PRS);
+  const [log,       setLog]       = useState(()=> _saved?.log       ?? []);
+  const [lastRes,   setLastRes]   = useState(()=> _saved?.lastRes   ?? null);
+  const [lastWt,    setLastWt]    = useState(()=> _saved?.lastWt    ?? null);
   const [prFlash,   setPrFlash]   = useState(null);
   const [wConf,     setWConf]     = useState(null);
   const [weightAdj, setWeightAdj] = useState(0);
   const [tick,      setTick]      = useState(0);
-  const [sessionStart, setSessionStart] = useState(null);
+  const [sessionStart, setSessionStart] = useState(()=> _saved?.sessionStart ?? null);
   const [sessionEnd,   setSessionEnd]   = useState(null);
-  const [sessionDate,  setSessionDate]  = useState(null); // real calendar date captured at launch
+  const [sessionDate,  setSessionDate]  = useState(()=> _saved?.sessionDate  ?? null);
   const [phrInput,      setPhrInput]      = useState(130);
   const [pendingResult, setPendingResult] = useState(null);
   const [showExPicker,  setShowExPicker]  = useState(false);
@@ -783,6 +790,21 @@ export default function IronGame(){
   useEffect(()=>{
     try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
   },[playlist]);
+
+  // PERSIST1 — write session state to localStorage on every relevant change
+  useEffect(()=>{
+    if(screen==="complete"||screen==="setup"){
+      // Clear saved session when done or reset to setup
+      try{ localStorage.removeItem('ig_session'); }catch{}
+      return;
+    }
+    try{
+      localStorage.setItem('ig_session', JSON.stringify({
+        sesType, exList, exIdx, setIdx, prs, log,
+        lastRes, lastWt, sessionStart, sessionDate,
+      }));
+    }catch{}
+  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate]);
 
   // ── Music helpers ─────────────────────────────────────────
   // YouTube audio in iOS web apps is fundamentally blocked regardless of
@@ -1116,6 +1138,42 @@ export default function IronGame(){
 
     return(
       <div style={shell}>
+        {/* PERSIST1 — Resume session modal */}
+        {showResume&&(
+          <div style={{position:"fixed",inset:0,zIndex:999,background:"rgba(0,0,0,0.82)",
+            display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+            <div style={{background:"#111",border:`1px solid #3a3a3a`,borderRadius:16,
+              padding:28,maxWidth:340,width:"100%",textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,
+                color:"#fff",letterSpacing:"0.08em",marginBottom:8}}>
+                Resume Session?
+              </div>
+              <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,
+                color:"#888",marginBottom:24,lineHeight:1.5}}>
+                You have an in-progress {sesType} session with {log.length} set{log.length!==1?"s":""} logged.
+              </div>
+              <button className="t" onClick={()=>{setScreen("session");setShowResume(false);}}
+                style={{width:"100%",height:52,borderRadius:10,cursor:"pointer",
+                  background:"linear-gradient(180deg,#e8260a,#aa1a00)",
+                  border:"none",color:"#fff",
+                  fontFamily:"'Bebas Neue',sans-serif",fontSize:20,
+                  letterSpacing:"0.1em",marginBottom:10}}>
+                Resume
+              </button>
+              <button className="t" onClick={()=>{
+                try{localStorage.removeItem('ig_session');}catch{}
+                setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
+                setPrs(INIT_PRS);setLog([]);setLastRes(null);setLastWt(null);
+                setSessionStart(null);setSessionDate(null);setShowResume(false);
+              }} style={{width:"100%",height:42,borderRadius:10,cursor:"pointer",
+                background:"transparent",border:"1px solid #2a2a2a",
+                color:"#888",fontFamily:"'Inter',sans-serif",fontWeight:700,
+                fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        )}
         <style>{FONTS}</style>
         <div style={{flex:1,display:"flex",flexDirection:"column",padding:"50px 18px 32px"}}>
 
