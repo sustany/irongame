@@ -2308,6 +2308,17 @@ export default function IronGame(){
                       letterSpacing:"0.1em",boxShadow:`0 4px 16px ${C.redGlow}`}}>
                     Log {currentReps} {currentReps===1?"Rep":"Reps"}
                   </button>
+                  {/* BACK — returns to pre-set (ready) screen */}
+                  <button className="t"
+                    onClick={()=>{setPhase("ready");setWeightAdj(0);}}
+                    style={{
+                      width:"100%",marginTop:10,height:42,borderRadius:10,
+                      background:"transparent",border:`1px solid ${C.bdr}`,
+                      color:C.md,cursor:"pointer",
+                      fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
+                      letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                    ← Back
+                  </button>
                 </>
               );
             })()}
