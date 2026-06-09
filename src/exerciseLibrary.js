@@ -235,7 +235,7 @@ export const WARMUP_MOVES = {
 // ─────────────────────────────────────────────────────────────
 // FUZZY MATCHING — strip noise words, normalize for comparison.
 // ─────────────────────────────────────────────────────────────
-const NOISE = /\b(machine|seated|lying|standing|prone|kneeling|plate[-\s]?loaded|pl|barbell|bb|dumbbell|db|cable|smith|hammer|hammer\s?strength|hs|lf|life\s?fitness|nautilus|the|a|an|with|using)\b/gi;
+const NOISE = /\b(machine|plate[-\s]?loaded|pl|barbell|bb|dumbbell|db|cable|smith|hammer|hammer\s?strength|hs|lf|life\s?fitness|nautilus|the|a|an|with|using)\b/gi;
 
 export const normalize = (s) =>
   (s || "")
