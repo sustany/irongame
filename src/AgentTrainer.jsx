@@ -1200,7 +1200,7 @@ export default function IronGame(){
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:12,
                 color:C.md,letterSpacing:"0.2em",textTransform:"uppercase"}}>
-                SCIENCE + AI = RESULTS
+                AI BODY EVOLUTION
               </div>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
                 color:"#eab308",letterSpacing:"0.12em",textTransform:"uppercase",whiteSpace:"nowrap"}}>
