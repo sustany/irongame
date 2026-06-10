@@ -1360,7 +1360,7 @@ export default function IronGame(){
             </button>
           )}
 
-          {/* Version stamp — tap to force-reload */}
+          {/* Version stamp — fixed to bottom of screen */}
           <div onClick={async()=>{
               if(!window.confirm('Reload to the latest build now?')) return;
               try{
@@ -1375,16 +1375,16 @@ export default function IronGame(){
               }catch(e){}
               window.location.replace(window.location.pathname+'?v='+Date.now());
             }}
-            style={{marginTop:12,padding:"5px 10px",cursor:"pointer",
-              background:"rgba(255,255,255,0.10)",
-              border:"1px solid rgba(255,255,255,0.30)",
-              borderRadius:8,display:"flex",alignItems:"center",
-              justifyContent:"space-between",gap:10}}>
+            style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
+              width:"100%",maxWidth:430,padding:"6px 18px 12px",
+              background:C.page,borderTop:`1px solid ${C.bdr}`,
+              cursor:"pointer",display:"flex",alignItems:"center",
+              justifyContent:"space-between",zIndex:50}}>
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:12,color:"rgba(255,255,255,0.7)",letterSpacing:"0.06em"}}>
+              fontSize:12,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em"}}>
               {BUILD_VERSION}
             </div>
-            <div style={{color:"rgba(255,255,255,0.45)",display:"flex",alignItems:"center"}}>
+            <div style={{color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center"}}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </div>
           </div>
@@ -2516,16 +2516,16 @@ export default function IronGame(){
             }catch(e){}
             window.location.replace(window.location.pathname+'?v='+Date.now());
           }}
-          style={{marginTop:8,padding:"5px 10px",cursor:"pointer",
-            background:"rgba(255,255,255,0.12)",
-            border:"1px solid rgba(255,255,255,0.35)",
-            borderRadius:8,display:"flex",alignItems:"center",
-            justifyContent:"space-between",gap:10}}>
+          style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
+            width:"100%",maxWidth:430,padding:"6px 18px 12px",
+            background:C.page,borderTop:`1px solid ${C.bdr}`,
+            cursor:"pointer",display:"flex",alignItems:"center",
+            justifyContent:"space-between",zIndex:50}}>
           <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-            fontSize:12,color:"rgba(255,255,255,0.7)",letterSpacing:"0.06em"}}>
+            fontSize:12,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em"}}>
             {BUILD_VERSION}
           </div>
-          <div style={{color:"rgba(255,255,255,0.45)",display:"flex",alignItems:"center"}}>
+          <div style={{color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center"}}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </div>
         </div>
