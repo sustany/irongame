@@ -2504,7 +2504,10 @@ export default function IronGame(){
         )}
 
         {phase==="ready"&&(
-          <button className="t" onClick={()=>{setSessionEnd(Date.now());setScreen("complete");}}
+          <button className="t" onClick={()=>{
+            if(!window.confirm('End session? This will finalize your workout.')) return;
+            setSessionEnd(Date.now());setScreen("complete");
+          }}
             style={{width:"100%",height:38,background:"transparent",
               border:"none",
               fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
