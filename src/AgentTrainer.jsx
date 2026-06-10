@@ -274,6 +274,9 @@ const INIT_PRS = {
   "Calf Press":            { muscle:"calves", weight:680,  reps:12 },
   "Calf Press, Linear Leg Press": { muscle:"calves", weight:630, reps:10 },
   "Seated Calf Raise":     { muscle:"calves", weight:180,  reps:7  },
+  "DB Flys":               { muscle:"chest", weight:40,   reps:12 },
+  "Assisted Dips":         { muscle:"chest", weight:100,  reps:10 },
+  "Reverse Pec Deck":      { muscle:"rear_delts", weight:130, reps:12 },
 };
 // ── Equipment type registry ──────────────────────────────────
 // Source of truth for how an exercise behaves: increment buttons, snap math,
@@ -322,6 +325,9 @@ const META = {
   "Calf Press":            { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Seated Calf Raise":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "DB Flys":               { muscle:"chest", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Assisted Dips":         { muscle:"chest", tier:"COMP",prPts:5, compound:true, eq:"stack-pin" },
+  "Reverse Pec Deck":      { muscle:"rear_delts", tier:"ISO",prPts:3, eq:"stack-pin" },
 };
 // Category membership controls which exercises appear in pickers per session type.
 // Exercises not listed appear under "Other" at the bottom of pickers.
