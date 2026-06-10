@@ -2403,9 +2403,9 @@ export default function IronGame(){
               {/* YouTube logo + track info */}
               <div style={{display:"flex",alignItems:"center",gap:8,flex:1,overflow:"hidden"}}>
                 {/* YouTube logo */}
-                <svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
-                  <rect width="28" height="20" rx="4" fill="#FF0000"/>
-                  <polygon points="11,5 11,15 20,10" fill="white"/>
+                <svg width="32" height="22" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+                  <rect width="32" height="22" rx="5" fill="#FF0000"/>
+                  <path d="M13 6.5L22 11L13 15.5V6.5Z" fill="white"/>
                 </svg>
                 {/* Song info */}
                 <div style={{overflow:"hidden"}}>
