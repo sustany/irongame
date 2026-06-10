@@ -2646,7 +2646,23 @@ export default function IronGame(){
                         Use Existing
                       </button>
                       <button className="t"
-                        onClick={()=>setNewExDuplicate(null)}
+                        onClick={()=>{
+                          // Bypass duplicate check — add directly
+                          const name=newExName.trim();
+                          if(!name) return;
+                          const wt=parseInt(newExWeight)||100;
+                          const rp=parseInt(newExReps)||10;
+                          const mx=parseInt(newExMaxWt)||null;
+                          setPrs(p=>({...p,[name]:{weight:wt,reps:rp,...(mx?{gymMax:mx}:{})}}));
+                          setUserMeta(u=>({...u,[name]:{eq:newExEq,prPts:3}}));
+                          const updated=[...exList];
+                          updated[exIdx]={...updated[exIdx],name,repRange:"8–12",targetReps:10};
+                          setExList(updated);
+                          setSetIdx(0);setLastRes(null);setLastWt(null);
+                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
+                          setNewExDuplicate(null);setNewExName("");setWarmupNext(false);
+                          setNewExEq("plate-loaded");
+                        }}
                         style={{flex:1,background:"transparent",
                           color:"rgba(255,180,0,0.9)",
                           border:"1px solid rgba(255,180,0,0.5)",
