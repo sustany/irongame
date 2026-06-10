@@ -1368,7 +1368,7 @@ export default function IronGame(){
 
           {/* Version stamp — fixed to bottom of screen */}
           <div onClick={async()=>{
-              if(!window.confirm('Reload to the latest build now?')) return;
+              if(!window.confirm('Reload to get the latest version?')) return;
               try{
                 if('serviceWorker' in navigator){
                   const regs=await navigator.serviceWorker.getRegistrations();
@@ -1379,7 +1379,8 @@ export default function IronGame(){
                   await Promise.all(keys.map(k=>caches.delete(k)));
                 }
               }catch(e){}
-              window.location.replace(window.location.pathname+'?v='+Date.now());
+              // Force hard reload — bypass cache entirely
+              window.location.href=window.location.pathname+'?nocache='+Date.now();
             }}
             style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
               width:"100%",maxWidth:430,padding:"8px 18px 16px",
@@ -2524,7 +2525,7 @@ export default function IronGame(){
         )}
         {/* In-session build stamp — tap to force-reload to latest build */}
         <div onClick={async()=>{
-            if(!window.confirm('Reload to the latest build? Your current session and logged sets will be lost.')) return;
+            if(!window.confirm('Reload to get the latest version? Your session will be saved and can be resumed.')) return;
             try{
               if('serviceWorker' in navigator){
                 const regs=await navigator.serviceWorker.getRegistrations();
@@ -2535,7 +2536,8 @@ export default function IronGame(){
                 await Promise.all(keys.map(k=>caches.delete(k)));
               }
             }catch(e){}
-            window.location.replace(window.location.pathname+'?v='+Date.now());
+            // Force hard reload — bypass cache entirely
+            window.location.href=window.location.pathname+'?nocache='+Date.now();
           }}
           style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
             width:"100%",maxWidth:430,padding:"8px 18px 16px",
