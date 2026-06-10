@@ -2400,17 +2400,23 @@ export default function IronGame(){
           <div style={{borderTop:`1px solid ${C.bdr}`,marginTop:8,paddingTop:8}}>
             {/* Track info + controls */}
             <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0"}}>
-              {/* Track name */}
-              <div style={{flex:1,overflow:"hidden"}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",marginBottom:1}}>
-                  {isPlaying?"♪ Playing in YouTube":"Music"}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
-                  color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                  {shuffled[trackIdx]
-                    ? `${shuffled[trackIdx].artist?shuffled[trackIdx].artist+" – ":""}${shuffled[trackIdx].title}`
-                    : "No tracks"}
+              {/* YouTube logo + track info */}
+              <div style={{display:"flex",alignItems:"center",gap:8,flex:1,overflow:"hidden"}}>
+                {/* YouTube logo */}
+                <svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
+                  <rect width="28" height="20" rx="4" fill="#FF0000"/>
+                  <polygon points="11,5 11,15 20,10" fill="white"/>
+                </svg>
+                {/* Song info */}
+                <div style={{overflow:"hidden"}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                    color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                    {shuffled[trackIdx]?.artist || ""}
+                  </div>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:500,fontSize:11,
+                    color:C.md,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                    {shuffled[trackIdx]?.title || "No tracks"}
+                  </div>
                 </div>
               </div>
               {/* Controls */}
