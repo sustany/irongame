@@ -1360,8 +1360,9 @@ export default function IronGame(){
             </button>
           )}
 
-          {/* Version stamp — tap to force-reload */}
-          <div onClick={async()=>{
+          {/* Version stamp — reload icon right-aligned */}
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:16}}>
+            <button className="t" onClick={async()=>{
               if(!window.confirm('Reload to the latest build now?')) return;
               try{
                 if('serviceWorker' in navigator){
@@ -1374,18 +1375,11 @@ export default function IronGame(){
                 }
               }catch(e){}
               window.location.replace(window.location.pathname+'?v='+Date.now());
-            }}
-            style={{marginTop:20,padding:"10px 16px",cursor:"pointer",
-              background:"rgba(255,255,255,0.10)",
-              border:"1px solid rgba(255,255,255,0.30)",
-              borderRadius:10,textAlign:"center"}}>
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
-              fontSize:10,color:"rgba(255,255,255,0.55)",letterSpacing:"0.18em",
-              textTransform:"uppercase",marginBottom:2}}>TAP TO RELOAD</div>
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:16,color:"#ffffff",letterSpacing:"0.06em"}}>
-              {BUILD_VERSION}
-            </div>
+            }} style={{background:"transparent",border:"none",cursor:"pointer",
+              color:"rgba(255,255,255,0.35)",padding:6,display:"flex",
+              alignItems:"center",justifyContent:"center"}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
           </div>
         </div>
 
@@ -2515,20 +2509,10 @@ export default function IronGame(){
             }catch(e){}
             window.location.replace(window.location.pathname+'?v='+Date.now());
           }}
-          style={{marginTop:12,padding:"10px 16px",cursor:"pointer",
-            background:"rgba(255,255,255,0.12)",
-            border:"1px solid rgba(255,255,255,0.35)",
-            borderRadius:10,
-            display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
-            fontSize:11,color:"rgba(255,255,255,0.6)",letterSpacing:"0.18em",
-            textTransform:"uppercase"}}>
-            TAP TO RELOAD
-          </div>
-          <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-            fontSize:14,color:"#ffffff",letterSpacing:"0.06em"}}>
-            {BUILD_VERSION}
-          </div>
+          style={{background:"transparent",border:"none",cursor:"pointer",
+            color:"rgba(255,255,255,0.35)",padding:6,display:"flex",
+            alignItems:"center",justifyContent:"center",alignSelf:"flex-end"}}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </div>
       </div>
 
