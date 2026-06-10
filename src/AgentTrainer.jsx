@@ -1376,16 +1376,22 @@ export default function IronGame(){
               window.location.replace(window.location.pathname+'?v='+Date.now());
             }}
             style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
-              width:"100%",maxWidth:430,padding:"6px 18px 12px",
-              background:C.page,borderTop:`1px solid ${C.bdr}`,
-              cursor:"pointer",display:"flex",alignItems:"center",
-              justifyContent:"space-between",zIndex:50}}>
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:12,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em"}}>
-              {BUILD_VERSION}
-            </div>
-            <div style={{color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center"}}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              width:"100%",maxWidth:430,padding:"8px 18px 16px",
+              background:C.page,cursor:"pointer",display:"flex",
+              alignItems:"center",justifyContent:"center",zIndex:50}}>
+            <div style={{
+              width:"100%",padding:"6px 12px",
+              background:"rgba(255,255,255,0.08)",
+              border:"1px solid rgba(255,255,255,0.20)",
+              borderRadius:8,display:"flex",alignItems:"center",
+              justifyContent:"space-between"}}>
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
+                fontSize:12,color:"rgba(255,255,255,0.55)",letterSpacing:"0.06em"}}>
+                {BUILD_VERSION}
+              </div>
+              <div style={{color:"rgba(255,255,255,0.4)",display:"flex",alignItems:"center"}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </div>
             </div>
           </div>
         </div>
@@ -2517,16 +2523,22 @@ export default function IronGame(){
             window.location.replace(window.location.pathname+'?v='+Date.now());
           }}
           style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
-            width:"100%",maxWidth:430,padding:"6px 18px 12px",
-            background:C.page,borderTop:`1px solid ${C.bdr}`,
-            cursor:"pointer",display:"flex",alignItems:"center",
-            justifyContent:"space-between",zIndex:50}}>
-          <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-            fontSize:12,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em"}}>
-            {BUILD_VERSION}
-          </div>
-          <div style={{color:"rgba(255,255,255,0.3)",display:"flex",alignItems:"center"}}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            width:"100%",maxWidth:430,padding:"8px 18px 16px",
+            background:C.page,cursor:"pointer",display:"flex",
+            alignItems:"center",justifyContent:"center",zIndex:50}}>
+          <div style={{
+            width:"100%",padding:"6px 12px",
+            background:"rgba(255,255,255,0.08)",
+            border:"1px solid rgba(255,255,255,0.20)",
+            borderRadius:8,display:"flex",alignItems:"center",
+            justifyContent:"space-between"}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
+              fontSize:12,color:"rgba(255,255,255,0.55)",letterSpacing:"0.06em"}}>
+              {BUILD_VERSION}
+            </div>
+            <div style={{color:"rgba(255,255,255,0.4)",display:"flex",alignItems:"center"}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </div>
           </div>
         </div>
       </div>
