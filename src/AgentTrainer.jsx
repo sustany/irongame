@@ -2377,7 +2377,7 @@ export default function IronGame(){
                       border:"none",color:"#fff",
                       fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
                       letterSpacing:"0.1em",boxShadow:`0 4px 16px ${C.redGlow}`}}>
-                    Log {currentReps} {currentReps===1?"Rep":"Reps"}
+                    Set {setIdx+1} — Log {currentReps} {currentReps===1?"Rep":"Reps"}
                   </button>
                   {/* BACK — returns to pre-set (ready) screen */}
                   <button className="t"
