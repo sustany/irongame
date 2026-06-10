@@ -1375,16 +1375,17 @@ export default function IronGame(){
               }catch(e){}
               window.location.replace(window.location.pathname+'?v='+Date.now());
             }}
-            style={{marginTop:20,padding:"10px 16px",cursor:"pointer",
+            style={{marginTop:12,padding:"5px 10px",cursor:"pointer",
               background:"rgba(255,255,255,0.10)",
               border:"1px solid rgba(255,255,255,0.30)",
-              borderRadius:10,textAlign:"center"}}>
-            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4}}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </div>
+              borderRadius:8,display:"flex",alignItems:"center",
+              justifyContent:"space-between",gap:10}}>
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-              fontSize:16,color:"#ffffff",letterSpacing:"0.06em"}}>
+              fontSize:12,color:"rgba(255,255,255,0.7)",letterSpacing:"0.06em"}}>
               {BUILD_VERSION}
+            </div>
+            <div style={{color:"rgba(255,255,255,0.45)",display:"flex",alignItems:"center"}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </div>
           </div>
         </div>
@@ -2515,17 +2516,17 @@ export default function IronGame(){
             }catch(e){}
             window.location.replace(window.location.pathname+'?v='+Date.now());
           }}
-          style={{marginTop:12,padding:"10px 16px",cursor:"pointer",
+          style={{marginTop:8,padding:"5px 10px",cursor:"pointer",
             background:"rgba(255,255,255,0.12)",
             border:"1px solid rgba(255,255,255,0.35)",
-            borderRadius:10,
-            display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-          <div style={{display:"flex",justifyContent:"flex-end",marginBottom:2}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          </div>
+            borderRadius:8,display:"flex",alignItems:"center",
+            justifyContent:"space-between",gap:10}}>
           <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
-            fontSize:14,color:"#ffffff",letterSpacing:"0.06em"}}>
+            fontSize:12,color:"rgba(255,255,255,0.7)",letterSpacing:"0.06em"}}>
             {BUILD_VERSION}
+          </div>
+          <div style={{color:"rgba(255,255,255,0.45)",display:"flex",alignItems:"center"}}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </div>
         </div>
       </div>
