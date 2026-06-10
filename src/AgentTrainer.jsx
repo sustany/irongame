@@ -2211,9 +2211,9 @@ export default function IronGame(){
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,color:C.lt}}>
                 Target: {ex.unit==="sec"?`${ex.targetReps} sec`:`${lastRes==="exceeded"?ex.targetReps+2:lastRes==="fell_short"?Math.max(ex.targetReps-2,1):ex.targetReps} reps`}
               </div>
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,
-                fontSize:14,color:C.md,marginTop:8,letterSpacing:"0.08em",textTransform:"uppercase"}}>
-                Reps completed
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",
+                fontSize:18,color:C.md,marginTop:8,letterSpacing:"0.12em"}}>
+                {setIdx+1}/{ex.sets}
               </div>
             </div>
           )}
