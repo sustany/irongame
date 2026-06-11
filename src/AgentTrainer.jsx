@@ -2,6 +2,51 @@ import { useState, useEffect, useRef } from "react";
 import { searchExercises, findDuplicate } from "./exerciseLibrary";
 
 // ─────────────────────────────────────────────────────────────
+// DURABLE SESSION STORAGE
+// localStorage is the fast, synchronous path used for instant hydration, but
+// iOS Safari can evict it after ~7 days of inactivity. IndexedDB is a more
+// durable backstop, and navigator.storage.persist() (requested on mount) asks
+// the browser to exempt our data from eviction entirely. We mirror the session
+// to BOTH stores and recover from IDB if localStorage was wiped. Vanilla IDB —
+// no dependency, keeps the bundle lean and the eventual RN port unencumbered.
+// ─────────────────────────────────────────────────────────────
+const IDB_NAME = "irongame";
+const IDB_STORE = "kv";
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    try{
+      if(typeof indexedDB==="undefined"){reject(new Error("no-idb"));return;}
+      const req=indexedDB.open(IDB_NAME,1);
+      req.onupgradeneeded=()=>{const db=req.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    }catch(e){reject(e);}
+  });
+}
+async function idbSet(key,val){
+  try{const db=await idbOpen();
+    await new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readwrite");
+      tx.objectStore(IDB_STORE).put(val,key);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+    db.close();
+  }catch{}
+}
+async function idbGet(key){
+  try{const db=await idbOpen();
+    const val=await new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readonly");
+      const r=tx.objectStore(IDB_STORE).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+    db.close();return val;
+  }catch{return undefined;}
+}
+async function idbDel(key){
+  try{const db=await idbOpen();
+    await new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readwrite");
+      tx.objectStore(IDB_STORE).delete(key);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+    db.close();
+  }catch{}
+}
+
+// ─────────────────────────────────────────────────────────────
 // IRON GAME — Color System
 // Rule: pure white for all critical text. #aaa minimum on dark.
 // Cards must be visually distinct from page at arm's length.
@@ -750,6 +795,35 @@ export default function IronGame(){
     return () => clearInterval(id);
   }, []);
 
+  // Ask the browser to make our storage durable (exempt from eviction). Best-effort.
+  useEffect(()=>{
+    try{ navigator.storage?.persist?.(); }catch{}
+  },[]);
+
+  // Recover from IndexedDB if localStorage was evicted but the durable mirror
+  // survived. Runs once on mount; only acts when no session was hydrated from
+  // localStorage. Re-seeds localStorage and surfaces the Resume modal.
+  useEffect(()=>{
+    if(_saved) return;                    // localStorage already gave us a session
+    let cancelled=false;
+    (async()=>{
+      const raw=await idbGet("ig_session");
+      if(cancelled||!raw) return;
+      let d; try{ d=JSON.parse(raw); }catch{ return; }
+      if(!d||!d.sesType) return;
+      const hasProgress=(d.log?.length>0)||(d.exIdx>0);
+      if(!hasProgress) return;
+      setSesType(d.sesType); setExList(d.exList??[]);
+      setExIdx(d.exIdx??0); setSetIdx(d.setIdx??0);
+      setPrs(d.prs??INIT_PRS); setLog(d.log??[]);
+      setLastRes(d.lastRes??null); setLastWt(d.lastWt??null);
+      setSessionStart(d.sessionStart??null); setSessionDate(d.sessionDate??null);
+      try{ localStorage.setItem("ig_session", raw); }catch{}
+      setShowResume(true);
+    })();
+    return ()=>{ cancelled=true; };
+  },[]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-reload when a new service worker takes control (e.g. selfDestroying SW)
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -806,15 +880,16 @@ export default function IronGame(){
     // happen explicitly in reset() and the "Start Fresh" button.
     if(screen==="complete"){
       try{ localStorage.removeItem('ig_session'); }catch{}
+      idbDel('ig_session');               // clear durable mirror too
       return;
     }
     if(screen==="setup") return; // nothing to persist yet; never clear here
-    try{
-      localStorage.setItem('ig_session', JSON.stringify({
-        sesType, exList, exIdx, setIdx, prs, log,
-        lastRes, lastWt, sessionStart, sessionDate,
-      }));
-    }catch{}
+    const snapshot=JSON.stringify({
+      sesType, exList, exIdx, setIdx, prs, log,
+      lastRes, lastWt, sessionStart, sessionDate,
+    });
+    try{ localStorage.setItem('ig_session', snapshot); }catch{}
+    idbSet('ig_session', snapshot);       // durable mirror (async, best-effort)
   },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate]);
 
   // ── Music helpers ─────────────────────────────────────────
@@ -1128,6 +1203,7 @@ export default function IronGame(){
   };
   const reset=()=>{
     try{ localStorage.removeItem('ig_session'); }catch{}
+    idbDel('ig_session');
     setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
     setSessionStart(null);setSessionEnd(null);setWarmupNext(false);setWarmedMuscles(new Set());
@@ -1175,6 +1251,7 @@ export default function IronGame(){
               </button>
               <button className="t" onClick={()=>{
                 try{localStorage.removeItem('ig_session');}catch{}
+                idbDel('ig_session');
                 setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
                 setPrs(INIT_PRS);setLog([]);setLastRes(null);setLastWt(null);
                 setSessionStart(null);setSessionDate(null);setShowResume(false);
