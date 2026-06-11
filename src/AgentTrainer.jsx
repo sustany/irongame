@@ -799,11 +799,16 @@ export default function IronGame(){
 
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
-    if(screen==="complete"||screen==="setup"){
-      // Clear saved session when done or reset to setup
+    // Clear the saved session ONLY when a workout actually finishes.
+    // The app always boots to screen "setup", so clearing here on setup
+    // would wipe an in-progress session on every relaunch — that was the
+    // bug where reopening the app lost all session data. Intentional clears
+    // happen explicitly in reset() and the "Start Fresh" button.
+    if(screen==="complete"){
       try{ localStorage.removeItem('ig_session'); }catch{}
       return;
     }
+    if(screen==="setup") return; // nothing to persist yet; never clear here
     try{
       localStorage.setItem('ig_session', JSON.stringify({
         sesType, exList, exIdx, setIdx, prs, log,
@@ -1122,6 +1127,7 @@ export default function IronGame(){
     setPhase("ready");
   };
   const reset=()=>{
+    try{ localStorage.removeItem('ig_session'); }catch{}
     setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
     setSessionStart(null);setSessionEnd(null);setWarmupNext(false);setWarmedMuscles(new Set());
