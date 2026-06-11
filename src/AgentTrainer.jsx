@@ -1129,6 +1129,7 @@ export default function IronGame(){
 
   const shell={background:C.page,minHeight:"100dvh",color:C.wht,
     maxWidth:430,margin:"0 auto",display:"flex",flexDirection:"column",
+    paddingTop:"env(safe-area-inset-top)",
     fontFamily:"'Inter',sans-serif"};
 
   // ── SETUP ────────────────────────────────────────────────
@@ -1490,7 +1491,7 @@ export default function IronGame(){
 
   // ── BARBELL CHECK ─────────────────────────────────────────
   if(screen==="barbellCheck") return(
-    <div style={{...shell,justifyContent:"center",padding:"0 22px",gap:24}}>
+    <div style={{...shell,justifyContent:"center",padding:"0 22px",paddingTop:"env(safe-area-inset-top)",gap:24}}>
       <style>{FONTS}</style>
       <div>
         <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
@@ -1562,7 +1563,7 @@ export default function IronGame(){
     const kcal = kcalRange ? kcalRange.est : null;
 
     return(
-      <div style={{...shell,padding:"40px 20px 36px"}}>
+      <div style={{...shell,padding:"40px 20px 36px",paddingTop:"calc(40px + env(safe-area-inset-top))"}}>
         <style>{FONTS}</style>
         <SL color={C.md}>Session Complete{sessionDate?` · ${sessionDate}`:""}</SL>
         {isPerfect&&(
@@ -2241,7 +2242,11 @@ export default function IronGame(){
           /* ── PHR ENTRY ───────────────────────────────────── */
           <div>
             <div style={{marginBottom:14}}>
-
+              {/* Set count label — keeps the current set number visible on the BPM screen */}
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                color:C.md,letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:6}}>
+                Peak Heart Rate · Set {setIdx+1}
+              </div>
               {/* BPM display */}
               <div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:12}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:80,
