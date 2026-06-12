@@ -17,18 +17,16 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Never cache the root HTML — and wipe SW/cache on load
+# Never cache the root HTML (no Clear-Site-Data: it was erasing user storage every load)
 [[headers]]
   for = "/"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
-    Clear-Site-Data = '"cache", "storage"'
 
 [[headers]]
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
-    Clear-Site-Data = '"cache", "storage"'
 
 # Never cache the service worker
 [[headers]]
