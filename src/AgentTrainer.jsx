@@ -449,7 +449,6 @@ function suggestW(name,si,lw,lr,prs){
   const w=pr.weight;
   // Set 1: auto-load to last session's working weight (PR).
   // If user already adjusted weight this session (lw>0), respect that.
-  // 68% warmup ramp is no longer used — user controls warmup via + Warm-Up toggle.
   if(si===0) return lw&&lw>0 ? lw : w;
   // Set 2+: progress from last NON-WARMUP working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
@@ -463,26 +462,9 @@ function suggestW(name,si,lw,lr,prs){
 // Returns how many warm-up sets should be auto-tagged for a given
 // exercise position in the session.
 //
-// Rule 1: First exercise of session → always 2 warm-up sets
-// Rule 2: New muscle group, shoulders → always 1 (joint protection)
-// Rule 3: New muscle group, isolation (non-shoulder) → 1
-// Rule 4: New muscle group, compound non-shoulder → 0 (general warmth assumed)
-// Rule 5: Muscle already warmed → 0
-// ─────────────────────────────────────────────────────────────
-function getAutoWarmupSets(exIdx, exList, warmedMuscles, META) {
-  if (exIdx === 0) return 2;
-  const name   = exList[exIdx]?.name;
-  const meta   = META[name] || {};
-  const muscle = meta.muscle;
-  if (!muscle) return 0;
-  if (warmedMuscles.has(muscle)) return 0;
-  if (muscle === "shoulders") return 1;
-  if (!meta.compound) return 1;
-  return 0;
-}
+
 
 function calcScore(log,prs,ext){
-  // Working sets only — warmup sets must not inflate volume, PR, or set-count scoring.
   const wlog = log.filter(s=>!s.warmup);
 
   // MUS scoring model (max 45):
@@ -734,7 +716,6 @@ export default function IronGame(){
   const [ext,       setExt]       = useState(false);
   const [tcMode,    setTcMode]    = useState(true);
   const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
-  const [genWarmup, setGenWarmup] = useState(false);
   const [exList,    setExList]    = useState(()=> _saved?.exList    ?? []);
   const [exIdx,     setExIdx]     = useState(()=> _saved?.exIdx     ?? 0);
   const [setIdx,    setSetIdx]    = useState(()=> _saved?.setIdx    ?? 0);
@@ -763,11 +744,8 @@ export default function IronGame(){
   const [showBrandInfo, setShowBrandInfo] = useState(false); // brand tooltip for LF etc. // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
-  // warmupNext: when true, the next logged set is tagged as a warm-up.
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
-  const [warmupNext, setWarmupNext] = useState(false);
-  const [warmedMuscles,setWarmedMuscles] = useState(new Set()); // muscles warmed this session
 
   // ── Music player state ────────────────────────────────────
   const [playlist,      setPlaylist]     = useState(() => {
@@ -777,9 +755,6 @@ export default function IronGame(){
   const [shuffled,      setShuffled]     = useState(()=>shuffleArr(DEFAULT_PLAYLIST));
   const [trackIdx,      setTrackIdx]     = useState(0);
   const [isPlaying,     setIsPlaying]    = useState(false);
-  const [showAddTrack,  setShowAddTrack] = useState(false);
-  const [addTrackUrl,   setAddTrackUrl]  = useState("");
-  const [addTrackStatus,setAddTrackStatus]=useState(""); // "loading"|"ok"|"error"
   const [showPlayer, setShowPlayer] = useState(false); // show/hide YouTube player strip
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
@@ -853,18 +828,7 @@ export default function IronGame(){
     if (phase === "ready") setRepInput(null);
   }, [phase, exIdx, setIdx]);
 
-  // Auto warm-up: set warmupNext=true when rules say this set should be a warm-up.
-  // Fires when exercise changes or a set is logged (log.length changes).
-  // User can always override by tapping the pill.
-  useEffect(() => {
-    if (phase !== "ready" || !ex) return;
-    const autoNeeded  = getAutoWarmupSets(exIdx, exList, warmedMuscles, META);
-    const warmupDone  = log.filter(s => s.exercise === ex.name && s.warmup).length;
-    const workingDone = log.filter(s => s.exercise === ex.name && !s.warmup).length;
-    if (workingDone === 0 && warmupDone < autoNeeded) {
-      setWarmupNext(true);
-    }
-  }, [exIdx, log.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── YouTube iframe src builder ────────────────────────────
   // Persist playlist to localStorage when it changes
   useEffect(()=>{
@@ -914,30 +878,7 @@ export default function IronGame(){
     window.open(`https://www.youtube.com/watch?v=${shuffled[prev].ytId}`,'_blank');
     setIsPlaying(true);
   };
-  const musicAddTrack = async () => {
-    const id=extractYTId(addTrackUrl);
-    if(!id){ setAddTrackStatus("error"); return; }
-    setAddTrackStatus("loading");
-    try{
-      const r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
-      const d=await r.json();
-      const newTrack={ title:d.title||"Unknown", artist:d.author_name||"", ytId:id };
-      setPlaylist(p=>[...p,newTrack]);
-      setShuffled(p=>[...p,newTrack]); // append to current shuffled order too
-      setAddTrackUrl("");
-      setShowAddTrack(false);
-      setAddTrackStatus("ok");
-    }catch{
-      // Fallback if oEmbed fails — add with URL as title
-      const id2=extractYTId(addTrackUrl);
-      if(id2){
-        const newTrack={ title:"Track "+id2.slice(-4), artist:"", ytId:id2 };
-        setPlaylist(p=>[...p,newTrack]);
-        setShuffled(p=>[...p,newTrack]);
-        setAddTrackUrl(""); setShowAddTrack(false); setAddTrackStatus("");
-      } else { setAddTrackStatus("error"); }
-    }
-  };
+
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -999,14 +940,7 @@ export default function IronGame(){
 
   const ex     = exList[exIdx]||null;
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
-  // Warm-up tag is now user-controlled via the warmupNext pill on the Set ready screen.
-  const isWarmupSet = warmupNext;
-  // Auto-warmup count for display on the pill
-  const autoWarmupNeeded = ex ? getAutoWarmupSets(exIdx, exList, warmedMuscles, META) : 0;
-  const autoWarmupDone   = ex ? log.filter(s => s.exercise === ex.name && s.warmup).length : 0;
-  const autoWarmupLabel  = autoWarmupNeeded > 0 && autoWarmupDone < autoWarmupNeeded
-    ? ` ${autoWarmupDone + 1}/${autoWarmupNeeded}`
-    : "";
+
   const isBw = m.eq === "bodyweight";
   const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
 
@@ -1019,9 +953,8 @@ export default function IronGame(){
   const repRange     = ex ? parseRange(ex.repRange) : null;
   const rangeLo      = repRange ? repRange[0] : (ex?.targetReps||8);
   const rangeHi      = repRange ? repRange[1] : (ex?.targetReps||8);
-  // Last logged reps for this exercise in current session — SKIP warmups so warmup
-  // reps don't pollute the rep grid centering or progression math.
-  const lastExLog    = ex ? [...log].reverse().find(s => s.exercise === ex.name && !s.warmup) : null;
+  // Last logged reps for this exercise in current session
+  const lastExLog    = ex ? [...log].reverse().find(s => s.exercise === ex.name) : null;
   const lastReps     = lastExLog?.reps ?? null;
   // Adapted target: center the grid on last rep count if available, else prescribed target
   const adaptedTarget = lastReps !== null ? lastReps : (ex?.targetReps || 8);
@@ -1103,7 +1036,7 @@ export default function IronGame(){
     setScreen("session");
   };
   // ── Back navigation: undo the most recent logged set ──────────
-  // Pops the last log entry, restores setIdx/exIdx/lastWt/lastRes/warmupNext to
+  // Pops the last log entry, restores setIdx/exIdx/lastWt/lastRes to
   // the state immediately preceding that log. Supports cross-exercise undo:
   // if the user already advanced to the next exercise, this rolls back to it.
   const undoLastSet = () => {
@@ -1117,7 +1050,7 @@ export default function IronGame(){
 
     // Roll PR back if the popped set had set a new PR for its exercise
     const exMeta = META[popped.exercise] || userMeta[popped.exercise] || {};
-    if (!popped.warmup && !exMeta.bw) {
+    if (!exMeta.bw) {
       const currentPr = prs[popped.exercise];
       if (currentPr && popped.weight >= currentPr.weight && popped.result !== "fell_short") {
         // The popped set may have been the PR. Recompute from prior logs.
@@ -1140,17 +1073,11 @@ export default function IronGame(){
     setExIdx(poppedExIdx);
     setSetIdx(workingDone);
 
-    if (popped.warmup) {
-      // Restoring a warmup: warmupNext goes back ON, lastWt/lastRes unchanged
-      setWarmupNext(true);
-    } else {
-      setWarmupNext(false);
-      // Find last working set for this exercise in newLog for progression context
-      const priorWorking = [...newLog].reverse()
-        .find(s => s.exercise === popped.exercise && !s.warmup);
-      setLastWt(priorWorking?.weight ?? null);
-      setLastRes(priorWorking?.result ?? null);
-    }
+    // Find last set for this exercise in newLog for progression context
+    const priorWorking = [...newLog].reverse()
+      .find(s => s.exercise === popped.exercise);
+    setLastWt(priorWorking?.weight ?? null);
+    setLastRes(priorWorking?.result ?? null);
     setPhase("ready");
   };
 
@@ -1172,23 +1099,9 @@ export default function IronGame(){
   };
   const doLog=(res,wt,reps,phr=null)=>{
     setWConf(null);
-    const wasWarmup = warmupNext;
     setLog(l=>[...l,{exercise:ex.name,setNum:setIdx+1,weight:wt,
-      reps:reps,result:res,...(wasWarmup?{warmup:true}:{}),...(phr?{phr}:{})}]);
+      reps:reps,result:res,...(phr?{phr}:{})}]);
     setWeightAdj(0);
-    if(wasWarmup){
-      // Warmup logged: clear the toggle, stay on the same working set index.
-      // Don't update lastWt/lastRes (those drive the next working set's prescription).
-      // Don't award PRs from warmup sets.
-      setWarmupNext(false);
-      setPhase("ready");
-      return;
-    }
-    // Mark muscle group as warmed on first working set for this exercise
-    const exMetaM = META[ex.name] || {};
-    if (exMetaM.muscle) {
-      setWarmedMuscles(prev => new Set([...prev, exMetaM.muscle]));
-    }
     setLastRes(res);setLastWt(wt);
     const pr=prs[ex.name];
     if(res!=="fell_short"&&pr&&!pr.bw&&wt>pr.weight){
@@ -1197,7 +1110,7 @@ export default function IronGame(){
     }
     if(setIdx+1>=ex.sets){
       if(exIdx+1>=exList.length){setSessionEnd(Date.now());setScreen("complete");return;}
-      setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);setWarmupNext(false);
+      setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
     } else setSetIdx(s=>s+1);
     setPhase("ready");
   };
@@ -1206,7 +1119,7 @@ export default function IronGame(){
     idbDel('ig_session');
     setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
-    setSessionStart(null);setSessionEnd(null);setWarmupNext(false);setWarmedMuscles(new Set());
+    setSessionStart(null);setSessionEnd(null);
   };
 
   const shell={background:C.page,minHeight:"100dvh",color:C.wht,
@@ -1367,39 +1280,13 @@ export default function IronGame(){
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
-                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a-(genWarmup?5:0);return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
+                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
                 </div>
               </div>
             )}
           </div>
 
-          {/* GENERAL WARM-UP — 3-5 min treadmill before session */}
-          <div style={{marginBottom:18}}>
-            <button className="t" onClick={()=>setGenWarmup(g=>!g)} style={{
-              width:"100%",minHeight:54,borderRadius:12,padding:"10px 14px",cursor:"pointer",
-              background:genWarmup?STEEL_SEL:STEEL,
-              border:`1px solid ${genWarmup?C.red:C.bdr}`,
-              borderTop:`1px solid ${genWarmup?"#f03010":C.bdrTop}`,
-              boxShadow:genWarmup?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-              display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:24,height:24,borderRadius:6,
-                background:genWarmup?"rgba(255,255,255,0.18)":"rgba(255,255,255,0.04)",
-                border:`1px solid ${genWarmup?"rgba(255,255,255,0.4)":C.bdr}`,
-                display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {genWarmup&&<IChk s={14} style={{color:"#fff"}}/>}
-              </div>
-              <div style={{flex:1,textAlign:"left"}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:"0.08em",color:C.wht,lineHeight:1}}>
-                  Treadmill Warm-Up
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:genWarmup?"rgba(255,255,255,0.78)":C.md,letterSpacing:"0.08em",
-                  textTransform:"uppercase",marginTop:3}}>
-                  3–5 min before session
-                </div>
-              </div>
-            </button>
-          </div>
+
 
           {/* SESSION TYPE — second choice */}
           <div style={{marginBottom:18}}>
@@ -1437,7 +1324,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setGenWarmup(false); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
@@ -2031,7 +1918,7 @@ export default function IronGame(){
             color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>SETS</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
             {log.filter(s=>!s.warmup).length}
-            {(phase==="logging"||phase==="phr")&&!isWarmupSet&&(
+            {(phase==="logging"||phase==="phr")&&(
               <span style={{color:C.red,fontSize:22,lineHeight:1}}>+</span>
             )}
             <span style={{color:C.md}}>/{totS}</span>
@@ -2071,19 +1958,7 @@ export default function IronGame(){
                   Mandatory
                 </span>
               )}
-              {/* Warm-up pill — user-controlled. Tag THIS set as a warm-up before logging. */}
-              {phase==="ready"&&!isBw&&(
-                <button className="t" onClick={()=>setWarmupNext(v=>!v)}
-                  style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
-                    color:warmupNext?"#111":"#ffb400",
-                    background:warmupNext?"#ffb400":"rgba(255,180,0,0.08)",
-                    border:`1px solid ${warmupNext?"#ffb400":"rgba(255,180,0,0.4)"}`,
-                    borderRadius:5,padding:"4px 10px",letterSpacing:"0.1em",
-                    textTransform:"uppercase",cursor:"pointer",
-                    boxShadow:warmupNext?"0 2px 10px rgba(255,180,0,0.35)":"none"}}>
-                  {warmupNext ? `Warm-Up${autoWarmupLabel} ✓` : autoWarmupNeeded > 0 ? `+ Warm-Up${autoWarmupLabel}` : "+ Warm-Up"}
-                </button>
-              )}
+
             </div>
 
             <div style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
@@ -2116,25 +1991,9 @@ export default function IronGame(){
 
           {phase==="ready"?(
             <>
-              {/* Warm-up activation cue — visible only when user has tagged this set as warm-up AND exercise has a cue */}
-              {isWarmupSet&&m.warmupCue&&(
-                <div style={{background:"rgba(255,180,0,0.08)",
-                  border:"1px solid rgba(255,180,0,0.3)",
-                  borderRadius:10,padding:"10px 14px",marginBottom:10,
-                  display:"flex",gap:10,alignItems:"flex-start"}}>
-                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
-                    color:"#ffb400",letterSpacing:"0.18em",
-                    textTransform:"uppercase",flexShrink:0,marginTop:2}}>
-                    Activation
-                  </div>
-                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
-                    color:C.lt,lineHeight:1.45,letterSpacing:"0.02em"}}>
-                    {m.warmupCue}
-                  </div>
-                </div>
-              )}
+
               {/* Last session reference — shown at exercise open (setIdx===0) only */}
-              {setIdx===0&&!isWarmupSet&&prs[ex.name]&&!prs[ex.name].bw&&(
+              {setIdx===0&&prs[ex.name]&&!prs[ex.name].bw&&(
                 <div style={{background:"rgba(255,255,255,0.04)",
                   border:`1px solid ${C.bdr}`,
                   borderTop:"1px solid rgba(255,255,255,0.09)",
@@ -2160,14 +2019,13 @@ export default function IronGame(){
 
               {/* Load card */}
               <div style={{background:STEEL,borderRadius:12,
-                border:`1px solid ${isWarmupSet?"rgba(255,180,0,0.2)":C.bdr}`,
-                borderTop:`1px solid ${isWarmupSet?"rgba(255,180,0,0.3)":C.bdrTop}`,
+                border:`1px solid ${C.bdr}`,
+                borderTop:`1px solid ${C.bdrTop}`,
                 padding:"10px 14px",marginBottom:10,
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <SL color={isWarmupSet?"#ffb400":C.md}>
-                    {isWarmupSet      ? "Warm-Up Load"
-                      : m.eq==="bodyweight" ? "Load"
+                  <SL color={C.md}>
+                    {m.eq==="bodyweight" ? "Load"
                       : m.eq==="stack-pin"  ? "Stack Weight"
                       : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
                       : m.eq==="barbell"    ? `Olympic Bar · 45 lbs`
@@ -2186,7 +2044,7 @@ export default function IronGame(){
                 {isBw?(
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:46,
-                      color:isWarmupSet?"rgba(255,180,0,0.85)":C.lt}}>
+                      color:C.lt}}>
                       {prs[ex.name]?.unit==="sec"?`/ ${prs[ex.name].reps} sec`:""}
                     </div>
                   </div>
@@ -2329,7 +2187,7 @@ export default function IronGame(){
         )}
         {phase==="ready"?(
           <RedBtn onClick={()=>setPhase("logging")} h={70}>
-            {isWarmupSet ? "Begin Warm-Up" : `Begin Set ${setIdx+1}`}
+            {`Begin Set ${setIdx+1}`}
           </RedBtn>
         ):phase==="phr"?(
           /* ── PHR ENTRY ───────────────────────────────────── */
@@ -2499,14 +2357,8 @@ export default function IronGame(){
           <div style={{borderTop:`1px solid ${C.bdr}`,marginTop:8,paddingTop:8}}>
             {/* Track info + controls */}
             <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0"}}>
-              {/* YouTube logo + track info */}
+              {/* Track info */}
               <div style={{display:"flex",alignItems:"center",gap:8,flex:1,overflow:"hidden"}}>
-                {/* YouTube logo */}
-                <svg width="32" height="22" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg" style={{flexShrink:0}}>
-                  <rect width="32" height="22" rx="5" fill="#FF0000"/>
-                  <path d="M13 6.5L22 11L13 15.5V6.5Z" fill="white"/>
-                </svg>
-                {/* Song info */}
                 <div style={{overflow:"hidden"}}>
                   <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
                     color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
@@ -2544,9 +2396,9 @@ export default function IronGame(){
                   ▶▶
                 </button>
                 {/* Add track */}
-                <button className="t" onClick={()=>{setShowAddTrack(v=>!v);setAddTrackUrl("");setAddTrackStatus("");}}
+                <button className="t"
                   style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
-                    background:showAddTrack?"rgba(255,255,255,0.08)":C.card,
+                    background:C.card,
                     color:C.md,fontSize:18,fontWeight:700,cursor:"pointer",
                     display:"flex",alignItems:"center",justifyContent:"center"}}>
                   +
@@ -2556,55 +2408,10 @@ export default function IronGame(){
             {/* Track count indicator */}
             <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
               color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",
-              textAlign:"center",marginBottom:showAddTrack?6:0}}>
+              textAlign:"center",marginBottom:0}}>
               {trackIdx+1} / {shuffled.length} · SHUFFLED
             </div>
-            {/* Add track input */}
-            {showAddTrack&&(
-              <div style={{background:C.inner,borderRadius:10,padding:"10px 12px",
-                border:`1px solid ${C.bdr}`,marginTop:4}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                  color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:6}}>
-                  Paste YouTube URL
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  <input
-                    value={addTrackUrl}
-                    onChange={e=>{setAddTrackUrl(e.target.value);setAddTrackStatus("");}}
-                    placeholder="https://youtube.com/watch?v=..."
-                    style={{flex:1,background:"rgba(255,255,255,0.06)",
-                      border:`1px solid ${addTrackStatus==="error"?C.red:C.bdr}`,
-                      borderRadius:7,padding:"7px 10px",color:C.wht,
-                      fontFamily:"'Inter',sans-serif",fontSize:12,outline:"none"}}
-                  />
-                  <button className="t" onClick={musicAddTrack}
-                    disabled={addTrackStatus==="loading"}
-                    style={{padding:"7px 14px",borderRadius:7,cursor:"pointer",
-                      border:`1px solid ${C.red}`,
-                      background:addTrackStatus==="loading"?"rgba(232,38,10,0.1)":"rgba(232,38,10,0.2)",
-                      color:C.red,fontFamily:"'Inter',sans-serif",
-                      fontWeight:700,fontSize:12,letterSpacing:"0.06em"}}>
-                    {addTrackStatus==="loading"?"…":"Add"}
-                  </button>
-                </div>
-                {addTrackStatus==="error"&&(
-                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
-                    color:C.red,marginTop:4}}>
-                    Not a valid YouTube URL — check and try again
-                  </div>
-                )}
-                {addTrackStatus==="ok"&&(
-                  <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
-                    color:C.grn,marginTop:4}}>
-                    Track added to playlist ✓
-                  </div>
-                )}
-                <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,
-                  color:"rgba(255,255,255,0.2)",marginTop:6,lineHeight:1.5}}>
-                  {playlist.length} track{playlist.length!==1?"s":""} in playlist · saved automatically
-                </div>
-              </div>
-            )}
+
           </div>
         )}
 
@@ -2775,7 +2582,7 @@ export default function IronGame(){
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);
                           setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
-                          setNewExDuplicate(null);setNewExName("");setWarmupNext(false);
+                          setNewExDuplicate(null);setNewExName("");
                           setNewExEq("plate-loaded");
                         }}
                         style={{flex:1,background:"transparent",
@@ -2871,7 +2678,7 @@ export default function IronGame(){
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
                     setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
-                    setNewExDuplicate(null);setNewExName("");setWarmupNext(false);
+                    setNewExDuplicate(null);setNewExName("");
                     setNewExEq("plate-loaded");
                   }}
                   style={{width:"100%",fontFamily:"'Bebas Neue',sans-serif",
@@ -2913,7 +2720,7 @@ export default function IronGame(){
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
-                        setWeightAdj(0);setShowExPicker(false);setWarmupNext(false);
+                        setWeightAdj(0);setShowExPicker(false);
                       }}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
