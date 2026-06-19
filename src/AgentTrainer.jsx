@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { searchExercises, findDuplicate } from "./exerciseLibrary";
+import { searchExercises, findDuplicate, EXERCISE_LIBRARY } from "./exerciseLibrary";
 
 // ─────────────────────────────────────────────────────────────
 // DURABLE SESSION STORAGE
@@ -395,6 +395,10 @@ function exListForType(type, prs){
   const outCat = Object.keys(prs).filter(n=>!(CATEGORY[type]||[]).includes(n));
   return {inCat, outCat};
 }
+// Name → primary muscle lookup (exercise library, used by picker filter)
+const EX_PRIMARY = Object.fromEntries(
+  EXERCISE_LIBRARY.map(e=>[e.canonical, e.primary])
+);
 const TMPLS = {
   push:[
     {name:"LF Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
@@ -2832,7 +2836,7 @@ export default function IronGame(){
                 const {inCat,outCat}=exListForType(sesType,prs);
                 // Muscle-group filter
                 const _musMatch = exFilter
-                  ? (()=>{const _p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[];return n=>{const meta=META[n];return meta?_p.includes(meta.primary):false;};})()
+                  ? (()=>{const _p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[];return n=>_p.includes(EX_PRIMARY[n]||"");})()
                   : ()=>true;
                 // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
                 const slotAlts = (TMPLS[sesType]?.[exIdx]?.alts || [])
