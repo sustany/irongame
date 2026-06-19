@@ -745,6 +745,7 @@ export default function IronGame(){
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
   const [exSearch,         setExSearch]         = useState("");
+  const [exFilter,         setExFilter]         = useState("");
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
 
@@ -2489,7 +2490,7 @@ export default function IronGame(){
                     borderRadius:8,padding:"7px 14px",cursor:"pointer"}}>
                   + New
                 </button>
-                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);setExSearch("");}}
+                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);setExSearch("");setExFilter("");}}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                     fontSize:12,color:C.md,letterSpacing:"0.12em",
                     background:"transparent",border:`1px solid ${C.bdr}`,
@@ -2514,7 +2515,7 @@ export default function IronGame(){
                     borderRadius:10,padding:"10px 36px 10px 12px",
                     color:C.wht,outline:"none"}}/>
                 {exSearch.length>0&&(
-                  <button className="t" onClick={()=>setExSearch("")}
+                  <button className="t" onClick={()=>{setExSearch("");setExFilter("");}}
                     style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",
                       background:"transparent",border:"none",cursor:"pointer",
                       color:C.md,fontSize:16,lineHeight:1,padding:2}}>
@@ -2524,10 +2525,53 @@ export default function IronGame(){
               </div>
             </div>
 
+            {/* ── Muscle-group filter pills ──────────────────────────────── */}
+            {(()=>{
+              // pill label → primary[] it matches
+              const PILL_MAP = [
+                {label:"CHEST",     match:["chest"]},
+                {label:"BACK",      match:["lats","mid back","lower back","traps"]},
+                {label:"SHOULDERS", match:["front delts","side delts","rear delts"]},
+                {label:"ARMS",      match:["biceps","triceps","forearms"]},
+                {label:"LEGS",      match:["quads","hamstrings","glutes","calves"]},
+                {label:"CORE",      match:["abs","obliques"]},
+              ];
+              // session-aware ordering
+              const sesOrder = sesType==="push"  ? ["CHEST","SHOULDERS","ARMS","BACK","LEGS","CORE"]
+                             : sesType==="pull"  ? ["BACK","ARMS","SHOULDERS","CHEST","LEGS","CORE"]
+                             : sesType==="legs"  ? ["LEGS","CORE","BACK","CHEST","SHOULDERS","ARMS"]
+                             : PILL_MAP.map(p=>p.label);
+              const ordered = sesOrder.map(l=>PILL_MAP.find(p=>p.label===l)).filter(Boolean);
+              return(
+                <div style={{overflowX:"auto",display:"flex",gap:6,
+                  padding:"0 12px 10px",flexShrink:0,
+                  scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+                  {ordered.map(pill=>{
+                    const active = exFilter===pill.label;
+                    return(
+                      <button key={pill.label} className="t"
+                        onClick={()=>setExFilter(active?"":pill.label)}
+                        style={{flexShrink:0,fontFamily:"'Bebas Neue',sans-serif",
+                          fontSize:13,letterSpacing:"0.1em",
+                          padding:"5px 11px",borderRadius:20,cursor:"pointer",
+                          border:`1px solid ${active?C.red:C.bdr}`,
+                          background:active?"rgba(232,38,10,0.18)":"transparent",
+                          color:active?C.red:C.md,transition:"all 0.15s"}}>
+                        {pill.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* ── Search results (replaces normal list when query active) ── */}
             {exSearch.length>=2&&(()=>{
-              const hits = searchExercises(exSearch, 30).filter(s=>{
-                // skip exercises already occupying another slot
+              const filterMatch = exFilter
+                ? (()=>{const p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[]; return s=>p.includes(s.primary);})()
+                : ()=>true;
+              const hits = searchExercises(exSearch, 60).filter(s=>{
+                if(!filterMatch(s)) return false;
                 return !exList.some((e,i)=>e.name===s.canonical&&i!==exIdx);
               });
               const isCurrent = name => exList[exIdx]?.name===name;
@@ -2544,7 +2588,7 @@ export default function IronGame(){
                     return(
                       <button key={s.canonical} className="t"
                         onClick={()=>{
-                          if(cur){setShowExPicker(false);setExSearch("");return;}
+                          if(cur){setShowExPicker(false);setExSearch("");setExFilter("");return;}
                           const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===s.canonical);
                           const updated=[...exList];
                           updated[exIdx]={...updated[exIdx],name:s.canonical,
@@ -2554,7 +2598,7 @@ export default function IronGame(){
                           };
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);
-                          setWeightAdj(0);setShowExPicker(false);setExSearch("");
+                          setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");
                         }}
                         style={{width:"100%",display:"flex",
                           justifyContent:"space-between",alignItems:"center",
@@ -2647,7 +2691,7 @@ export default function IronGame(){
                           updated[exIdx]={...updated[exIdx],name:newExDuplicate.name};
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
-                          setShowNewExForm(false);setShowExPicker(false);setExSearch("");
+                          setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                           setNewExDuplicate(null);setNewExName("");
                         }}
                         style={{flex:1,background:"#ffb400",color:"#000",border:"none",
@@ -2670,7 +2714,7 @@ export default function IronGame(){
                           updated[exIdx]={...updated[exIdx],name,repRange:"8–12",targetReps:10};
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);
-                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");
+                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                           setNewExDuplicate(null);setNewExName("");
                           setNewExEq("plate-loaded");
                         }}
@@ -2766,7 +2810,7 @@ export default function IronGame(){
                       repRange:"8–12",targetReps:10};
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
-                    setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");
+                    setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                     setNewExDuplicate(null);setNewExName("");
                     setNewExEq("plate-loaded");
                   }}
@@ -2786,11 +2830,15 @@ export default function IronGame(){
 
               {(()=>{
                 const {inCat,outCat}=exListForType(sesType,prs);
+                // Muscle-group filter
+                const _musMatch = exFilter
+                  ? (()=>{const _p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[];return n=>{const meta=META[n];return meta?_p.includes(meta.primary):false;};})()
+                  : ()=>true;
                 // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
                 const slotAlts = (TMPLS[sesType]?.[exIdx]?.alts || [])
-                  .filter(n => prs[n]); // skip alts not in PR list
+                  .filter(n => prs[n] && _musMatch(n)); // skip alts not in PR list or filtered muscle
                 const altSet = new Set(slotAlts);
-                const inCatRemaining = inCat.filter(n => !altSet.has(n));
+                const inCatRemaining = inCat.filter(n => !altSet.has(n) && _musMatch(n));
                 const renderEx=(name,tag)=>{
                   const pr=prs[name];
                   const isCurrent=exList[exIdx]?.name===name;
@@ -2798,7 +2846,7 @@ export default function IronGame(){
                   return(
                     <button key={name} className="t"
                       onClick={()=>{
-                        if(isCurrent){setShowExPicker(false);setExSearch("");return;}
+                        if(isCurrent){setShowExPicker(false);setExSearch("");setExFilter("");return;}
                         // Pull sets/repRange/targetReps from the session template
                         // so switching to RDL (4 sets) from a 3-set substitute
                         // correctly uses 4 sets — not the substitute's count.
@@ -2811,7 +2859,7 @@ export default function IronGame(){
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
-                        setWeightAdj(0);setShowExPicker(false);setExSearch("");
+                        setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");
                       }}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
