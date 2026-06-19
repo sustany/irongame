@@ -744,6 +744,7 @@ export default function IronGame(){
   const [showBrandInfo, setShowBrandInfo] = useState(false); // brand tooltip for LF etc. // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
+  const [exSearch,         setExSearch]         = useState("");
   // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
   // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
 
@@ -2488,7 +2489,7 @@ export default function IronGame(){
                     borderRadius:8,padding:"7px 14px",cursor:"pointer"}}>
                   + New
                 </button>
-                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);}}
+                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);setExSearch("");}}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                     fontSize:12,color:C.md,letterSpacing:"0.12em",
                     background:"transparent",border:`1px solid ${C.bdr}`,
@@ -2498,8 +2499,96 @@ export default function IronGame(){
               </div>
             </div>
 
+            {/* ── Smart search ───────────────────────────────── */}
+            <div style={{padding:"0 12px 10px",flexShrink:0}}>
+              <div style={{position:"relative"}}>
+                <input
+                  value={exSearch}
+                  onChange={e=>setExSearch(e.target.value)}
+                  placeholder="Search exercises…"
+                  autoFocus
+                  style={{width:"100%",boxSizing:"border-box",
+                    fontFamily:"'Inter',sans-serif",fontSize:14,fontWeight:600,
+                    background:"rgba(255,255,255,0.07)",
+                    border:`1px solid ${exSearch.length>=2?C.red:C.bdr}`,
+                    borderRadius:10,padding:"10px 36px 10px 12px",
+                    color:C.wht,outline:"none"}}/>
+                {exSearch.length>0&&(
+                  <button className="t" onClick={()=>setExSearch("")}
+                    style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",
+                      background:"transparent",border:"none",cursor:"pointer",
+                      color:C.md,fontSize:16,lineHeight:1,padding:2}}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Search results (replaces normal list when query active) ── */}
+            {exSearch.length>=2&&(()=>{
+              const hits = searchExercises(exSearch, 30).filter(s=>{
+                // skip exercises already occupying another slot
+                return !exList.some((e,i)=>e.name===s.canonical&&i!==exIdx);
+              });
+              const isCurrent = name => exList[exIdx]?.name===name;
+              return(
+                <div style={{overflowY:"auto",padding:"0 12px 32px",flex:1}}>
+                  {hits.length===0&&(
+                    <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,
+                      color:C.md,textAlign:"center",padding:"24px 0"}}>
+                      No matches
+                    </div>
+                  )}
+                  {hits.map(s=>{
+                    const cur = isCurrent(s.canonical);
+                    return(
+                      <button key={s.canonical} className="t"
+                        onClick={()=>{
+                          if(cur){setShowExPicker(false);setExSearch("");return;}
+                          const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===s.canonical);
+                          const updated=[...exList];
+                          updated[exIdx]={...updated[exIdx],name:s.canonical,
+                            sets:       tmpl?.sets       ?? updated[exIdx].sets,
+                            repRange:   tmpl?.repRange   ?? (META[s.canonical]?.compound?"6–10":"10–15"),
+                            targetReps: tmpl?.targetReps ?? (META[s.canonical]?.compound?8:12),
+                          };
+                          setExList(updated);
+                          setSetIdx(0);setLastRes(null);setLastWt(null);
+                          setWeightAdj(0);setShowExPicker(false);setExSearch("");
+                        }}
+                        style={{width:"100%",display:"flex",
+                          justifyContent:"space-between",alignItems:"center",
+                          background:cur?"rgba(232,38,10,0.12)":"transparent",
+                          border:`1px solid ${cur?C.red:C.bdr}`,
+                          borderRadius:10,padding:"12px 14px",marginBottom:6,
+                          cursor:"pointer",textAlign:"left"}}>
+                        <div>
+                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+                            color:cur?C.red:C.wht,letterSpacing:"0.06em",
+                            lineHeight:1,marginBottom:2}}>
+                            {s.canonical}
+                          </div>
+                          <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                            color:C.md,fontWeight:600}}>
+                            {s.primary} · {s.equip}
+                          </div>
+                        </div>
+                        {cur&&(
+                          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                            fontSize:10,color:C.red,letterSpacing:"0.1em",
+                            textTransform:"uppercase",flexShrink:0}}>
+                            Current
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* Inline new exercise form */}
-            {showNewExForm&&(()=>{
+            {exSearch.length<2&&showNewExForm&&(()=>{
               const suggestions = searchExercises(newExName, 5);
               return (
               <div style={{margin:"0 12px 10px",background:"rgba(232,38,10,0.08)",
@@ -2558,7 +2647,7 @@ export default function IronGame(){
                           updated[exIdx]={...updated[exIdx],name:newExDuplicate.name};
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
-                          setShowNewExForm(false);setShowExPicker(false);
+                          setShowNewExForm(false);setShowExPicker(false);setExSearch("");
                           setNewExDuplicate(null);setNewExName("");
                         }}
                         style={{flex:1,background:"#ffb400",color:"#000",border:"none",
@@ -2581,7 +2670,7 @@ export default function IronGame(){
                           updated[exIdx]={...updated[exIdx],name,repRange:"8–12",targetReps:10};
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);
-                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
+                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");
                           setNewExDuplicate(null);setNewExName("");
                           setNewExEq("plate-loaded");
                         }}
@@ -2677,7 +2766,7 @@ export default function IronGame(){
                       repRange:"8–12",targetReps:10};
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
-                    setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);
+                    setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");
                     setNewExDuplicate(null);setNewExName("");
                     setNewExEq("plate-loaded");
                   }}
@@ -2692,7 +2781,9 @@ export default function IronGame(){
             })()}
 
             {/* Exercise list — filtered by session type, sourced from live prs */}
+            {exSearch.length<2&&(
             <div style={{overflowY:"auto",padding:"0 12px 32px"}}>
+
               {(()=>{
                 const {inCat,outCat}=exListForType(sesType,prs);
                 // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
@@ -2707,7 +2798,7 @@ export default function IronGame(){
                   return(
                     <button key={name} className="t"
                       onClick={()=>{
-                        if(isCurrent){setShowExPicker(false);return;}
+                        if(isCurrent){setShowExPicker(false);setExSearch("");return;}
                         // Pull sets/repRange/targetReps from the session template
                         // so switching to RDL (4 sets) from a 3-set substitute
                         // correctly uses 4 sets — not the substitute's count.
@@ -2720,7 +2811,7 @@ export default function IronGame(){
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
-                        setWeightAdj(0);setShowExPicker(false);
+                        setWeightAdj(0);setShowExPicker(false);setExSearch("");
                       }}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
@@ -2770,6 +2861,7 @@ export default function IronGame(){
                 );
               })()}
             </div>
+            )}
           </div>
         </div>
       )}
