@@ -1019,7 +1019,7 @@ export default function IronGame(){
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
-    setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
+    setLastRes(null);setLastWt(null);setPhase("ready");
     setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
     setSessionStart(Date.now());
     setScreen("session");
@@ -1030,7 +1030,7 @@ export default function IronGame(){
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
-    setLastRes(null);setLastWt(null);setPhase("ready");setWarmedMuscles(new Set());
+    setLastRes(null);setLastWt(null);setPhase("ready");
     setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
     setSessionStart(Date.now());
     setScreen("session");
