@@ -1577,6 +1577,9 @@ export default function IronGame(){
     <div style={{...shell,justifyContent:"center",padding:"0 22px",paddingTop:"env(safe-area-inset-top)",gap:24}}>
       <style>{FONTS}</style>
       <div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:"0.06em",lineHeight:1,marginBottom:10}}>
+          <span style={{color:C.red}}>IRON</span><span style={{color:C.wht}}>Q</span>
+        </div>
         <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
           color:C.red,letterSpacing:"0.22em",textTransform:"uppercase",marginBottom:14}}>
           Priority Lift Check
@@ -1648,6 +1651,9 @@ export default function IronGame(){
     return(
       <div style={{...shell,padding:"40px 20px 36px",paddingTop:"calc(40px + env(safe-area-inset-top))"}}>
         <style>{FONTS}</style>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,letterSpacing:"0.06em",lineHeight:1,marginBottom:6}}>
+          <span style={{color:C.red}}>IRON</span><span style={{color:C.wht}}>Q</span>
+        </div>
         <SL color={C.md}>Session Complete{sessionDate?` · ${sessionDate}`:""}</SL>
         {isPerfect&&(
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,
@@ -1938,7 +1944,7 @@ export default function IronGame(){
   const sc=score.total>=90?C.grn:score.total>=70?C.wht:C.gld;
 
   return(
-    <div style={shell}>
+    <div style={{...shell,paddingTop:0}}>
       <style>{FONTS}</style>
 
       {prFlash&&(
@@ -1975,7 +1981,8 @@ export default function IronGame(){
 
       {/* ── SCORE BAR — needs to be readable glance distance ── */}
       <div style={{background:STEEL,borderBottom:`2px solid ${C.bdr}`,
-        padding:"10px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",
+        padding:"10px 18px",paddingTop:"calc(10px + env(safe-area-inset-top))",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
         boxShadow:"0 2px 14px rgba(0,0,0,0.5)"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           {/* Back chevron — phase-aware: cancels current logging/phr, undoes last logged set, or returns to setup */}
@@ -2008,6 +2015,9 @@ export default function IronGame(){
 
         {/* Score — the centrepiece of the game */}
         <div style={{textAlign:"center"}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:"0.06em",lineHeight:1,marginBottom:1}}>
+            <span style={{color:C.red}}>IRON</span><span style={{color:C.wht}}>Q</span>
+          </div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:68,lineHeight:1,color:sc,
             textShadow:score.total>=70?`0 0 22px ${sc}55`:undefined}}>
             {score.total}
