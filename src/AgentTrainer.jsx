@@ -230,10 +230,6 @@ const DEFAULT_PLAYLIST = [
   { title:"Simply The Best", artist:"Tina Turner",  ytId:"GC5E8ie2pdM" },
 ];
 function shuffleArr(a){ return [...a].sort(()=>Math.random()-0.5); }
-function extractYTId(url){
-  const m=url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-  return m?m[1]:null;
-}
 
 // ─────────────────────────────────────────────────────────────
 // USER PROFILE — used for kcal estimation and HR zone calibration.
@@ -339,33 +335,33 @@ const EQUIPMENT = {
 const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
 
 const META = {
-  "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness", warmupCue:"Activate lats + rhomboids. Scapular pulls × 10, band pull-aparts × 15." },
-  "LF Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate pec minor + serratus. Light cable fly × 15, scapular push-ups × 10." },
-  "LF Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, band external rotations × 10/side." },
-  "Bench Press, Smith Machine": { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate pecs + serratus. Push-ups × 10, scapular push-ups × 10." },
-  "Military Press PL Machine":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate rear delts + rotator cuff. Band pull-aparts × 15, wall slides × 10." },
-  "Seated PL Dip Machine":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps + lower pecs. Triceps stretch × 10s/side, scapular dips × 8." },
-  "LF Seated Dip":         { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate triceps long head. Overhead triceps stretch × 10s/side." },
-  "HS Decline Press":      { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true, warmupCue:"Activate lower pecs. Light press × 12, scapular push-ups × 10." },
+  "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
+  "LF Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Bench Press, Smith Machine": { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"smith" },
+  "Military Press PL Machine":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Seated PL Dip Machine":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Seated Dip":         { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "HS Decline Press":      { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true },
   "Pec Deck":              { muscle:"chest", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Cable Pushdown":        { muscle:"triceps", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Seated Lateral Raise":  { muscle:"shoulders", tier:"ISO",prPts:3, eq:"dumbbell" },
   "Weighted Crunches":     { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
   "Captain's Chair":       { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
-  "Barbell RDL":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true, warmupCue:"Activate hamstrings + glutes + lower back. Hip hinge × 10 bodyweight, glute bridge × 10, cat-cow × 8." },
-  "Lat Pull-Down PL":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate lats + scapular depressors. Dead hang × 15s, scapular pulls × 10." },
-  "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
-  "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", warmupCue:"Activate rhomboids + mid-traps. Band rows × 15, scapular retractions × 10." },
-  "Assisted Chin-Up":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate lats + grip. Dead hang × 15s, scapular pulls × 10." },
+  "Barbell RDL":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
+  "Lat Pull-Down PL":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
+  "Assisted Chin-Up":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
   "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
   "DB Alternating Curl":   { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "LF Bicep Curl":         { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "Dead Hang":             { muscle:"lats", tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
-  "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith", warmupCue:"Activate glutes. Glute bridge × 12, clamshells × 10/side, monster walks × 10 steps." },
-  "Seated Leg Curl":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin", warmupCue:"Activate hamstrings. Leg swings × 10/side, light reps × 12." },
-  "Linear Hack Squat PL":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", warmupCue:"Activate glutes + VMO. Bodyweight squat × 15, hip circles × 10/side, leg swings × 10/side." },
+  "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith" },
+  "Seated Leg Curl":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Linear Hack Squat PL":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Leg Extension":         { muscle:"quads", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Calf Press":            { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
@@ -454,22 +450,15 @@ function suggestW(name,si,lw,lr,prs){
   // Set 1: auto-load to last session's working weight (PR).
   // If user already adjusted weight this session (lw>0), respect that.
   if(si===0) return lw&&lw>0 ? lw : w;
-  // Set 2+: progress from last NON-WARMUP working set based on result.
+  // Set 2+: progress from last working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
   if(!lw) return w;
   if(lr==="exceeded")   return Math.round(Math.min(lw+5,w*1.08)/5)*5;
   if(lr==="fell_short") return Math.round(Math.max(lw-10,w*0.75)/5)*5;
   return lw;
 }
-// ─────────────────────────────────────────────────────────────
-// AUTO WARM-UP RULES
-// Returns how many warm-up sets should be auto-tagged for a given
-// exercise position in the session.
-//
-
-
 function calcScore(log,prs,ext){
-  const wlog = log.filter(s=>!s.warmup);
+  const wlog = log;
 
   // MUS scoring model (max 45):
   //   • Stimulus volume (max 27)  — sum of tier weight per non-failed working set.
@@ -505,7 +494,7 @@ function calcScore(log,prs,ext){
 
   // CRD — based on actual PHR zone quality, not set count.
   // Z3+ (Aerobic/Threshold/Max) = full points. Z2 = partial. Z1 = minimal.
-  // Include warmup PHRs since they reflect real cardiovascular load.
+  // Include all PHRs since they reflect real cardiovascular load.
   const phrs=log.filter(s=>s.phr>0).map(s=>s.phr);
   let cv=0;
   if(phrs.length>0){
@@ -750,8 +739,6 @@ export default function IronGame(){
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
   const [exSearch,         setExSearch]         = useState("");
   const [exFilter,         setExFilter]         = useState("");
-  // Warmup sets don't advance setIdx and don't feed lastWt/lastRes.
-  // User controls this explicitly via the "Warm-up" pill on the Set ready screen.
 
   // ── Music player state ────────────────────────────────────
   const [playlist,      setPlaylist]     = useState(() => {
@@ -761,7 +748,6 @@ export default function IronGame(){
   const [shuffled,      setShuffled]     = useState(()=>shuffleArr(DEFAULT_PLAYLIST));
   const [trackIdx,      setTrackIdx]     = useState(0);
   const [isPlaying,     setIsPlaying]    = useState(false);
-  const [showPlayer, setShowPlayer] = useState(false); // show/hide YouTube player strip
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -835,7 +821,6 @@ export default function IronGame(){
   }, [phase, exIdx, setIdx]);
 
 
-  // ── YouTube iframe src builder ────────────────────────────
   // Persist playlist to localStorage when it changes
   useEffect(()=>{
     try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
@@ -1026,7 +1011,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -1037,7 +1022,7 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);setShowPlayer(false);
+    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -1061,7 +1046,7 @@ export default function IronGame(){
       if (currentPr && popped.weight >= currentPr.weight && popped.result !== "fell_short") {
         // The popped set may have been the PR. Recompute from prior logs.
         const priorBest = newLog
-          .filter(s => s.exercise === popped.exercise && !s.warmup && s.result !== "fell_short")
+          .filter(s => s.exercise === popped.exercise && s.result !== "fell_short")
           .reduce((best, s) => (s.weight > (best?.weight || 0) ? s : best), null);
         if (priorBest && priorBest.weight < currentPr.weight) {
           setPrs(p => ({...p, [popped.exercise]: {...p[popped.exercise],
@@ -1075,7 +1060,7 @@ export default function IronGame(){
     if (poppedExIdx === -1) { setPhase("ready"); return; }
 
     // Count working sets for that exercise in newLog to compute restored setIdx
-    const workingDone = newLog.filter(s => s.exercise === popped.exercise && !s.warmup).length;
+    const workingDone = newLog.filter(s => s.exercise === popped.exercise).length;
     setExIdx(poppedExIdx);
     setSetIdx(workingDone);
 
@@ -1665,7 +1650,7 @@ export default function IronGame(){
         {(() => {
           // Gather PHR points in chronological order
           const phrPoints = log
-            .map((s, idx) => ({ idx, phr: s.phr, exercise: s.exercise, warmup: !!s.warmup }))
+            .map((s, idx) => ({ idx, phr: s.phr, exercise: s.exercise }))
             .filter(p => p.phr > 0);
           if (phrPoints.length === 0) return null;
 
@@ -1760,7 +1745,7 @@ export default function IronGame(){
 
         <div style={{display:"flex",gap:10,marginBottom:28}}>
           {[
-            {label:"Total Sets",val:log.filter(s=>!s.warmup).length,   c:C.wht},
+            {label:"Total Sets",val:log.length,   c:C.wht},
             {label:"PRs Hit",   val:hits.length,  c:hits.length?C.gld:C.wht},
           ].map(({label,val,c})=>(
             <div key={label} style={{flex:1,background:STEEL,borderRadius:12,
@@ -1785,7 +1770,7 @@ export default function IronGame(){
             lines.push(`${sesType?.toUpperCase() || "SESSION"} · ${elapsedMin} min · Score ${fs.total}/100`);
             lines.push("");
             if (kcal) lines.push(`Energy: ${kcal.toLocaleString()} kcal · Avg HR ${Math.round(avgPhr)}`);
-            const workingSets = log.filter(s=>!s.warmup).length;
+            const workingSets = log.length;
             lines.push(`Sets: ${workingSets} working · ${hits.length} PRs`);
             lines.push("");
             lines.push("Score breakdown:");
@@ -1811,10 +1796,9 @@ export default function IronGame(){
             order.forEach(exName=>{
               lines.push(`  ${exName}`);
               byEx[exName].forEach((s,i)=>{
-                const tag   = s.warmup ? " (W)" : "";
-                const prTag = !s.warmup && s.result==="exceeded" && hits.includes(s.exercise) ? " (PR)" : "";
+                const prTag = s.result==="exceeded" && hits.includes(s.exercise) ? " (PR)" : "";
                 const hr    = s.phr ? ` @ ${s.phr}` : "";
-                lines.push(`    ${i+1}: ${s.weight}×${s.reps}${tag}${prTag}${hr}`);
+                lines.push(`    ${i+1}: ${s.weight}×${s.reps}${prTag}${hr}`);
               });
             });
             const subject = `IronQ · ${sessionDate || ""} · ${sesType?.toUpperCase() || ""} · ${fs.total}/100`;
@@ -1923,7 +1907,7 @@ export default function IronGame(){
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
             color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>SETS</div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,lineHeight:1,color:C.wht}}>
-            {log.filter(s=>!s.warmup).length}
+            {log.length}
             {(phase==="logging"||phase==="phr")&&(
               <span style={{color:C.red,fontSize:22,lineHeight:1}}>+</span>
             )}
