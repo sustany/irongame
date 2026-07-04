@@ -32,11 +32,11 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 - Acceptance: 'seated plate-loaded incline' → LF Incline Press; CHEST browse = 23; 0 muscle orphans.
 **Artifacts:** commits `a4f25aa` (module), Step 1 findings in this entry
 **Open questions:**
-- Step 5 (laptop): rewire Change Exercise picker to searchMaster/getMasterDB; retire searchExercises/EXERCISE_LIBRARY imports.
+- Step 5 DONE same session (commit `03d1...` see git log): picker + suggestions + EX_PRIMARY wired to master DB, isolated session-screen commit, code-level §5 GO, build PASS. On-device visual verify pending (Step 7).
 - Step 6 (laptop): migrate INIT_PRS/META/TMPLS lookups to id keys; consolidate duplicate-ish pairs (e.g., LF Incline Press vs Incline Machine Press).
 - Step 7 (laptop): on-device §5 smoke of picker states.
 - FEAT-001 grip metadata: schema now exists to attach to (add fields to exerciseDB records).
-**Session opens with:** "Open src/exerciseDB.js, start BUG-001 Step 5 — wire the picker."
+**Session opens with:** "BUG-001 Step 6 — migrate INIT_PRS/META/TMPLS to id keys + consolidate duplicate pairs; then Step 7 on-device §3 smoke."
 **Status:** OPEN (Steps 5–7 pending laptop)
 
 ## 2026-07-04 — iPhone session: Jun 18 bug-fix sweep CLOSED (rule exception approved)
