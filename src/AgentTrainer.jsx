@@ -324,6 +324,9 @@ const EQUIPMENT = {
 };
 // Helper — fetch equipment config from a META entry. Defaults to plate-loaded if missing.
 const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
+// Map a master-DB equip value to an EQUIPMENT key (cable/machine behave as stack).
+const eqKeyFromDB = (equip) => EQUIPMENT[equip] ? equip
+  : (equip==="cable"||equip==="machine") ? "stack-pin" : "plate-loaded";
 
 const META = {
   "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
@@ -736,7 +739,7 @@ export default function IronGame(){
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
   // Each entry can supply { eq, compound, ... } to drive equipment behavior.
-  const [userMeta, setUserMeta] = useState({});
+  const [userMeta, setUserMeta] = useState(()=> _saved?.userMeta ?? {});
   // newExEq: equipment type chosen on the New Exercise form.
   const [newExEq, setNewExEq] = useState("plate-loaded");
 
@@ -769,6 +772,7 @@ export default function IronGame(){
       setPrs(d.prs??INIT_PRS); setLog(d.log??[]);
       setLastRes(d.lastRes??null); setLastWt(d.lastWt??null);
       setSessionStart(d.sessionStart??null); setSessionDate(d.sessionDate??null);
+      setUserMeta(d.userMeta??{});
       try{ localStorage.setItem("ig_session", raw); }catch{}
       setShowResume(true);
     })();
@@ -821,11 +825,11 @@ export default function IronGame(){
     if(screen==="setup") return; // nothing to persist yet; never clear here
     const snapshot=JSON.stringify({
       sesType, exList, exIdx, setIdx, prs, log,
-      lastRes, lastWt, sessionStart, sessionDate,
+      lastRes, lastWt, sessionStart, sessionDate, userMeta,
     });
     try{ localStorage.setItem('ig_session', snapshot); }catch{}
     idbSet('ig_session', snapshot);       // durable mirror (async, best-effort)
-  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate]);
+  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate, userMeta]);
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -2477,6 +2481,10 @@ export default function IronGame(){
                       <button key={s.canonical} className="t"
                         onClick={()=>{
                           if(cur){setShowExPicker(false);setExSearch("");setExFilter("");return;}
+                          if(!META[s.canonical]&&!userMeta[s.canonical]){
+                            setUserMeta(u=>({...u,[s.canonical]:{eq:eqKeyFromDB(s.equip),
+                              prPts:s.prPts||3,...(s.compound?{compound:true}:{})}}));
+                          }
                           const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===s.canonical);
                           const updated=[...exList];
                           updated[exIdx]={...updated[exIdx],name:s.canonical,
