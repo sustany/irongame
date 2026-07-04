@@ -1,0 +1,185 @@
+// ─────────────────────────────────────────────────────────────
+// MASTER EXERCISE DATABASE — BUG-001 Steps 2–4 (data layer only)
+//
+// Step 2 SCHEMA: one record per exercise, keyed by stable `id`.
+//   { id, canonical, aliases[], primary, secondary[], equip, type,
+//     tier, prPts, compound, custom }
+// Runtime data (progression, PRs, scoring) attaches to `id`, never
+// to a display string — this ends the dual name-space split.
+//
+// Step 3 SEED: EXERCISE_LIBRARY (generic catalog) merged with the
+// 33 runtime exercises from AgentTrainer (META/INIT_PRS keys).
+// 23 match library canonicals exactly; 10 are added below as
+// first-class entries so search always returns the exact runtime
+// name and progression lookups never break.
+//
+// Step 4 PERSISTENCE: user overlay (custom exercises + user-added
+// aliases) in localStorage under `ig_exdb_v1`, same defensive
+// try/catch pattern as `ig_session`.
+//
+// NOT yet imported by AgentTrainer.jsx — Step 5 (laptop) wires the
+// Change Exercise picker to searchMaster()/getMasterDB().
+// ─────────────────────────────────────────────────────────────
+import { EXERCISE_LIBRARY } from "./exerciseLibrary";
+
+const slug = (s) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// ── Step 3a: runtime metadata for the 23 library-matched names ──
+// canonical name (exact library match) → scoring metadata
+const RUNTIME_META = {
+  "LF Shoulder Press":          { tier:"P1", prPts:8, compound:true },
+  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true },
+  "Seated PL Dip Machine":      { tier:"P2", prPts:5, compound:true },
+  "LF Seated Dip":              { tier:"P2", prPts:5, compound:true },
+  "Pec Deck":                   { tier:"ISO", prPts:3 },
+  "Cable Pushdown":             { tier:"ISO", prPts:3 },
+  "Seated Lateral Raise":       { tier:"ISO", prPts:3 },
+  "Captain's Chair":            { tier:"ISO", prPts:3 },
+  "Barbell RDL":                { tier:"P1", prPts:8, compound:true },
+  "LF Row":                     { tier:"P1", prPts:8, compound:true },
+  "Lever Seated Row":           { tier:"P1", prPts:8, compound:true },
+  "DB Alternating Curl":        { tier:"ISO", prPts:3 },
+  "DB Hammer Curl":             { tier:"ISO", prPts:3 },
+  "LF Bicep Curl":              { tier:"ISO", prPts:3 },
+  "Dead Hang":                  { tier:"ISO", prPts:3 },
+  "Hip Thrust (Smith)":         { tier:"P2", prPts:5, compound:true },
+  "Seated Leg Curl":            { tier:"P2", prPts:5, compound:true },
+  "Linear Hack Squat PL":       { tier:"P1", prPts:8, compound:true },
+  "Leg Extension":              { tier:"ISO", prPts:3 },
+  "Calf Press":                 { tier:"ISO", prPts:3 },
+  "Calf Press, Linear Leg Press": { tier:"ISO", prPts:3 },
+  "Seated Calf Raise":          { tier:"ISO", prPts:3 },
+  "Reverse Pec Deck":           { tier:"ISO", prPts:3 },
+};
+
+// ── Step 3b: the 10 runtime exercises absent from the library ──
+// canonical = EXACT runtime key (INIT_PRS/META/TMPLS) so selecting
+// a search hit preserves all progression/scoring lookups.
+const RUNTIME_ONLY = [
+  { canonical:"LF Incline Press", aliases:["seated plate-loaded incline bench press","incline machine press lf","life fitness incline press"],
+    primary:"chest", secondary:["front delts","triceps"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
+  { canonical:"Bench Press, Smith Machine", aliases:["smith bench press","smith machine bench","flat smith press"],
+    primary:"chest", secondary:["front delts","triceps"], equip:"smith", type:"compound", tier:"P1", prPts:8, compound:true },
+  { canonical:"HS Decline Press", aliases:["hammer strength decline press","decline plate loaded press"],
+    primary:"chest", secondary:["triceps"], equip:"plate-loaded", type:"compound", tier:"P2", prPts:5, compound:true },
+  { canonical:"DB Flys", aliases:["dumbbell fly","flat db fly","dumbbell flyes"],
+    primary:"chest", secondary:[], equip:"dumbbell", type:"isolation", tier:"ISO", prPts:3 },
+  { canonical:"Assisted Dips", aliases:["assisted dip machine","dip assist"],
+    primary:"chest", secondary:["triceps","front delts"], equip:"stack-pin", type:"compound", tier:"P2", prPts:5, compound:true },
+  { canonical:"High Row PL", aliases:["plate loaded high row","hammer strength high row"],
+    primary:"mid back", secondary:["lats","biceps"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
+  { canonical:"Lat Pull-Down PL", aliases:["plate loaded lat pulldown","lat pulldown pl","iso lateral pulldown"],
+    primary:"lats", secondary:["biceps","mid back"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
+  { canonical:"Assisted Chin-Up", aliases:["assisted chin up machine","chin up assist"],
+    primary:"lats", secondary:["biceps"], equip:"stack-pin", type:"compound", tier:"P2", prPts:5, compound:true },
+  { canonical:"Hyperextensions 45°", aliases:["45 degree back extension","hyperextension","back extension 45"],
+    primary:"lower back", secondary:["glutes","hamstrings"], equip:"bodyweight", type:"isolation", tier:"ISO", prPts:3 },
+  { canonical:"Weighted Crunches", aliases:["weighted crunch","plate crunch"],
+    primary:"abs", secondary:[], equip:"plate-loaded", type:"isolation", tier:"ISO", prPts:3 },
+];
+
+// ── 7-group filter model (matches locked homescreen redesign) ──
+export const GROUP_FILTERS = {
+  CHEST:     ["chest"],
+  BACK:      ["lats","mid back","lower back","traps"],
+  SHOULDERS: ["front delts","side delts","rear delts"],
+  BICEPS:    ["biceps","brachialis","forearms","grip"],
+  TRICEPS:   ["triceps"],
+  LEGS:      ["quads","hamstrings","glutes","calves","hip flexors"],
+  CORE:      ["abs","obliques","core","neck"],
+};
+
+// ── Step 2/3: build the seeded master DB ──
+const buildSeed = () => {
+  const db = EXERCISE_LIBRARY.map((e) => ({
+    id: slug(e.canonical),
+    canonical: e.canonical,
+    aliases: [...e.aliases],
+    primary: e.primary,
+    secondary: [...(e.secondary || [])],
+    equip: e.equip,
+    type: e.type,
+    custom: false,
+    ...(RUNTIME_META[e.canonical] || {}),
+  }));
+  for (const r of RUNTIME_ONLY) {
+    db.push({ id: slug(r.canonical), custom: false, ...r,
+      aliases: [...r.aliases], secondary: [...r.secondary] });
+  }
+  return db;
+};
+
+const SEED = buildSeed();
+
+// ── Step 4: persistence (user overlay) ──
+const STORE_KEY = "ig_exdb_v1";
+const emptyOverlay = () => ({ v: 1, customExercises: [], aliasAdds: {} });
+
+export const loadOverlay = () => {
+  try {
+    const s = localStorage.getItem(STORE_KEY);
+    if (!s) return emptyOverlay();
+    const o = JSON.parse(s);
+    return o && o.v === 1 ? o : emptyOverlay();
+  } catch { return emptyOverlay(); }
+};
+
+export const saveOverlay = (overlay) => {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(overlay)); return true; }
+  catch { return false; }
+};
+
+// Merge seed + overlay into the live master DB.
+export const getMasterDB = (overlay = loadOverlay()) => {
+  const db = SEED.map((e) => {
+    const extra = overlay.aliasAdds[e.id];
+    return extra ? { ...e, aliases: [...e.aliases, ...extra] } : e;
+  });
+  for (const c of overlay.customExercises) {
+    if (!db.some((e) => e.id === c.id)) db.push({ ...c, custom: true });
+  }
+  return db;
+};
+
+export const addCustomExercise = ({ canonical, primary, secondary = [], equip = "machine", type = "compound", tier = "P2", prPts = 5 }) => {
+  const overlay = loadOverlay();
+  const id = slug(canonical);
+  if (SEED.some((e) => e.id === id) || overlay.customExercises.some((e) => e.id === id)) {
+    return { ok: false, reason: "exists", id };
+  }
+  overlay.customExercises.push({ id, canonical, aliases: [], primary, secondary, equip, type, tier, prPts, compound: type === "compound", custom: true });
+  return { ok: saveOverlay(overlay), id };
+};
+
+export const addAlias = (id, alias) => {
+  const overlay = loadOverlay();
+  const a = (alias || "").trim().toLowerCase();
+  if (!a) return { ok: false, reason: "empty" };
+  overlay.aliasAdds[id] = [...new Set([...(overlay.aliasAdds[id] || []), a])];
+  return { ok: saveOverlay(overlay), id };
+};
+
+// ── Search over the master DB (query + optional 7-group filter) ──
+export const searchMaster = (query, { group = null, limit = 60, db = getMasterDB() } = {}) => {
+  const q = (query || "").toLowerCase().trim();
+  const groupSet = group ? new Set(GROUP_FILTERS[group] || []) : null;
+  const wordStart = (t) => t.split(/[\s,()/\-_.°]+/).filter(Boolean).some((w) => w.startsWith(q));
+  const scored = [];
+  for (const e of db) {
+    if (groupSet && !groupSet.has(e.primary)) continue;
+    if (!q) { scored.push({ ...e, score: 0.5 }); continue; }
+    const cands = [e.canonical.toLowerCase(), ...e.aliases.map((a) => a.toLowerCase())];
+    let best = 0;
+    for (const t of cands) {
+      let s = 0;
+      if (t === q) s = 1.0;
+      else if (t.startsWith(q)) s = 0.95;
+      else if (wordStart(t)) s = 0.9;
+      else if (q.length >= 4 && t.includes(q)) s = 0.65;
+      if (s > best) best = s;
+    }
+    if (best >= 0.6) scored.push({ ...e, score: best });
+  }
+  return scored.sort((a, b) => b.score - a.score || a.canonical.localeCompare(b.canonical)).slice(0, limit);
+};
