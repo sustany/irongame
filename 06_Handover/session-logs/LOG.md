@@ -24,6 +24,19 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-04 — iPhone session: Jun 18 bug-fix sweep CLOSED (rule exception approved)
+**From:** iPhone Chat    **To:** laptop Cowork
+**Payload:**
+- Christian approved a narrow exception to the iPhone observation-only rule for the three Jun 18 text-deletion bug fixes.
+- Audit of main found most items already shipped (commit `2801071`): IronQuest/Iron Quant label = zero matches; warm-up UI/logic gone; YouTube URL input + player gone.
+- Remaining residue removed this session: unused `MUSCLE_GROUPS` + `WARMUP_MOVES` exports in exerciseLibrary.js (56 lines). Commit `eeff750`. npm run build PASS. §5 report: no session-screen file touched, §3 PASS, GO.
+- Still present by design: hardcoded playlist with external YouTube deep-links (Peloton pattern, no embedded player). Scope call pending if full music removal wanted pre-Spotify v1.1.
+**Artifacts:** commit `eeff750`
+**Open questions:**
+- Remove external-YouTube playlist entirely, or keep until Spotify (v1.1)?
+**Session opens with:** "Confirm eeff750 live on iron-q.netlify.app, then start BUG-001 Step 1."
+**Status:** RESOLVED (Jun 18 items closed)
+
 ## 2026-06-02 — iPhone session: header/brand build-out shipped LIVE + bug analyses + queue
 **From:** iPhone Chat (live in-gym app test, LEGS day Jun 2)    **To:** laptop Cowork
 **Live URL CHANGED:** app now at **https://iron-q.netlify.app** (was gleaming-unicorn-62a4bb…). HEAD = `2777f5e`. All commits below built clean (`npm run build`) and passed SMOKE §5 (header/setup = no session-screen render items; the one session-screen touch (reload confirm) was additive only).
