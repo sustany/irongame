@@ -1441,6 +1441,14 @@ export default function IronGame(){
           boxShadow:"0 3px 16px rgba(34,200,100,0.25)",
         }}>Available</button>
       </div>
+      <button className="t" onClick={()=>setScreen("setup")}
+        style={{width:"100%",height:42,borderRadius:10,
+          background:"transparent",border:`1px solid ${C.bdr}`,
+          color:C.md,cursor:"pointer",
+          fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
+          letterSpacing:"0.1em",textTransform:"uppercase"}}>
+        ← Back
+      </button>
     </div>
   );
 
