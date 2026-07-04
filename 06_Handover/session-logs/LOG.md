@@ -32,10 +32,10 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 - Remaining residue removed this session: unused `MUSCLE_GROUPS` + `WARMUP_MOVES` exports in exerciseLibrary.js (56 lines). Commit `eeff750`. npm run build PASS. §5 report: no session-screen file touched, §3 PASS, GO.
 - Still present by design: hardcoded playlist with external YouTube deep-links (Peloton pattern, no embedded player). Scope call pending if full music removal wanted pre-Spotify v1.1.
 **Artifacts:** commit `eeff750`
-**Open questions:**
-- Remove external-YouTube playlist entirely, or keep until Spotify (v1.1)?
-**Session opens with:** "Confirm eeff750 live on iron-q.netlify.app, then start BUG-001 Step 1."
-**Status:** RESOLVED (Jun 18 items closed)
+**Open questions:** none
+- UPDATE same session: Christian ordered full playlist removal. Commit `2915983` removes DEFAULT_PLAYLIST, music state/helpers, session-screen music bar, ig_playlist persistence (-111 lines, -3KB). SMOKE_TEST.md music-widget items removed same commit (shared root cause). Build PASS, full §5 walk GO. Music returns as Spotify App Remote SDK in v1.1. Classified: feature 1/4 today.
+**Session opens with:** "Confirm 2915983 live on iron-q.netlify.app, then start BUG-001 Step 1."
+**Status:** RESOLVED (Jun 18 items closed + music removed)
 
 ## 2026-06-02 — iPhone session: header/brand build-out shipped LIVE + bug analyses + queue
 **From:** iPhone Chat (live in-gym app test, LEGS day Jun 2)    **To:** laptop Cowork
