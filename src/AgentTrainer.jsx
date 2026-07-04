@@ -221,17 +221,6 @@ const _hr12= _hr % 12 || 12;
 const BUILD_VERSION = `${_mo}/${_dy} · ${_hr12}:${_min}${_ampm}`;
 
 // ─────────────────────────────────────────────────────────────
-// WORKOUT PLAYLIST — add songs via the + button during a session.
-// ytId = last 11 chars of a YouTube URL (?v=XXXXXXXXXXX)
-// ─────────────────────────────────────────────────────────────
-const DEFAULT_PLAYLIST = [
-  { title:"Thunderstruck",   artist:"AC/DC",        ytId:"v2AC41dglnM" },
-  { title:"You're The Voice",artist:"John Farnham", ytId:"qpd2NFAkCkY" },
-  { title:"Simply The Best", artist:"Tina Turner",  ytId:"GC5E8ie2pdM" },
-];
-function shuffleArr(a){ return [...a].sort(()=>Math.random()-0.5); }
-
-// ─────────────────────────────────────────────────────────────
 // USER PROFILE — used for kcal estimation and HR zone calibration.
 // Adjust here when bodyweight / age change.
 // ─────────────────────────────────────────────────────────────
@@ -741,13 +730,6 @@ export default function IronGame(){
   const [exFilter,         setExFilter]         = useState("");
 
   // ── Music player state ────────────────────────────────────
-  const [playlist,      setPlaylist]     = useState(() => {
-    try { const s=localStorage.getItem('ig_playlist'); return s?JSON.parse(s):DEFAULT_PLAYLIST; }
-    catch { return DEFAULT_PLAYLIST; }
-  });
-  const [shuffled,      setShuffled]     = useState(()=>shuffleArr(DEFAULT_PLAYLIST));
-  const [trackIdx,      setTrackIdx]     = useState(0);
-  const [isPlaying,     setIsPlaying]    = useState(false);
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
@@ -821,10 +803,6 @@ export default function IronGame(){
   }, [phase, exIdx, setIdx]);
 
 
-  // Persist playlist to localStorage when it changes
-  useEffect(()=>{
-    try{ localStorage.setItem('ig_playlist', JSON.stringify(playlist)); }catch{}
-  },[playlist]);
 
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
@@ -846,30 +824,6 @@ export default function IronGame(){
     try{ localStorage.setItem('ig_session', snapshot); }catch{}
     idbSet('ig_session', snapshot);       // durable mirror (async, best-effort)
   },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate]);
-
-  // ── Music helpers ─────────────────────────────────────────
-  // YouTube audio in iOS web apps is fundamentally blocked regardless of
-  // embed technique. Solution: open YouTube directly — iOS keeps audio
-  // running when user switches back to IronGame. Same pattern as Peloton.
-  const musicPlay = () => {
-    const track = shuffled[trackIdx];
-    if (!track) return;
-    window.open(`https://www.youtube.com/watch?v=${track.ytId}`, '_blank');
-    setIsPlaying(true);
-  };
-  const musicNext = () => {
-    const next=(trackIdx+1)%shuffled.length;
-    setTrackIdx(next);
-    window.open(`https://www.youtube.com/watch?v=${shuffled[next].ytId}`,'_blank');
-    setIsPlaying(true);
-  };
-  const musicPrev = () => {
-    const prev=(trackIdx-1+shuffled.length)%shuffled.length;
-    setTrackIdx(prev);
-    window.open(`https://www.youtube.com/watch?v=${shuffled[prev].ytId}`,'_blank');
-    setIsPlaying(true);
-  };
-
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -1011,7 +965,6 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -1022,7 +975,6 @@ export default function IronGame(){
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
-    setShuffled(shuffleArr(playlist));setTrackIdx(0);setIsPlaying(false);
     setSessionStart(Date.now());
     setScreen("session");
   };
@@ -2342,69 +2294,6 @@ export default function IronGame(){
             })()}
           </>
         )}
-        {/* ── Music bar ─────────────────────────────────────── */}
-        {screen==="session"&&(
-          <div style={{borderTop:`1px solid ${C.bdr}`,marginTop:8,paddingTop:8}}>
-            {/* Track info + controls */}
-            <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0"}}>
-              {/* Track info */}
-              <div style={{display:"flex",alignItems:"center",gap:8,flex:1,overflow:"hidden"}}>
-                <div style={{overflow:"hidden"}}>
-                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
-                    color:C.wht,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                    {shuffled[trackIdx]?.artist || ""}
-                  </div>
-                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:500,fontSize:11,
-                    color:C.md,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                    {shuffled[trackIdx]?.title || "No tracks"}
-                  </div>
-                </div>
-              </div>
-              {/* Controls */}
-              <div style={{display:"flex",gap:4,flexShrink:0}}>
-                {/* Prev */}
-                <button className="t" onClick={musicPrev}
-                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
-                    background:C.card,color:C.lt,fontSize:16,cursor:"pointer",
-                    display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  ◀
-                </button>
-                {/* Play/Pause */}
-                <button className="t" onClick={musicPlay}
-                  style={{width:38,height:38,borderRadius:8,
-                    border:`1px solid ${C.red}`,
-                    background:"rgba(232,38,10,0.18)",
-                    color:C.red,fontSize:16,cursor:"pointer",
-                    display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  {"▶"}
-                </button>
-                {/* Next */}
-                <button className="t" onClick={musicNext}
-                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
-                    background:C.card,color:C.lt,fontSize:16,cursor:"pointer",
-                    display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  ▶▶
-                </button>
-                {/* Add track */}
-                <button className="t"
-                  style={{width:38,height:38,borderRadius:8,border:`1px solid ${C.bdr}`,
-                    background:C.card,
-                    color:C.md,fontSize:18,fontWeight:700,cursor:"pointer",
-                    display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  +
-                </button>
-              </div>
-            </div>
-            {/* Track count indicator */}
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
-              color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",
-              textAlign:"center",marginBottom:0}}>
-              {trackIdx+1} / {shuffled.length} · SHUFFLED
-            </div>
-
-          </div>
-        )}
-
         {phase==="ready"&&(
           <button className="t" onClick={()=>{
             if(!window.confirm('End session? This will finalize your workout.')) return;

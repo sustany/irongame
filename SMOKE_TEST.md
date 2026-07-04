@@ -54,7 +54,6 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 - [ ] Reps target range display
 - [ ] **BEGIN SET N button** (primary CTA) ← required
 - [ ] **CHANGE EXERCISE button** (secondary CTA) ← required, **regression target 2026-05-27**
-- [ ] Music player widget (Now Playing + prev/play-pause/next/add)
 - [ ] END SESSION link (bottom of screen)
 
 ### 1a. Plate-loaded equipment (e.g. Linear Hack Squat PL, Plate-Loaded Military Press)
@@ -107,7 +106,6 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 - [ ] HR zone reference row (Recovery / Fat / Aerobic / Threshold / Max with numeric thresholds)
 - [ ] HR adjust buttons: -5, -1, +1, +5
 - [ ] **LOG SET — N BPM button** (primary CTA) ← required
-- [ ] Music player widget
 - [ ] END SESSION link
 - [ ] **Back button** ← required per Obs #3b (pending implementation, becomes required once shipped)
 
