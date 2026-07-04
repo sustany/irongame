@@ -38,6 +38,18 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 **Session opens with:** "BUG-001 Step 6b — id-key migration of INIT_PRS/META/TMPLS + persisted prs/ig_session migration; fold into Supabase schema work."
 **Status:** RESOLVED (Jun 13 closed)
 
+
+## 2026-07-04 — iPhone session #5: equipment-metadata fix; design decisions deferred
+**From:** iPhone Chat    **To:** laptop Cowork
+**Payload:**
+- Jun 2 queue audit: DUP1, DUP2, PERSIST1, rep-logging BACK, End Session confirm ALL confirmed shipped. F-MUSIC1/F-WARM1 obsolete (features removed). Queue closed.
+- Bug fix (cap-exempt): equipment metadata integrity — picker swap now records equip/prPts/compound to userMeta for non-META picks (cable/machine→stack-pin); userMeta persisted in ig_session snapshot + IDB rehydrate (backward compatible with old snapshots).
+- DECISION (Christian): homescreen redesign's two open decisions (muscle-button icon treatment, time-toggle default) DEFERRED — Claude picks provisional defaults when the redesign build starts; Christian reviews later.
+**Open questions:**
+- REPS-COMPLETED removal + SET x/xx still pending Christian's three answers (Jun 2 queue item 4).
+**Session opens with:** "Homescreen redesign build — apply provisional defaults, or BUG-001 Step 6b if Supabase work starts."
+**Status:** RESOLVED
+
 ## 2026-07-04 — iPhone session #4: BUG-001 Step 6a shipped
 **From:** iPhone Chat    **To:** laptop Cowork
 **Payload:**
