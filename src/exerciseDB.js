@@ -74,7 +74,7 @@ const RUNTIME_ONLY = [
   { canonical:"Assisted Chin-Up", aliases:["assisted chin up machine","chin up assist"],
     primary:"lats", secondary:["biceps"], equip:"stack-pin", type:"compound", tier:"P2", prPts:5, compound:true },
   { canonical:"Hyperextensions 45°", aliases:["45 degree back extension","hyperextension","back extension 45"],
-    primary:"lower back", secondary:["glutes","hamstrings"], equip:"bodyweight", type:"isolation", tier:"ISO", prPts:3 },
+    primary:"lower back", secondary:["glutes","hamstrings"], equip:"bw-load", type:"isolation", tier:"ISO", prPts:3 },
   { canonical:"Weighted Crunches", aliases:["weighted crunch","plate crunch"],
     primary:"abs", secondary:[], equip:"plate-loaded", type:"isolation", tier:"ISO", prPts:3 },
 ];

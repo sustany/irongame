@@ -320,6 +320,7 @@ const EQUIPMENT = {
   "barbell":      { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:true  },
   "smith":        { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
   "bodyweight":   { steps:[],         snap:0,   bilateral:false, showPlates:false, hasBar:false },
+  "bw-load":      { steps:[5,10,25],  snap:5,   bilateral:false, showPlates:true,  hasBar:false },
 };
 // Helper — fetch equipment config from a META entry. Defaults to plate-loaded if missing.
 const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
@@ -344,7 +345,7 @@ const META = {
   "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "Assisted Chin-Up":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
-  "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bodyweight", mandatory:true },
+  "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bw-load", mandatory:true },
   "DB Alternating Curl":   { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "LF Bicep Curl":         { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
@@ -1977,6 +1978,7 @@ export default function IronGame(){
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <SL color={C.md}>
                     {m.eq==="bodyweight" ? "Load"
+                      : m.eq==="bw-load"    ? "Added Load"
                       : m.eq==="stack-pin"  ? "Stack Weight"
                       : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
                       : m.eq==="barbell"    ? `Olympic Bar · 45 lbs`
@@ -2660,6 +2662,7 @@ export default function IronGame(){
                       {k:"barbell",     l:"Barbell"},
                       {k:"smith",       l:"Smith"},
                       {k:"bodyweight",  l:"Bodyweight"},
+                      {k:"bw-load",     l:"BW + Load"},
                     ].map(({k,l})=>{
                       const active = newExEq===k;
                       return(
