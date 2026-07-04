@@ -24,6 +24,21 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-04 — iPhone session #2: BUG-001 Steps 1–4 SHIPPED (exception extended)
+**From:** iPhone Chat    **To:** laptop Cowork
+**Payload:**
+- Step 1 diagnosis: root cause = dual name-space split. Runtime data (INIT_PRS/META/TMPLS, 33 exercises, personal names) vs. search (EXERCISE_LIBRARY, 136 generic canonicals). 10 runtime names had no library entry; selecting a library canonical severed progression/PR/scoring lookups.
+- Steps 2–4 shipped as `src/exerciseDB.js` (commit `a4f25aa`): id-keyed schema, 146-entry seeded master DB (all 33 runtime keys resolvable exactly, 0 missing), ig_exdb_v1 localStorage overlay for custom exercises + aliases, searchMaster() with 7-group GROUP_FILTERS aligned to the locked homescreen redesign. NOT imported by AgentTrainer yet — zero UI impact. Build PASS.
+- Acceptance: 'seated plate-loaded incline' → LF Incline Press; CHEST browse = 23; 0 muscle orphans.
+**Artifacts:** commits `a4f25aa` (module), Step 1 findings in this entry
+**Open questions:**
+- Step 5 (laptop): rewire Change Exercise picker to searchMaster/getMasterDB; retire searchExercises/EXERCISE_LIBRARY imports.
+- Step 6 (laptop): migrate INIT_PRS/META/TMPLS lookups to id keys; consolidate duplicate-ish pairs (e.g., LF Incline Press vs Incline Machine Press).
+- Step 7 (laptop): on-device §5 smoke of picker states.
+- FEAT-001 grip metadata: schema now exists to attach to (add fields to exerciseDB records).
+**Session opens with:** "Open src/exerciseDB.js, start BUG-001 Step 5 — wire the picker."
+**Status:** OPEN (Steps 5–7 pending laptop)
+
 ## 2026-07-04 — iPhone session: Jun 18 bug-fix sweep CLOSED (rule exception approved)
 **From:** iPhone Chat    **To:** laptop Cowork
 **Payload:**
