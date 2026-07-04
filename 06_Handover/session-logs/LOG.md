@@ -24,6 +24,20 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-04 — iPhone session #3: Jun 13 items shipped
+**From:** iPhone Chat    **To:** laptop Cowork
+**Payload:**
+- Audit: header back arrow (phase-aware) + log-phase Back already live; search box subsumed by BUG-001 (done); safe-area insets present at 4 sites. Remaining gaps shipped:
+- Bug fix (cap-exempt): ← Back on barbellCheck screen — wrong session type no longer traps user.
+- Feature 2/4: bw-load equipment type. Hyperextensions 45° logs added load (±5/10/25, plate badges ADD TOTAL, snap-5, suggestW progression off 90 lb PR). Dead Hang / Captain's Chair remain pure bodyweight. +New form gains BW + Load chip. exerciseDB.js updated same commit.
+- Jun 13 queue now CLOSED.
+**Artifacts:** commits this session (git log 2026-07-04)
+**Open questions:**
+- On-device verify §1e on Hyperextensions during today's session (Step-7-style check).
+- Complete screen intentionally has no back (terminal). Confirm acceptable.
+**Session opens with:** "BUG-001 Step 6 — migrate INIT_PRS/META/TMPLS to id keys."
+**Status:** RESOLVED (Jun 13 closed; Step 6 remains next laptop item)
+
 ## 2026-07-04 — iPhone session #2: BUG-001 Steps 1–4 SHIPPED (exception extended)
 **From:** iPhone Chat    **To:** laptop Cowork
 **Payload:**
