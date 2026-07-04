@@ -35,8 +35,17 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 **Open questions:**
 - On-device verify §1e on Hyperextensions during today's session (Step-7-style check).
 - Complete screen intentionally has no back (terminal). Confirm acceptable.
-**Session opens with:** "BUG-001 Step 6 — migrate INIT_PRS/META/TMPLS to id keys."
-**Status:** RESOLVED (Jun 13 closed; Step 6 remains next laptop item)
+**Session opens with:** "BUG-001 Step 6b — id-key migration of INIT_PRS/META/TMPLS + persisted prs/ig_session migration; fold into Supabase schema work."
+**Status:** RESOLVED (Jun 13 closed)
+
+## 2026-07-04 — iPhone session #4: BUG-001 Step 6a shipped
+**From:** iPhone Chat    **To:** laptop Cowork
+**Payload:**
+- Step 6a consolidation shipped: 9 duplicate generic entries merged into runtime records (aliases absorbed), Chin-Up alias collision fixed, DB 146→137. Data-only, build PASS, acceptance green.
+- Step 6b DEFERRED to laptop by risk call: id-key migration touches live localStorage prs/ig_session — needs on-device testing; recommend folding into Supabase schema (locked v1.0 backend) rather than doing a throwaway localStorage migration.
+- BUG-001 functionally complete pending Step 7 on-device picker smoke during today's session.
+**Session opens with:** "BUG-001 Step 6b/7 review, then homescreen redesign prerequisites (icon treatment + toggle default decisions)."
+**Status:** OPEN (6b + 7)
 
 ## 2026-07-04 — iPhone session #2: BUG-001 Steps 1–4 SHIPPED (exception extended)
 **From:** iPhone Chat    **To:** laptop Cowork
