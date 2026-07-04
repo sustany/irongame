@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { searchExercises, findDuplicate, EXERCISE_LIBRARY } from "./exerciseLibrary";
+import { findDuplicate } from "./exerciseLibrary";
+import { searchMaster, getMasterDB } from "./exerciseDB";
 
 // ─────────────────────────────────────────────────────────────
 // DURABLE SESSION STORAGE
@@ -382,7 +383,7 @@ function exListForType(type, prs){
 }
 // Name → primary muscle lookup (exercise library, used by picker filter)
 const EX_PRIMARY = Object.fromEntries(
-  EXERCISE_LIBRARY.map(e=>[e.canonical, e.primary])
+  getMasterDB().map(e=>[e.canonical, e.primary])
 );
 const TMPLS = {
   push:[
@@ -2447,7 +2448,7 @@ export default function IronGame(){
               const filterMatch = exFilter
                 ? (()=>{const p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[]; return s=>p.includes(s.primary);})()
                 : ()=>true;
-              const hits = searchExercises(exSearch, 60).filter(s=>{
+              const hits = searchMaster(exSearch, {limit:60}).filter(s=>{
                 if(!filterMatch(s)) return false;
                 return !exList.some((e,i)=>e.name===s.canonical&&i!==exIdx);
               });
@@ -2510,7 +2511,7 @@ export default function IronGame(){
 
             {/* Inline new exercise form */}
             {exSearch.length<2&&showNewExForm&&(()=>{
-              const suggestions = searchExercises(newExName, 5);
+              const suggestions = searchMaster(newExName, {limit:5});
               return (
               <div style={{margin:"0 12px 10px",background:"rgba(232,38,10,0.08)",
                 border:`1px solid ${C.red}`,borderRadius:12,padding:"14px"}}>
