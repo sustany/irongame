@@ -90,22 +90,62 @@ export const GROUP_FILTERS = {
   CORE:      ["abs","obliques","core","neck"],
 };
 
+// ── Step 6: duplicate consolidation ──
+// Generic library entries that describe the SAME machine/movement as a
+// runtime exercise are removed; their canonical + aliases fold into the
+// runtime record so every search resolves to the single record that
+// carries progression data. Distinct-equipment variants (e.g. cable
+// Lat Pulldown vs plate-loaded) are intentionally NOT merged.
+const CONSOLIDATE = {
+  "LF Incline Press":           ["Incline Machine Press"],
+  "Bench Press, Smith Machine": ["Smith Machine Bench Press"],
+  "HS Decline Press":           ["Hammer Strength Decline"],
+  "DB Flys":                    ["Dumbbell Fly"],
+  "Assisted Dips":              ["Assisted Dip"],
+  "High Row PL":                ["LF High Row"],
+  "Lat Pull-Down PL":           ["Lat Pulldown PL"],
+  "Hyperextensions 45°":        ["Hyperextension 45°"],
+  "Weighted Crunches":          ["Weighted Crunch"],
+};
+// Aliases on generic entries that collide with a runtime canonical.
+const ALIAS_STRIP = {
+  "Chin-Up": ["assisted chin-up"],
+};
+
 // ── Step 2/3: build the seeded master DB ──
 const buildSeed = () => {
-  const db = EXERCISE_LIBRARY.map((e) => ({
-    id: slug(e.canonical),
-    canonical: e.canonical,
-    aliases: [...e.aliases],
-    primary: e.primary,
-    secondary: [...(e.secondary || [])],
-    equip: e.equip,
-    type: e.type,
-    custom: false,
-    ...(RUNTIME_META[e.canonical] || {}),
-  }));
+  const absorbed = new Map(); // runtime canonical -> extra aliases
+  const removeSet = new Set();
+  for (const [keep, drops] of Object.entries(CONSOLIDATE)) {
+    for (const d of drops) removeSet.add(d);
+  }
+  const db = [];
+  for (const e of EXERCISE_LIBRARY) {
+    if (removeSet.has(e.canonical)) {
+      // fold canonical + aliases into the runtime record's aliases
+      const keep = Object.keys(CONSOLIDATE).find((k) => CONSOLIDATE[k].includes(e.canonical));
+      const list = absorbed.get(keep) || [];
+      list.push(e.canonical.toLowerCase(), ...e.aliases);
+      absorbed.set(keep, list);
+      continue;
+    }
+    const strip = ALIAS_STRIP[e.canonical];
+    db.push({
+      id: slug(e.canonical),
+      canonical: e.canonical,
+      aliases: strip ? e.aliases.filter((a) => !strip.includes(a)) : [...e.aliases],
+      primary: e.primary,
+      secondary: [...(e.secondary || [])],
+      equip: e.equip,
+      type: e.type,
+      custom: false,
+      ...(RUNTIME_META[e.canonical] || {}),
+    });
+  }
   for (const r of RUNTIME_ONLY) {
+    const extra = absorbed.get(r.canonical) || [];
     db.push({ id: slug(r.canonical), custom: false, ...r,
-      aliases: [...r.aliases], secondary: [...r.secondary] });
+      aliases: [...new Set([...r.aliases, ...extra])], secondary: [...r.secondary] });
   }
   return db;
 };
