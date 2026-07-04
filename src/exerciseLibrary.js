@@ -177,62 +177,6 @@ export const EXERCISE_LIBRARY = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-// MUSCLE GROUP MAP — used by warm-up tracker.
-// Maps any primary muscle to its broader group for warm-up logic.
-// ─────────────────────────────────────────────────────────────
-export const MUSCLE_GROUPS = {
-  // Upper body push
-  "chest":        "chest",
-  "front delts":  "shoulders",
-  "side delts":   "shoulders",
-  "rear delts":   "shoulders",
-  "triceps":      "triceps",
-  // Upper body pull
-  "lats":         "back",
-  "mid back":     "back",
-  "lower back":   "lower back",
-  "traps":        "traps",
-  "biceps":       "biceps",
-  "brachialis":   "biceps",
-  "forearms":     "forearms",
-  "grip":         "forearms",
-  // Lower body
-  "quads":        "quads",
-  "hamstrings":   "hamstrings",
-  "glutes":       "glutes",
-  "calves":       "calves",
-  // Core
-  "abs":          "core",
-  "obliques":     "core",
-  "core":         "core",
-  "hip flexors":  "core",
-  // Neck
-  "neck":         "neck",
-};
-
-// ─────────────────────────────────────────────────────────────
-// WARM-UP MOVEMENTS — keyed by muscle group.
-// Triggered when a muscle group has not yet been engaged in the
-// session and an exercise targeting it is about to start.
-// ─────────────────────────────────────────────────────────────
-export const WARMUP_MOVES = {
-  "chest":      ["Band pull-aparts × 15", "Wall slides × 10", "Push-ups × 10 controlled"],
-  "shoulders":  ["Shoulder CARs × 5/side", "Band external rotations × 12/side", "Light dumbbell press × 12"],
-  "back":       ["Scapular pulls × 10", "Cat-cow × 8", "Band rows × 15"],
-  "lower back": ["Cat-cow × 8", "Bird-dog × 6/side", "Bodyweight hyperextensions × 10"],
-  "traps":      ["Scapular shrugs × 15", "Band face pulls × 15"],
-  "biceps":     ["Light DB curls × 15 each arm"],
-  "triceps":    ["Bodyweight tricep extensions × 15", "Band pushdowns × 15"],
-  "forearms":   ["Wrist circles × 10/direction", "Light wrist curls × 15"],
-  "quads":      ["Bodyweight squats × 15", "Walking lunges × 10/side", "Leg swings front × 10/side"],
-  "hamstrings": ["Bodyweight RDL × 10", "Leg swings front × 10/side", "Cat-cow × 8"],
-  "glutes":     ["Glute bridges × 15", "Banded clamshells × 12/side", "Bodyweight hip thrust × 12"],
-  "calves":     ["Bodyweight calf raises × 20", "Ankle circles × 10/direction"],
-  "core":       ["Dead bug × 8/side", "Plank × 30 sec", "Cat-cow × 8"],
-  "neck":       ["Cervical rotations × 5/direction", "Chin tucks × 10"],
-};
-
-// ─────────────────────────────────────────────────────────────
 // FUZZY MATCHING — strip noise words, normalize for comparison.
 // ─────────────────────────────────────────────────────────────
 const NOISE = /\b(machine|plate[-\s]?loaded|pl|barbell|bb|dumbbell|db|cable|smith|hammer|hammer\s?strength|hs|lf|life\s?fitness|nautilus|the|a|an|with|using)\b/gi;
