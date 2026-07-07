@@ -9,6 +9,8 @@
 //   secondary : Stabilizers / synergists.
 //   equip     : barbell | dumbbell | machine | cable | bodyweight | plate-loaded | smith
 //   type      : compound | isolation
+//   grips     : optional array of grip/handle variants selectable in
+//               the picker (annotation-only; PRs stay keyed to canonical)
 // ─────────────────────────────────────────────────────────────
 
 export const EXERCISE_LIBRARY = [
@@ -30,38 +32,62 @@ export const EXERCISE_LIBRARY = [
   { canonical: "Incline Dumbbell Fly",        aliases: ["incline db fly"], primary: "chest", secondary: [], equip: "dumbbell",  type: "isolation" },
   { canonical: "Cable Crossover",             aliases: ["cable fly", "standing cable fly"], primary: "chest", secondary: [], equip: "cable",     type: "isolation" },
   { canonical: "Dumbbell Pullover",           aliases: ["db pullover"], primary: "chest", secondary: ["lats"], equip: "dumbbell",  type: "isolation" },
+  { canonical: "Cable Pullover",              aliases: ["standing cable pullover", "kneeling cable pullover"], primary: "lats", secondary: ["chest"], equip: "cable", type: "isolation", grips: ["rope","straight-bar"] },
+  { canonical: "Machine Pullover",            aliases: ["pullover machine", "nautilus pullover"], primary: "lats", secondary: ["chest"], equip: "machine", type: "isolation" },
   { canonical: "Push-Up",                     aliases: ["pushup", "push ups"], primary: "chest", secondary: ["triceps","front delts","core"], equip: "bodyweight", type: "compound" },
   { canonical: "Weighted Dip (Chest)",        aliases: ["chest dip", "weighted chest dip"], primary: "chest", secondary: ["triceps","front delts"], equip: "bodyweight", type: "compound" },
 
   // ── BACK / LATS ─────────────────────────────────────────────
-  { canonical: "Pull-Up",                     aliases: ["pullup", "pull ups"], primary: "lats", secondary: ["biceps","mid back"], equip: "bodyweight", type: "compound" },
-  { canonical: "Chin-Up",                     aliases: ["chinup", "chin ups", "assisted chin-up"], primary: "lats", secondary: ["biceps"], equip: "bodyweight", type: "compound" },
-  { canonical: "Lat Pulldown",                aliases: ["pulldown", "cable pulldown", "wide grip pulldown"], primary: "lats", secondary: ["biceps","mid back"], equip: "cable", type: "compound" },
+  { canonical: "Pull-Up",                     aliases: ["pullup", "pull ups", "weighted pull-up", "assisted pull-up"], primary: "lats", secondary: ["biceps","mid back"], equip: "bodyweight", type: "compound", grips: ["wide","close","neutral"] },
+  { canonical: "Chin-Up",                     aliases: ["chinup", "chin ups", "assisted chin-up", "weighted chin-up"], primary: "lats", secondary: ["biceps"], equip: "bodyweight", type: "compound" },
+  { canonical: "Lat Pulldown",                aliases: ["pulldown", "cable pulldown", "wide grip pulldown", "kneeling pulldown", "neutral grip pulldown", "reverse grip pulldown", "single arm pulldown", "underhand pulldown"], primary: "lats", secondary: ["biceps","mid back"], equip: "cable", type: "compound", grips: ["wide","close","neutral","reverse","single-arm"] },
   { canonical: "Lat Pulldown PL",             aliases: ["plate loaded pulldown", "hammer pulldown"], primary: "lats", secondary: ["biceps","mid back"], equip: "plate-loaded", type: "compound" },
   { canonical: "Close Grip Pulldown",         aliases: ["narrow grip pulldown", "v-bar pulldown"], primary: "lats", secondary: ["biceps"], equip: "cable", type: "compound" },
-  { canonical: "Straight Arm Pulldown",       aliases: ["lat pushdown", "straight arm lat"], primary: "lats", secondary: [], equip: "cable", type: "isolation" },
-  { canonical: "Barbell Row",                 aliases: ["bb row", "bent over row", "bent over barbell row"], primary: "mid back", secondary: ["lats","biceps","rear delts"], equip: "barbell", type: "compound" },
-  { canonical: "Dumbbell Row",                aliases: ["db row", "one arm db row", "single arm row"], primary: "mid back", secondary: ["lats","biceps"], equip: "dumbbell", type: "compound" },
-  { canonical: "T-Bar Row",                   aliases: ["tbar row", "landmine row"], primary: "mid back", secondary: ["lats","biceps"], equip: "barbell", type: "compound" },
-  { canonical: "Seated Cable Row",            aliases: ["cable row", "seated row"], primary: "mid back", secondary: ["lats","biceps","rear delts"], equip: "cable", type: "compound" },
+  { canonical: "Straight Arm Pulldown",       aliases: ["lat pushdown", "straight arm lat", "band straight arm pulldown", "band pulldown"], primary: "lats", secondary: [], equip: "cable", type: "isolation", grips: ["rope","straight-bar"] },
+  { canonical: "Barbell Row",                 aliases: ["bb row", "bent over row", "bent over barbell row"], primary: "mid back", secondary: ["lats","biceps","rear delts"], equip: "barbell", type: "compound", grips: ["overhand","underhand","wide","close"] },
+  { canonical: "Dumbbell Row",                aliases: ["db row", "one arm db row", "single arm row"], primary: "mid back", secondary: ["lats","biceps"], equip: "dumbbell", type: "compound", grips: ["single-arm","two-arm"] },
+  { canonical: "T-Bar Row",                   aliases: ["tbar row"], primary: "mid back", secondary: ["lats","biceps"], equip: "barbell", type: "compound", grips: ["close","wide","chest-supported"] },
+  { canonical: "Seated Cable Row",            aliases: ["cable row", "seated row"], primary: "mid back", secondary: ["lats","biceps","rear delts"], equip: "cable", type: "compound", grips: ["wide","close","neutral","single-arm"] },
   { canonical: "LF Row",                      aliases: ["life fitness row", "lifefitness row"], primary: "mid back", secondary: ["lats","biceps"], equip: "plate-loaded", type: "compound" },
   { canonical: "LF High Row",                 aliases: ["life fitness high row", "high row machine"], primary: "lats", secondary: ["biceps","mid back"], equip: "plate-loaded", type: "compound" },
   { canonical: "Lever Seated Row",            aliases: ["plate loaded row", "hammer row"], primary: "mid back", secondary: ["lats","biceps"], equip: "plate-loaded", type: "compound" },
-  { canonical: "Chest Supported Row",         aliases: ["seal row", "chest support row"], primary: "mid back", secondary: ["lats","rear delts"], equip: "machine", type: "compound" },
-  { canonical: "Inverted Row",                aliases: ["body row", "ring row"], primary: "mid back", secondary: ["lats","biceps"], equip: "bodyweight", type: "compound" },
+  { canonical: "Chest Supported Row",         aliases: ["chest support row", "t-bar chest supported row"], primary: "mid back", secondary: ["lats","rear delts"], equip: "machine", type: "compound", grips: ["neutral","overhand"] },
+  { canonical: "Inverted Row",                aliases: ["body row", "ring row", "trx row", "smith machine inverted row"], primary: "mid back", secondary: ["lats","biceps"], equip: "bodyweight", type: "compound", grips: ["overhand","underhand","neutral"] },
   { canonical: "Deadlift",                    aliases: ["conventional deadlift", "bb deadlift"], primary: "lower back", secondary: ["hamstrings","glutes","traps","forearms"], equip: "barbell", type: "compound" },
   { canonical: "Trap Bar Deadlift",           aliases: ["hex bar deadlift"], primary: "quads", secondary: ["hamstrings","glutes","traps","lower back"], equip: "barbell", type: "compound" },
   { canonical: "Rack Pull",                   aliases: ["rack deadlift", "block pull"], primary: "lower back", secondary: ["traps","hamstrings","forearms"], equip: "barbell", type: "compound" },
   { canonical: "Good Morning",                aliases: ["barbell good morning"], primary: "hamstrings", secondary: ["lower back","glutes"], equip: "barbell", type: "compound" },
-  { canonical: "Hyperextension 45°",          aliases: ["45 degree back extension", "hyperextension", "back extension"], primary: "lower back", secondary: ["glutes","hamstrings"], equip: "bodyweight", type: "compound" },
+  { canonical: "Hyperextension 45°",          aliases: ["45 degree back extension", "hyperextension", "back extension", "horizontal back extension"], primary: "lower back", secondary: ["glutes","hamstrings"], equip: "bodyweight", type: "compound" },
   { canonical: "Reverse Hyperextension",      aliases: ["reverse hyper"], primary: "lower back", secondary: ["glutes","hamstrings"], equip: "machine", type: "compound" },
 
+  { canonical: "Scapular Pull-Up",            aliases: ["scap pull-up", "scapular pullup"], primary: "mid back", secondary: ["lats"], equip: "bodyweight", type: "isolation" },
+  { canonical: "Pendlay Row",                 aliases: ["dead stop row", "pendlay barbell row"], primary: "mid back", secondary: ["lats","biceps"], equip: "barbell", type: "compound", grips: ["overhand","wide"] },
+  { canonical: "Incline Dumbbell Row",        aliases: ["chest supported db row", "incline bench row"], primary: "mid back", secondary: ["lats","rear delts"], equip: "dumbbell", type: "compound" },
+  { canonical: "Smith Machine Row",           aliases: ["smith row", "smith bent over row"], primary: "mid back", secondary: ["lats","biceps"], equip: "smith", type: "compound", grips: ["overhand","underhand"] },
+  { canonical: "Seal Row",                    aliases: ["barbell seal row", "db seal row", "bench row"], primary: "mid back", secondary: ["lats","rear delts"], equip: "barbell", type: "compound" },
+  { canonical: "Landmine Row",                aliases: ["landmine single arm row"], primary: "mid back", secondary: ["lats","biceps"], equip: "barbell", type: "compound", grips: ["single-arm","two-arm"] },
+  { canonical: "Meadows Row",                 aliases: ["meadows landmine row"], primary: "mid back", secondary: ["lats","rear delts"], equip: "barbell", type: "compound" },
+  { canonical: "Cable High Row",              aliases: ["high row cable", "kneeling high row"], primary: "lats", secondary: ["mid back","biceps"], equip: "cable", type: "compound" },
+  { canonical: "Sumo Deadlift",               aliases: ["sumo dl"], primary: "glutes", secondary: ["hamstrings","quads","lower back","traps"], equip: "barbell", type: "compound" },
+  { canonical: "Dumbbell RDL",                aliases: ["db rdl", "db romanian deadlift"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "dumbbell", type: "compound" },
+  { canonical: "Single-Leg RDL",              aliases: ["single leg romanian deadlift", "sl rdl"], primary: "hamstrings", secondary: ["glutes","core"], equip: "dumbbell", type: "compound" },
+  { canonical: "Stiff-Leg Deadlift",          aliases: ["sldl", "stiff legged deadlift", "db stiff leg deadlift"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "barbell", type: "compound" },
+  { canonical: "Safety Bar Good Morning",     aliases: ["ssb good morning"], primary: "hamstrings", secondary: ["lower back","glutes"], equip: "barbell", type: "compound" },
+  { canonical: "Seated Good Morning",         aliases: [], primary: "lower back", secondary: ["hamstrings"], equip: "barbell", type: "compound" },
+
   // ── TRAPS ──────────────────────────────────────────────────
-  { canonical: "Barbell Shrug",               aliases: ["bb shrug"], primary: "traps", secondary: ["forearms"], equip: "barbell", type: "isolation" },
+  { canonical: "Barbell Shrug",               aliases: ["bb shrug"], primary: "traps", secondary: ["forearms"], equip: "barbell", type: "isolation", grips: ["front","behind-the-back"] },
   { canonical: "Dumbbell Shrug",              aliases: ["db shrug"], primary: "traps", secondary: ["forearms"], equip: "dumbbell", type: "isolation" },
   { canonical: "Trap Bar Shrug",              aliases: ["hex bar shrug"], primary: "traps", secondary: ["forearms"], equip: "barbell", type: "isolation" },
   { canonical: "Machine Shrug",               aliases: ["smith shrug"], primary: "traps", secondary: [], equip: "machine", type: "isolation" },
-  { canonical: "Face Pull",                   aliases: ["cable face pull"], primary: "rear delts", secondary: ["traps","mid back"], equip: "cable", type: "isolation" },
+  { canonical: "Face Pull",                   aliases: ["cable face pull", "band face pull", "high cable face pull"], primary: "rear delts", secondary: ["traps","mid back"], equip: "cable", type: "isolation", grips: ["rope"] },
+
+  { canonical: "Behind-the-Back Shrug",       aliases: ["btb shrug", "behind back barbell shrug"], primary: "traps", secondary: ["forearms"], equip: "barbell", type: "isolation" },
+  { canonical: "Barbell Upright Row",         aliases: ["bb upright row"], primary: "side delts", secondary: ["traps","biceps"], equip: "barbell", type: "compound", grips: ["wide","close"] },
+  { canonical: "Dumbbell Upright Row",        aliases: ["db upright row"], primary: "side delts", secondary: ["traps"], equip: "dumbbell", type: "compound" },
+  { canonical: "Cable Upright Row",           aliases: ["rope upright row"], primary: "side delts", secondary: ["traps"], equip: "cable", type: "compound", grips: ["rope","straight-bar"] },
+  { canonical: "Farmer's Carry",              aliases: ["farmers walk", "farmer carry", "trap bar carry", "kettlebell carry"], primary: "traps", secondary: ["forearms","core"], equip: "dumbbell", type: "compound" },
+  { canonical: "Suitcase Carry",              aliases: ["single arm carry", "one arm farmers walk"], primary: "core", secondary: ["traps","forearms"], equip: "dumbbell", type: "compound" },
 
   // ── SHOULDERS ───────────────────────────────────────────────
   { canonical: "Overhead Press",              aliases: ["ohp", "military press", "standing barbell press", "barbell ohp"], primary: "front delts", secondary: ["triceps","side delts","upper chest"], equip: "barbell", type: "compound" },
@@ -79,9 +105,15 @@ export const EXERCISE_LIBRARY = [
   { canonical: "Front Raise",                 aliases: ["db front raise", "dumbbell front raise"], primary: "front delts", secondary: [], equip: "dumbbell", type: "isolation" },
   { canonical: "Plate Front Raise",           aliases: ["weight plate front raise"], primary: "front delts", secondary: [], equip: "bodyweight", type: "isolation" },
   { canonical: "Cable Front Raise",           aliases: [], primary: "front delts", secondary: [], equip: "cable", type: "isolation" },
-  { canonical: "Rear Delt Fly",               aliases: ["bent over rear delt", "db rear delt fly", "reverse fly"], primary: "rear delts", secondary: ["mid back"], equip: "dumbbell", type: "isolation" },
+  { canonical: "Rear Delt Fly",               aliases: ["bent over rear delt", "db rear delt fly", "reverse fly", "bent-over lateral raise"], primary: "rear delts", secondary: ["mid back"], equip: "dumbbell", type: "isolation" },
   { canonical: "Reverse Pec Deck",            aliases: ["reverse pec dec", "rear delt machine"], primary: "rear delts", secondary: ["mid back"], equip: "machine", type: "isolation" },
   { canonical: "Cable Rear Delt Fly",         aliases: ["cable reverse fly"], primary: "rear delts", secondary: ["mid back"], equip: "cable", type: "isolation" },
+  { canonical: "Incline Rear Delt Raise",     aliases: ["incline rear delt fly", "prone rear delt raise"], primary: "rear delts", secondary: ["mid back"], equip: "dumbbell", type: "isolation" },
+  { canonical: "Band Pull-Apart",             aliases: ["band pullapart"], primary: "rear delts", secondary: ["mid back","traps"], equip: "bodyweight", type: "isolation" },
+  { canonical: "Y-Raise",                     aliases: ["incline y raise", "cable y raise", "db y raise"], primary: "traps", secondary: ["rear delts","front delts"], equip: "dumbbell", type: "isolation" },
+  { canonical: "T-Raise",                     aliases: ["incline t raise", "cable t raise"], primary: "rear delts", secondary: ["mid back"], equip: "dumbbell", type: "isolation" },
+  { canonical: "W-Raise",                     aliases: ["incline w raise"], primary: "rear delts", secondary: ["traps"], equip: "dumbbell", type: "isolation" },
+  { canonical: "Prone Trap Raise",            aliases: ["prone y raise", "lower trap raise"], primary: "traps", secondary: ["rear delts"], equip: "dumbbell", type: "isolation" },
 
   // ── BICEPS ──────────────────────────────────────────────────
   { canonical: "Barbell Curl",                aliases: ["bb curl", "standing barbell curl"], primary: "biceps", secondary: ["forearms"], equip: "barbell", type: "isolation" },
