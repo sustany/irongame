@@ -3,6 +3,27 @@
 Running bridge between the **iPhone "IronGame" Chat Project** and the **laptop "IronGame" Cowork Project**.
 These are separate memory spaces that do NOT sync. This file is the only thing both surfaces reach (via GitHub).
 
+---
+
+## 2026-07-07 — iPhone Chat — OPEN
+
+**Shipped (commit ca863db, deployed):** 29 missing pull/posterior-chain
+exercises added to exerciseLibrary.js (165 entries total) + new optional
+`grips` schema field on 17 entries. Grip decision LOCKED: grip is a
+separate selectable field, annotation-only — PRs stay keyed to canonical;
+no localStorage migration needed. FEAT-001 partially pulled forward
+(grip metadata done; hand-position pending).
+
+**Weighted/assisted pull-up & chin-up:** intentionally NOT new entries —
+handled by existing BW ± added-load logging (§1e).
+
+**LAPTOP TODO (Commit 2 — feature, A1 gate applies):**
+Grip chip selector in Change Exercise picker + logged-set grip annotation
+in AgentTrainer.jsx. Full SMOKE_TEST.md §5 walk required. Bundle with
+Step 6b/7 laptop session.
+
+---
+
 **How it works**
 1. iPhone composes a handoff as plain text and Claude commits it here (newest entry on top).
 2. Laptop Cowork session opens by reading the top OPEN entry, then works from it.
