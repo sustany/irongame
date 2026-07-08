@@ -441,9 +441,15 @@ function suggestW(name,si,lw,lr,prs){
   const pr=prs[name];
   if(!pr||pr.bw) return 0;
   const w=pr.weight;
-  // Set 1: auto-load to last session's working weight (PR).
-  // If user already adjusted weight this session (lw>0), respect that.
-  if(si===0) return lw&&lw>0 ? lw : w;
+  // Set 1: open with a warm-up load, NOT last session's working max.
+  //   • Barbell lifts   → empty bar (45 lb)
+  //   • Hack squat / plate-loaded / Smith / machines → unloaded (bodyweight only)
+  // The user ramps up from here. If they already adjusted the weight this
+  // session (lw>0), respect that instead.
+  if(si===0){
+    const eq=eqOf(META[name]);
+    return lw&&lw>0 ? lw : (eq.hasBar ? 45 : 0);
+  }
   // Set 2+: progress from last working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
   if(!lw) return w;
