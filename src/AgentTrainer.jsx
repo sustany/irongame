@@ -963,23 +963,12 @@ export default function IronGame(){
     }
     return a;
   };
-  const launch=(needsBB)=>{
-    if(needsBB){setScreen("barbellCheck");return;}
+  const launch=()=>{
     const now=new Date();
     const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
-    setLastRes(null);setLastWt(null);setPhase("ready");
-    setSessionStart(Date.now());
-    setScreen("session");
-  };
-  const handleBB=(ok)=>{
-    const now=new Date();
-    const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
-    setExList(build(sesType,ok));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
     setSessionStart(Date.now());
     setScreen("session");
@@ -1265,7 +1254,7 @@ export default function IronGame(){
           <div style={{flex:1}}/>
 
           {ready&&(
-            <RedBtn onClick={()=>launch(["pull","legs"].includes(sesType))}>
+            <RedBtn onClick={()=>launch()}>
               {`Begin ${sesType.charAt(0).toUpperCase()+sesType.slice(1)} Session`}
             </RedBtn>
           )}
@@ -1407,55 +1396,6 @@ export default function IronGame(){
     </div>
   );
   }
-
-  // ── BARBELL CHECK ─────────────────────────────────────────
-  if(screen==="barbellCheck") return(
-    <div style={{...shell,justifyContent:"center",padding:"0 22px",paddingTop:"env(safe-area-inset-top)",gap:24}}>
-      <style>{FONTS}</style>
-      <div>
-        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:"0.06em",lineHeight:1,marginBottom:10}}>
-          <span style={{color:C.red}}>IRON</span><span style={{color:C.wht}}>Q</span>
-        </div>
-        <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
-          color:C.red,letterSpacing:"0.22em",textTransform:"uppercase",marginBottom:14}}>
-          Priority Lift Check
-        </div>
-        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:58,
-          lineHeight:1.05,color:C.wht,marginBottom:8}}>
-          Is a barbell available?
-        </div>
-        <Div/>
-        <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:15,
-          color:C.lt,lineHeight:1.65,marginBottom:28}}>
-          Barbell RDL is the priority lift. If unavailable the session will adjust automatically.
-        </div>
-      </div>
-      <div style={{display:"flex",gap:12}}>
-        <button className="t" onClick={()=>handleBB(false)} style={{
-          flex:1,height:78,borderRadius:12,cursor:"pointer",
-          background:"linear-gradient(170deg,#2a0a0a,#1a0505)",
-          border:`2px solid ${C.red}`,color:"#ff6644",
-          fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:"0.1em",
-          boxShadow:"0 3px 16px rgba(204,34,0,0.3)",
-        }}>Not Available</button>
-        <button className="t" onClick={()=>handleBB(true)} style={{
-          flex:1,height:78,borderRadius:12,cursor:"pointer",
-          background:"linear-gradient(170deg,#0a2010,#061408)",
-          border:`2px solid ${C.grn}`,color:C.grn,
-          fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:"0.1em",
-          boxShadow:"0 3px 16px rgba(34,200,100,0.25)",
-        }}>Available</button>
-      </div>
-      <button className="t" onClick={()=>setScreen("setup")}
-        style={{width:"100%",height:42,borderRadius:10,
-          background:"transparent",border:`1px solid ${C.bdr}`,
-          color:C.md,cursor:"pointer",
-          fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
-          letterSpacing:"0.1em",textTransform:"uppercase"}}>
-        ← Back
-      </button>
-    </div>
-  );
 
   // ── COMPLETE ──────────────────────────────────────────────
   if(screen==="complete"){
