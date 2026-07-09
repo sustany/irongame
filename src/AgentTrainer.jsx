@@ -379,10 +379,30 @@ const CATEGORY = {
          "Calf Press","Calf Press, Linear Leg Press","Seated Calf Raise","Hip Thrust (Smith)",
          "Hyperextensions 45°","Dead Hang"],
 };
-// Returns exercises for this session type first, then unrelated ones under "Other"
+// Session type → primary muscles, used for the master-DB fallback below.
+const SESSION_PRIMARIES = {
+  push: new Set(["chest","front delts","side delts","rear delts","triceps"]),
+  pull: new Set(["lats","mid back","lower back","traps","biceps","brachialis","forearms","grip","abs","obliques","core"]),
+  legs: new Set(["quads","hamstrings","glutes","calves","hip flexors"]),
+};
+// Returns exercises for this session type first, then unrelated ones under "Other".
+// Browse-list fallback fix: entries WITHOUT PR history are no longer hidden.
+// Curated CATEGORY names always render (PR'd first), then master-DB exercises
+// whose primary muscle matches the session type — so new/custom exercises are
+// visible in browse view even before their first logged set.
 function exListForType(type, prs){
-  const inCat  = (CATEGORY[type]||[]).filter(n=>prs[n]);
-  const outCat = Object.keys(prs).filter(n=>!(CATEGORY[type]||[]).includes(n));
+  const cat = CATEGORY[type]||[];
+  const catSet = new Set(cat);
+  const prim = SESSION_PRIMARIES[type];
+  const dbExtra = prim
+    ? getMasterDB()
+        .filter(e=>!catSet.has(e.canonical)&&prim.has(e.primary))
+        .map(e=>e.canonical)
+    : [];
+  const byPrFirst = (list)=>[...list.filter(n=>prs[n]),...list.filter(n=>!prs[n])];
+  const inCat  = [...byPrFirst(cat), ...byPrFirst(dbExtra)];
+  const dbSet  = new Set(dbExtra);
+  const outCat = Object.keys(prs).filter(n=>!catSet.has(n)&&!dbSet.has(n));
   return {inCat, outCat};
 }
 // Name → primary muscle lookup (exercise library, used by picker filter)
@@ -2679,7 +2699,7 @@ export default function IronGame(){
                   : ()=>true;
                 // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
                 const slotAlts = (TMPLS[sesType]?.[exIdx]?.alts || [])
-                  .filter(n => prs[n] && _musMatch(n)); // skip alts not in PR list or filtered muscle
+                  .filter(n => _musMatch(n)); // browse-list fallback: alts show even without PR history
                 const altSet = new Set(slotAlts);
                 const inCatRemaining = inCat.filter(n => !altSet.has(n) && _musMatch(n));
                 const renderEx=(name,tag)=>{
