@@ -1883,13 +1883,25 @@ export default function IronGame(){
 
             </div>
 
-            <div style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
+            <div onClick={()=>{if(phase==="ready")setShowExPicker(true);}}
+              style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
               lineHeight:1.05,color:C.wht,
               fontSize:ex.name.length>20?34:44,marginBottom:6,
-              display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+              display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",
+              cursor:phase==="ready"?"pointer":"default"}}>
               {ex.name}
+              {phase==="ready"&&(
+                /* F-CHANGEEX1: swap icon (lucide ArrowLeftRight path, inlined —
+                   no lucide-react dependency). Entire title row opens picker. */
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                  stroke={C.md} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  style={{flexShrink:0,alignSelf:"center"}} aria-label="Change exercise">
+                  <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
+                  <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+                </svg>
+              )}
               {m.brand&&(
-                <button className="t" onClick={()=>setShowBrandInfo(v=>!v)}
+                <button className="t" onClick={(e)=>{e.stopPropagation();setShowBrandInfo(v=>!v);}}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                     fontSize:11,color:C.md,letterSpacing:"0.1em",
                     background:"rgba(255,255,255,0.07)",border:`1px solid ${C.bdr}`,
@@ -2098,16 +2110,6 @@ export default function IronGame(){
 
       {/* BOTTOM — THUMB ZONE */}
       <div style={{padding:"14px 18px 42px",background:C.page,borderTop:`2px solid ${C.bdr}`}}>
-        {phase==="ready"&&(
-          <button className="t" onClick={()=>setShowExPicker(true)}
-            style={{width:"100%",height:42,background:"transparent",
-              border:`1px solid ${C.bdr}`,borderRadius:10,
-              fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
-              color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",
-              marginBottom:10,cursor:"pointer"}}>
-            Change Exercise
-          </button>
-        )}
         {phase==="ready"?(
           <RedBtn onClick={()=>setPhase("logging")} h={70}>
             {`Begin Set ${setIdx+1}`}
