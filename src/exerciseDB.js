@@ -172,12 +172,18 @@ export const saveOverlay = (overlay) => {
 
 // Merge seed + overlay into the live master DB.
 export const getMasterDB = (overlay = loadOverlay()) => {
-  const db = SEED.map((e) => {
+  // Guard: duplicate seed ids fold to the first entry (BUGFIX 2026-07-09 —
+  // duplicated library rows produced double picker listings and PR-id collisions).
+  const seen = new Set();
+  const db = [];
+  for (const e of SEED) {
+    if (seen.has(e.id)) continue;
+    seen.add(e.id);
     const extra = overlay.aliasAdds[e.id];
-    return extra ? { ...e, aliases: [...e.aliases, ...extra] } : e;
-  });
+    db.push(extra ? { ...e, aliases: [...e.aliases, ...extra] } : e);
+  }
   for (const c of overlay.customExercises) {
-    if (!db.some((e) => e.id === c.id)) db.push({ ...c, custom: true });
+    if (!seen.has(c.id)) { seen.add(c.id); db.push({ ...c, custom: true }); }
   }
   return db;
 };

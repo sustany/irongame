@@ -70,7 +70,7 @@ export const EXERCISE_LIBRARY = [
   { canonical: "Cable High Row",              aliases: ["high row cable", "kneeling high row"], primary: "lats", secondary: ["mid back","biceps"], equip: "cable", type: "compound" },
   { canonical: "Sumo Deadlift",               aliases: ["sumo dl"], primary: "glutes", secondary: ["hamstrings","quads","lower back","traps"], equip: "barbell", type: "compound" },
   { canonical: "Dumbbell RDL",                aliases: ["db rdl", "db romanian deadlift"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "dumbbell", type: "compound" },
-  { canonical: "Single-Leg RDL",              aliases: ["single leg romanian deadlift", "sl rdl"], primary: "hamstrings", secondary: ["glutes","core"], equip: "dumbbell", type: "compound" },
+  { canonical: "Single-Leg RDL",              aliases: ["single leg romanian deadlift", "sl rdl", "single leg romanian", "single leg rdl"], primary: "hamstrings", secondary: ["glutes","core"], equip: "dumbbell", type: "compound" },
   { canonical: "Stiff-Leg Deadlift",          aliases: ["sldl", "stiff legged deadlift", "db stiff leg deadlift"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "barbell", type: "compound" },
   { canonical: "Safety Bar Good Morning",     aliases: ["ssb good morning"], primary: "hamstrings", secondary: ["lower back","glutes"], equip: "barbell", type: "compound" },
   { canonical: "Seated Good Morning",         aliases: [], primary: "lower back", secondary: ["hamstrings"], equip: "barbell", type: "compound" },
@@ -86,7 +86,7 @@ export const EXERCISE_LIBRARY = [
   { canonical: "Barbell Upright Row",         aliases: ["bb upright row"], primary: "side delts", secondary: ["traps","biceps"], equip: "barbell", type: "compound", grips: ["wide","close"] },
   { canonical: "Dumbbell Upright Row",        aliases: ["db upright row"], primary: "side delts", secondary: ["traps"], equip: "dumbbell", type: "compound" },
   { canonical: "Cable Upright Row",           aliases: ["rope upright row"], primary: "side delts", secondary: ["traps"], equip: "cable", type: "compound", grips: ["rope","straight-bar"] },
-  { canonical: "Farmer's Carry",              aliases: ["farmers walk", "farmer carry", "trap bar carry", "kettlebell carry"], primary: "traps", secondary: ["forearms","core"], equip: "dumbbell", type: "compound" },
+  { canonical: "Farmer's Carry",              aliases: ["farmers walk", "farmer carry", "trap bar carry", "kettlebell carry", "farmer walk", "dumbbell carry"], primary: "traps", secondary: ["forearms","core"], equip: "dumbbell", type: "compound" },
   { canonical: "Suitcase Carry",              aliases: ["single arm carry", "one arm farmers walk"], primary: "core", secondary: ["traps","forearms"], equip: "dumbbell", type: "compound" },
 
   // ── SHOULDERS ───────────────────────────────────────────────
@@ -162,9 +162,6 @@ export const EXERCISE_LIBRARY = [
 
   // ── HAMSTRINGS ──────────────────────────────────────────────
   { canonical: "Barbell RDL",                 aliases: ["romanian deadlift", "stiff leg deadlift", "rdl", "bb rdl"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "barbell", type: "compound" },
-  { canonical: "Dumbbell RDL",                aliases: ["db rdl", "db romanian deadlift"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "dumbbell", type: "compound" },
-  { canonical: "Single Leg RDL",              aliases: ["sl rdl", "single leg romanian"], primary: "hamstrings", secondary: ["glutes","core"], equip: "dumbbell", type: "compound" },
-  { canonical: "Stiff Leg Deadlift",          aliases: ["sldl", "stiff legged deadlift"], primary: "hamstrings", secondary: ["lower back","glutes"], equip: "barbell", type: "compound" },
   { canonical: "Seated Leg Curl",             aliases: ["machine seated leg curl", "seated hamstring curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
   { canonical: "Lying Leg Curl",              aliases: ["leg curls laying", "prone leg curl", "machine lying leg curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
   { canonical: "Standing Leg Curl",           aliases: ["one leg standing curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
@@ -200,7 +197,6 @@ export const EXERCISE_LIBRARY = [
   // ── FOREARMS / GRIP ─────────────────────────────────────────
   { canonical: "Wrist Curl",                  aliases: ["barbell wrist curl"], primary: "forearms", secondary: [], equip: "barbell", type: "isolation" },
   { canonical: "Reverse Wrist Curl",          aliases: ["wrist extension"], primary: "forearms", secondary: [], equip: "barbell", type: "isolation" },
-  { canonical: "Farmer's Carry",              aliases: ["farmer walk", "dumbbell carry"], primary: "forearms", secondary: ["traps","core"], equip: "dumbbell", type: "compound" },
   { canonical: "Dead Hang",                   aliases: ["passive hang", "hanging hold"], primary: "forearms", secondary: ["lats","grip"], equip: "bodyweight", type: "isolation" },
 
   // ── NECK ────────────────────────────────────────────────────
