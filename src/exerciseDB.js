@@ -200,6 +200,17 @@ export const addAlias = (id, alias) => {
   return { ok: saveOverlay(overlay), id };
 };
 
+// ── F-LOADALERT1: warm-up pre-warm map ──
+// A muscle group listed as a key is considered "pre-warmed" when any exercise
+// whose primary is in its value array was already trained this session.
+// Locked pairs (2026-07-09): Chest→Triceps, Shoulders→Triceps,
+// Quads→Hamstrings, Back→Biceps. Group membership mirrors GROUP_FILTERS.
+export const PREWARM_PRIMARIES = {
+  triceps:    [...GROUP_FILTERS.CHEST, ...GROUP_FILTERS.SHOULDERS],
+  hamstrings: ["quads"],
+  biceps:     [...GROUP_FILTERS.BACK],
+};
+
 // ── Search over the master DB (query + optional 7-group filter) ──
 export const searchMaster = (query, { group = null, limit = 60, db = getMasterDB() } = {}) => {
   const q = (query || "").toLowerCase().trim();

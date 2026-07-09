@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { findDuplicate } from "./exerciseLibrary";
-import { searchMaster, getMasterDB } from "./exerciseDB";
+import { searchMaster, getMasterDB, PREWARM_PRIMARIES } from "./exerciseDB";
 
 // ─────────────────────────────────────────────────────────────
 // DURABLE SESSION STORAGE
@@ -1045,13 +1045,34 @@ export default function IronGame(){
     setPhase("ready");
   };
 
+  // F-LOADALERT1: suppress the 50%+ load-change alert during expected
+  // warm-up transitions. Keyed to the current exercise's primary muscle:
+  //  - group already directly trained this session (another exercise,
+  //    same primary): never suppress — muscles warm, no warm-up expected
+  //  - group pre-warmed via PREWARM_PRIMARIES (e.g. triceps after chest):
+  //    suppress Set 1→2 only (one warm-up set)
+  //  - fresh group: suppress Set 1→2 and Set 2→3 (two warm-up sets)
+  //  - Set 3+ (setIdx>=3): always alert
+  const warmupSuppressed=()=>{
+    const grp = EX_PRIMARY[ex.name];
+    if(!grp) return false;
+    const priorGroups = new Set(
+      log.filter(s=>s.exercise!==ex.name)
+         .map(s=>EX_PRIMARY[s.exercise])
+         .filter(Boolean));
+    if(priorGroups.has(grp)) return false;
+    const prewarmed=(PREWARM_PRIMARIES[grp]||[]).some(p=>priorGroups.has(p));
+    if(prewarmed) return setIdx===1;
+    return setIdx===1||setIdx===2;
+  };
+
   const attemptReps=(reps)=>{
     // Classify against the prescribed range, not a single integer target.
     // Reps WITHIN range = matched (working as prescribed); above = exceeded; below = fell_short.
     const res = reps > rangeHi ? "exceeded"
               : reps < rangeLo ? "fell_short"
               : "matched";
-    if(lastWt&&lastWt>0&&Math.abs(adjWt-lastWt)/lastWt>0.5){setWConf({res,wt:adjWt,reps});return;}
+    if(lastWt&&lastWt>0&&Math.abs(adjWt-lastWt)/lastWt>0.5&&!warmupSuppressed()){setWConf({res,wt:adjWt,reps});return;}
     setPendingResult({res,wt:adjWt,reps});
     setPhrInput(130);
     setPhase("phr");
