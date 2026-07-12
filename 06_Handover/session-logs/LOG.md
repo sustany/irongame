@@ -5,6 +5,25 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-12 — iPhone Chat — QWIKFIX — OPEN
+
+**Shipped (QWIKFIX: F-LASTW1):** Set 1 of every exercise now defaults to
+the weight the user opened that exercise with in their LAST session.
+New persistent `ig_openwt` map (localStorage + IDB mirror, PERSIST1
+pattern). Written on each exercise's set-1 log in doLog; read in
+suggestW si===0 branch. Survives session complete / reset / Start Fresh.
+Fallback with no history: prior behavior (45 bar / 0 unloaded).
+Classification: bug fix (cap-exempt). QWIKFIX slot 1/3 today.
+
+**Known residual:** keyed by exercise name — pending Hammer Strength
+canonical rename will orphan those keys (silent fallback, non-breaking).
+Resolves with BUG-001 Step 6b id-migration; laptop should fold ig_openwt
+into that migration scope.
+
+**Rollback:** revert this commit; optionally clear ig_openwt key.
+
+---
+
 ## 2026-07-07 — iPhone Chat — OPEN
 
 **Shipped (commit ca863db, deployed):** 29 missing pull/posterior-chain

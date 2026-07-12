@@ -457,7 +457,7 @@ function calcPlates(target, from, bilateral, maxPlate=45) {
 // Generates "Loaded: 2×45 + 2×25 + 2×10 = 160" from adjWt + fromWt
 // Removed 2026-05-24: visible plate badges replaced this text breakdown.
 
-function suggestW(name,si,lw,lr,prs){
+function suggestW(name,si,lw,lr,prs,ow){
   const pr=prs[name];
   if(!pr||pr.bw) return 0;
   const w=pr.weight;
@@ -468,7 +468,9 @@ function suggestW(name,si,lw,lr,prs){
   // session (lw>0), respect that instead.
   if(si===0){
     const eq=eqOf(META[name]);
-    return lw&&lw>0 ? lw : (eq.hasBar ? 45 : 0);
+    if(lw&&lw>0) return lw;              // user already adjusted this session
+    if(ow && ow[name]!==undefined) return ow[name]; // last session's opener (0 is valid)
+    return eq.hasBar ? 45 : 0;           // no history → warm-up default
   }
   // Set 2+: progress from last working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
@@ -734,6 +736,11 @@ export default function IronGame(){
   const [setIdx,    setSetIdx]    = useState(()=> _saved?.setIdx    ?? 0);
   const [phase,     setPhase]     = useState("ready");
   const [prs,       setPrs]       = useState(()=> _saved?.prs       ?? INIT_PRS);
+  // F-LASTW1 — per-exercise opening weight from the LAST session (cross-session).
+  // Set 1 default = the weight the user started this exercise with last time.
+  const [openWt,    setOpenWt]    = useState(()=>{
+    try{const v=localStorage.getItem('ig_openwt');return v?JSON.parse(v):{};}catch{return{};}
+  });
   const [log,       setLog]       = useState(()=> _saved?.log       ?? []);
   const [lastRes,   setLastRes]   = useState(()=> _saved?.lastRes   ?? null);
   const [lastWt,    setLastWt]    = useState(()=> _saved?.lastWt    ?? null);
@@ -836,6 +843,29 @@ export default function IronGame(){
 
 
 
+  // F-LASTW1 — persist opening-weight map (independent of session lifecycle;
+  // survives session completion and "Start Fresh"). localStorage + IDB mirror.
+  useEffect(()=>{
+    if(Object.keys(openWt).length===0) return;
+    const raw=JSON.stringify(openWt);
+    try{ localStorage.setItem('ig_openwt', raw); }catch{}
+    idbSet('ig_openwt', raw);
+  },[openWt]);
+  useEffect(()=>{                       // recover from IDB if localStorage evicted
+    if(Object.keys(openWt).length>0) return;
+    (async()=>{
+      const raw=await idbGet('ig_openwt');
+      if(!raw) return;
+      try{
+        const d=JSON.parse(raw);
+        if(d&&Object.keys(d).length>0){
+          setOpenWt(d);
+          try{ localStorage.setItem('ig_openwt', raw); }catch{}
+        }
+      }catch{}
+    })();
+  },[]); // mount only
+
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
     // Clear the saved session ONLY when a workout actually finishes.
@@ -919,7 +949,7 @@ export default function IronGame(){
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
 
   const isBw = m.eq === "bodyweight";
-  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs):0;
+  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt):0;
 
   // ── Double progression rep adaptation ──────────────────────
   // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
@@ -1088,6 +1118,7 @@ export default function IronGame(){
       reps:reps,result:res,...(phr?{phr}:{})}]);
     setWeightAdj(0);
     setLastRes(res);setLastWt(wt);
+    if(setIdx===0&&!isBw) setOpenWt(o=>({...o,[ex.name]:wt})); // F-LASTW1
     const pr=prs[ex.name];
     if(res!=="fell_short"&&pr&&!pr.bw&&wt>pr.weight){
       setPrs(p=>({...p,[ex.name]:{...p[ex.name],weight:wt,reps:ex.targetReps}}));
