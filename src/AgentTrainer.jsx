@@ -317,8 +317,8 @@ const EQUIPMENT = {
   "plate-loaded": { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
   "stack-pin":    { steps:[2.5,5,10],  snap:5,   bilateral:false, showPlates:false, hasBar:false },
   "dumbbell":     { steps:[2.5,5,10],  snap:2.5, bilateral:false, showPlates:false, hasBar:false },
-  "barbell":      { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:true  },
-  "smith":        { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false },
+  "barbell":      { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:true,  barWt:44 },
+  "smith":        { steps:[5,10,25],  snap:5,   bilateral:true,  showPlates:true,  hasBar:false, barWt:20 },
   "bodyweight":   { steps:[],         snap:0,   bilateral:false, showPlates:false, hasBar:false },
   "bw-load":      { steps:[5,10,25],  snap:5,   bilateral:false, showPlates:true,  hasBar:false },
 };
@@ -485,7 +485,7 @@ function suggestW(name,si,lw,lr,prs,ow){
     const eq=eqOf(META[name]);
     if(lw&&lw>0) return lw;              // user already adjusted this session
     if(ow && ow[name]!==undefined) return ow[name]; // last session's opener (0 is valid)
-    return eq.hasBar ? 45 : 0;           // no history → warm-up default
+    return eq.barWt || 0;                // no history → empty-bar default (44 oly / 20 smith)
   }
   // Set 2+: progress from last working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
@@ -996,7 +996,7 @@ export default function IronGame(){
     const e = eqOf(m);
     if (e.snap === 0) return 0;            // bodyweight → no load
     if (e.bilateral) {
-      const base = e.hasBar ? 45 : 0;
+      const base = e.barWt || 0;
       const diff = raw - base;
       return Math.round(diff / e.snap) * e.snap + base;
     }
@@ -1010,7 +1010,7 @@ export default function IronGame(){
   const eq     = eqOf(m);
   // F-PLATES1 — absolute breakdown of total load (TOTAL plate counts)
   const loadout = ex&&!isBw&&eq.showPlates&&adjWt>0
-    ? plateBreakdown(adjWt, eq.hasBar?45:0, eq.bilateral, m.maxPlate||45)
+    ? plateBreakdown(adjWt, eq.barWt||0, eq.bilateral, m.maxPlate||45)
     : [];
   const score  = calcScore(log,prs,ext);
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
@@ -2030,8 +2030,8 @@ export default function IronGame(){
                       : m.eq==="bw-load"    ? "Added Load"
                       : m.eq==="stack-pin"  ? "Stack Weight"
                       : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
-                      : m.eq==="barbell"    ? `Olympic Bar · 45 lbs`
-                      : m.eq==="smith"      ? "Smith Machine"
+                      : m.eq==="barbell"    ? `Olympic Bar · 44 lbs`
+                      : m.eq==="smith"      ? "Smith Machine · 20 lbs"
                       : "Plate Loaded"}
                   </SL>
                   {atCeiling&&(

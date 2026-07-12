@@ -5,6 +5,27 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-12 (3) — iPhone Chat — QWIKFIX — OPEN
+
+**Shipped (QWIKFIX: bar weight constants):** Olympic bar = 44 lbs (20 kg,
+Christian-confirmed), Life Fitness Smith bar = 20 lbs. New EQUIPMENT.barWt
+field drives snapWt base, suggestW empty-bar default, plateBreakdown bar
+subtraction, and load-card labels. Nominal-vs-actual note: 225 nominal over
+a 44 bar breaks down 4x(45)=224 actual; greedy drops the 0.5/side remainder.
+Classification: bug fix (cap-exempt). QWIKFIX 3/3 — LANE CAP REACHED today.
+
+**CONFIRMED BUG for laptop (B-SNAP1, do NOT fix from iPhone — design
+check-in required):** snap:5 on bilateral equipment permits totals with
+2.5-lb-per-side remainders that cannot be loaded (no 2.5 plates at gym) —
+e.g. 54 on a 44 bar = 5/side... loadable, but 49 = 2.5/side is not.
+Loadable bilateral totals are barWt + 10n. Recommended fix: bilateral
+snap 10 + steps [10,20,50] (pair increments). Changes ±button values →
+needs Christian's explicit design sign-off before implementation.
+
+**Rollback:** revert this commit.
+
+---
+
 ## 2026-07-12 (2) — iPhone Chat — QWIKFIX — OPEN
 
 **Shipped (QWIKFIX: F-PLATES1, commit 617e1a7):** Absolute plate loadout
