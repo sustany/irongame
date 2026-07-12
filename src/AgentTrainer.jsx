@@ -444,6 +444,21 @@ const PREV={
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
 // ─────────────────────────────────────────────────────────────
+// F-PLATES1 — absolute plate breakdown of the TOTAL load currently on the
+// implement. Counts are TOTAL across both sides. Computed per-side greedy
+// then doubled so every suggestion is physically loadable in pairs.
+// barWt subtracted first (Olympic bar 45; machines 0).
+function plateBreakdown(total, barWt, bilateral, maxPlate=45) {
+  const loadable = total - barWt;
+  if (loadable < 4.99) return [];
+  const perSide = bilateral ? loadable/2 : loadable;
+  let rem = perSide;
+  const sizes = PLATES.filter(p => p <= maxPlate);
+  const counts = {};
+  for (const p of sizes) while (rem >= p-0.01) { counts[p]=(counts[p]||0)+1; rem-=p; }
+  const mult = bilateral ? 2 : 1;
+  return sizes.filter(p=>counts[p]).map(p=>({plate:p, count:counts[p]*mult}));
+}
 function calcPlates(target, from, bilateral, maxPlate=45) {
   const diff = target - from;
   if (Math.abs(diff) < 2.5) return { plates:[], action:"none" };
@@ -993,10 +1008,10 @@ export default function IronGame(){
   if(gymMax && adjWt > gymMax) adjWt = snapWt(gymMax, m);
   const atCeiling = gymMax && adjWt >= gymMax;
   const eq     = eqOf(m);
-  const fromWt = setIdx>0 ? (lastWt||0) : (eq.hasBar ? 45 : 0);
-  const plates = ex&&!isBw&&adjWt>0
-    ? calcPlates(adjWt, fromWt, eq.bilateral, m.maxPlate||45)
-    : null;
+  // F-PLATES1 — absolute breakdown of total load (TOTAL plate counts)
+  const loadout = ex&&!isBw&&eq.showPlates&&adjWt>0
+    ? plateBreakdown(adjWt, eq.hasBar?45:0, eq.bilateral, m.maxPlate||45)
+    : [];
   const score  = calcScore(log,prs,ext);
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
 
@@ -2041,27 +2056,25 @@ export default function IronGame(){
                     <div style={{display:"flex",alignItems:"flex-start",
                       gap:10,marginBottom:8}}>
 
-                      {/* LEFT: plate badges — hidden for stack machines */}
-                      {eq.showPlates&&plates?.action!=="none"&&plates?.plates?.length>0&&(
+                      {/* LEFT: F-PLATES1 — absolute plate loadout, TOTAL counts,
+                          stacked "2x (45)" lines. Hidden for stack machines. */}
+                      {eq.showPlates&&loadout.length>0&&(
                         <div style={{display:"flex",flexDirection:"column",
                           gap:3,alignSelf:"center",flexShrink:0}}>
-                          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
-                            fontSize:8,color:C.md,letterSpacing:"0.14em",
-                            textTransform:"uppercase",marginBottom:1}}>
-                            {plates.action==="add"?"ADD":"RMV"}
-                            {plates.bilateral?" /SIDE":" TOTAL"}
-                          </div>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:3,maxWidth:66}}>
-                            {plates.plates.map((p,i)=>(
-                              <div key={i} style={{
-                                background:PC[p],color:p===5?"#111":"#fff",
+                          {loadout.map(({plate,count})=>(
+                            <div key={plate} style={{display:"flex",alignItems:"center",gap:4}}>
+                              <span style={{fontFamily:"'Bebas Neue',sans-serif",
+                                fontSize:14,color:C.lt,minWidth:22,textAlign:"right"}}>
+                                {count}x</span>
+                              <div style={{
+                                background:PC[plate],color:plate===5?"#111":"#fff",
                                 fontFamily:"'Bebas Neue',sans-serif",fontSize:13,
                                 padding:"2px 6px",borderRadius:4,
                                 minWidth:26,textAlign:"center",
                                 boxShadow:"0 2px 6px rgba(0,0,0,0.4)",
-                              }}>{p}</div>
-                            ))}
-                          </div>
+                              }}>{plate}</div>
+                            </div>
+                          ))}
                           {m.maxPlate&&m.maxPlate<45&&(
                             <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
                               color:C.md,marginTop:1}}>max {m.maxPlate}lb</div>
