@@ -5,6 +5,23 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-12 (2) — iPhone Chat — QWIKFIX — OPEN
+
+**Shipped (QWIKFIX: F-PLATES1, commit 617e1a7):** Absolute plate loadout
+display, TOTAL counts, stacked "Nx (P)" lines left of weight number for
+all showPlates equipment. Replaces delta ADD/RMV per-side chips (removed,
+same root cause). Denominations 45/25/10/5. Per-side greedy then x2 —
+loadability guaranteed. Bar-only load shows no chips.
+Classification: feature (cap 1/4). QWIKFIX 2/3 today.
+
+**OPEN QUESTION for Christian:** Olympic bar 44 (20 kg) vs app's existing
+45 constant — implemented against 45 for snap-math consistency. If gym
+bars are 20 kg, follow-up commit changes bar constant + label + snap base.
+
+**Rollback:** revert 617e1a7.
+
+---
+
 ## 2026-07-12 — iPhone Chat — QWIKFIX — OPEN
 
 **Shipped (QWIKFIX: F-LASTW1):** Set 1 of every exercise now defaults to
