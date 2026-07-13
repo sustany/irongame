@@ -14,13 +14,15 @@ subtraction, and load-card labels. Nominal-vs-actual note: 225 nominal over
 a 44 bar breaks down 4x(45)=224 actual; greedy drops the 0.5/side remainder.
 Classification: bug fix (cap-exempt). QWIKFIX 3/3 — LANE CAP REACHED today.
 
-**CONFIRMED BUG for laptop (B-SNAP1, do NOT fix from iPhone — design
-check-in required):** snap:5 on bilateral equipment permits totals with
-2.5-lb-per-side remainders that cannot be loaded (no 2.5 plates at gym) —
-e.g. 54 on a 44 bar = 5/side... loadable, but 49 = 2.5/side is not.
-Loadable bilateral totals are barWt + 10n. Recommended fix: bilateral
-snap 10 + steps [10,20,50] (pair increments). Changes ±button values →
-needs Christian's explicit design sign-off before implementation.
+**B-SNAP1 — RESOLVED 2026-07-12 by decision, no code change:**
+Christian reviewed interactive mockup (Option A vs B) and chose
+**Option A: keep ±5/±10/±25 on bilateral equipment.** Phantom weights
+(2.5-lb-per-side remainders, unloadable — no 2.5 plates) are ACCEPTED
+behavior. Plate display shows the loadable portion; number may exceed
+plates+bar by 5 on odd snap steps. Do NOT re-raise or "fix" this —
+decision is Christian's, on the record. Optional future enhancement
+(NOT approved, ask first): small "+2.5/side" remainder tag when a
+phantom weight is displayed.
 
 **Rollback:** revert this commit.
 
