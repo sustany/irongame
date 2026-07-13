@@ -186,6 +186,23 @@ const IconLegs = ({ sz = 48, col = "currentColor" }) => (
   </svg>
 );
 
+// CUSTOM — Shield + 2×2 grid: pick-your-own muscle groups
+const IconCustom = ({ sz = 48, col = "currentColor" }) => (
+  <svg width={sz} height={sz} viewBox="0 0 60 60" fill="none"
+    stroke={col} strokeLinecap="round" strokeLinejoin="round">
+    {/* Shield */}
+    <path d="M30 3 L56 13 L56 38 Q56 54 30 58 Q4 54 4 38 L4 13 Z" strokeWidth="2.8"/>
+    <path d="M30 9 L50 17 L50 38 Q50 51 30 55 Q10 51 10 38 L10 17 Z" strokeWidth="1" opacity="0.25"/>
+    {/* 2×2 selector grid */}
+    <rect x="16" y="17" width="12" height="12" rx="2.5" strokeWidth="3"/>
+    <rect x="32" y="17" width="12" height="12" rx="2.5" strokeWidth="3"/>
+    <rect x="16" y="33" width="12" height="12" rx="2.5" strokeWidth="3"/>
+    {/* Fourth cell = plus (add your own mix) */}
+    <line x1="38" y1="34" x2="38" y2="44" strokeWidth="3.5"/>
+    <line x1="33" y1="39" x2="43" y2="39" strokeWidth="3.5"/>
+  </svg>
+);
+
 const IClk = ({ s = 16 }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -385,15 +402,62 @@ const SESSION_PRIMARIES = {
   pull: new Set(["lats","mid back","lower back","traps","biceps","brachialis","forearms","grip","abs","obliques","core"]),
   legs: new Set(["quads","hamstrings","glutes","calves","hip flexors"]),
 };
+// F-CUSTOM1 — Custom session: user multi-selects muscle groups; the session
+// composes from the curated META list (elbow-safe by construction).
+// prims spans BOTH taxonomies: META muscle keys (underscored) + master-DB
+// primaries (space-separated).
+const MUSCLE_GROUPS = [
+  {id:"chest",      label:"Chest",      prims:["chest"]},
+  {id:"back",       label:"Back",       prims:["back","lats","lower_back","mid back","lower back","traps"]},
+  {id:"shoulders",  label:"Shoulders",  prims:["shoulders","rear_delts","front delts","side delts","rear delts"]},
+  {id:"biceps",     label:"Biceps",     prims:["biceps","brachialis","forearms"]},
+  {id:"triceps",    label:"Triceps",    prims:["triceps"]},
+  {id:"abs",        label:"Abs",        prims:["abs","obliques","core"]},
+  {id:"quads",      label:"Quads",      prims:["quads","hip flexors"]},
+  {id:"hamstrings", label:"Hamstrings", prims:["hamstrings"]},
+  {id:"glutes",     label:"Glutes",     prims:["glutes"]},
+  {id:"calves",     label:"Calves",     prims:["calves"]},
+];
+const groupPrimSet = (ids)=>new Set(
+  MUSCLE_GROUPS.filter(g=>ids.includes(g.id)).flatMap(g=>g.prims));
+// Curated exercises matching the selected groups — compounds first.
+function customCandidates(ids){
+  const prim = groupPrimSet(ids||[]);
+  return Object.keys(META)
+    .filter(n=>prim.has(META[n].muscle))
+    .sort((a,b)=>(META[a].compound?0:1)-(META[b].compound?0:1));
+}
+// Round-robin across selected groups: one exercise per group per pass
+// (compounds surface first within each group), until the exercise cap.
+// Compound-first sort within group; pick order does NOT drive ordering
+// beyond the round-robin fairness (locked 2026-07: compound-first).
+function buildCustomList(ids, ext){
+  const cap = ext?6:5;
+  const perGroup = (ids||[]).map(id=>customCandidates([id]));
+  const out=[]; const used=new Set();
+  for(let pass=0; out.length<cap && pass<4; pass++){
+    for(const list of perGroup){
+      if(out.length>=cap) break;
+      const next=list.find(n=>!used.has(n));
+      if(next){
+        used.add(next);
+        const c=META[next].compound;
+        out.push({name:next, sets:c?4:3,
+          repRange:c?"6\u201310":"10\u201315", targetReps:c?8:12});
+      }
+    }
+  }
+  return out;
+}
 // Returns exercises for this session type first, then unrelated ones under "Other".
 // Browse-list fallback fix: entries WITHOUT PR history are no longer hidden.
 // Curated CATEGORY names always render (PR'd first), then master-DB exercises
 // whose primary muscle matches the session type — so new/custom exercises are
 // visible in browse view even before their first logged set.
-function exListForType(type, prs){
-  const cat = CATEGORY[type]||[];
+function exListForType(type, prs, groups){
+  const cat = type==="custom" ? customCandidates(groups) : (CATEGORY[type]||[]);
   const catSet = new Set(cat);
-  const prim = SESSION_PRIMARIES[type];
+  const prim = type==="custom" ? groupPrimSet(groups||[]) : SESSION_PRIMARIES[type];
   const dbExtra = prim
     ? getMasterDB()
         .filter(e=>!catSet.has(e.canonical)&&prim.has(e.primary))
@@ -654,10 +718,13 @@ function FmtCard({label,sub,Icon,val,selected,onClick}){
 }
 
 // Session preview card
-function Preview({type, extended, opener, onPickOpener}){
-  const p=PREV[type];
-  const n=extended?6:5;
-  const dur=extended?"70–75 MIN":"65 MIN";
+function Preview({type, extended, opener, onPickOpener, customList, customMuscles}){
+  const isCustom = type==="custom";
+  const p = isCustom
+    ? {muscles: customMuscles, opens: customList?.[0]?.name || "—"}
+    : PREV[type];
+  const n = isCustom ? (customList?.length||0) : (extended?6:5);
+  const dur = isCustom ? `~${Math.max(20, n*13)} MIN` : (extended?"70–75 MIN":"65 MIN");
   const openerName = opener || p.opens;
   return(
     <div className="pop" style={{
@@ -675,7 +742,7 @@ function Preview({type, extended, opener, onPickOpener}){
         color:C.wht,lineHeight:1,marginBottom:12}}>{p.muscles}</div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
         {[`${n} EXERCISES`, dur,
-          `${TMPLS[type].slice(0,n).reduce((s,e)=>s+e.sets,0)} SETS`
+          `${(isCustom?(customList||[]):TMPLS[type].slice(0,n)).reduce((s,e)=>s+e.sets,0)} SETS`
         ].map(lbl=>(
           <span key={lbl} style={{
             fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
@@ -778,6 +845,8 @@ export default function IronGame(){
   const [newExPicked,   setNewExPicked]   = useState(false); // true after user selects from dropdown
   const [showBrandInfo, setShowBrandInfo] = useState(false); // brand tooltip for LF etc. // {name, score} when fuzzy match found
   const [customOpener,  setCustomOpener]  = useState(null);
+  // F-CUSTOM1 — selected muscle groups for the Custom session type
+  const [customGroups,  setCustomGroups]  = useState(()=> _saved?.customGroups ?? []);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
   const [exSearch,         setExSearch]         = useState("");
   const [exFilter,         setExFilter]         = useState("");
@@ -896,11 +965,11 @@ export default function IronGame(){
     if(screen==="setup") return; // nothing to persist yet; never clear here
     const snapshot=JSON.stringify({
       sesType, exList, exIdx, setIdx, prs, log,
-      lastRes, lastWt, sessionStart, sessionDate, userMeta,
+      lastRes, lastWt, sessionStart, sessionDate, userMeta, customGroups,
     });
     try{ localStorage.setItem('ig_session', snapshot); }catch{}
     idbSet('ig_session', snapshot);       // durable mirror (async, best-effort)
-  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate, userMeta]);
+  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate, userMeta, customGroups]);
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -1016,7 +1085,7 @@ export default function IronGame(){
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
 
   const build=(t,bbOK)=>{
-    let a=[...TMPLS[t]];
+    let a = t==="custom" ? buildCustomList(customGroups, ext) : [...TMPLS[t]];
     if(!bbOK) a=a.filter(e=>!e.priority);
     a=a.slice(0,ext?6:5);
     // Honor custom opener — move or prepend chosen exercise
@@ -1160,7 +1229,7 @@ export default function IronGame(){
 
   // ── SETUP ────────────────────────────────────────────────
   if(screen==="setup"){
-    const ready=!!sesType;
+    const ready=!!sesType && (sesType!=="custom" || customGroups.length>0);
 
     // Live day + date
     const now     = new Date();
@@ -1196,7 +1265,7 @@ export default function IronGame(){
               <button className="t" onClick={()=>{
                 try{localStorage.removeItem('ig_session');}catch{}
                 idbDel('ig_session');
-                setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
+                setSesType(null);setCustomGroups([]);setExList([]);setExIdx(0);setSetIdx(0);
                 setPrs(INIT_PRS);setLog([]);setLastRes(null);setLastWt(null);
                 setSessionStart(null);setSessionDate(null);setShowResume(false);
               }} style={{width:"100%",height:42,borderRadius:10,cursor:"pointer",
@@ -1333,14 +1402,84 @@ export default function IronGame(){
                 muscles={"Quads · Hams\nGlutes · Calves"}
                 Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);}}/>
             </div>
+
+            {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
+            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);}} style={{
+              width:"100%",marginTop:10,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+              background:sesType==="custom"?STEEL_SEL:STEEL,
+              border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
+              borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
+              boxShadow:sesType==="custom"
+                ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
+                :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`,
+              display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
+              <IconCustom sz={38} col="#ffffff"/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
+                  letterSpacing:"0.12em",lineHeight:1,color:C.wht,marginBottom:4}}>Custom</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                  color:sesType==="custom"?"rgba(255,255,255,0.88)":C.lt,
+                  textTransform:"uppercase",letterSpacing:"0.07em",
+                  whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                  {customGroups.length
+                    ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
+                    : "Pick your muscle groups"}
+                </div>
+              </div>
+              {sesType==="custom"&&(
+                <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
+                  width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <IChk s={12}/>
+                </div>
+              )}
+            </button>
+
+            {/* Muscle group multi-select — visible only in Custom mode */}
+            {sesType==="custom"&&(
+              <div style={{marginTop:10,background:STEEL,borderRadius:12,
+                border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+                padding:"12px 12px 10px",
+                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:10}}>
+                  Muscle groups · pick one or more
+                </div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {MUSCLE_GROUPS.map(g=>{
+                    const on=customGroups.includes(g.id);
+                    return(
+                      <button key={g.id} className="t"
+                        onClick={()=>{
+                          setCustomOpener(null);
+                          setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
+                        }}
+                        style={{
+                          padding:"9px 14px",borderRadius:20,cursor:"pointer",
+                          background:on?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
+                          border:`1px solid ${on?"#f03010":C.bdr}`,
+                          fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+                          color:on?"#fff":C.lt,letterSpacing:"0.08em",
+                          textTransform:"uppercase",
+                          boxShadow:on?`0 2px 12px ${C.redGlow}`:"none"}}>
+                        {g.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* PREVIEW */}
-          {sesType&&(
+          {sesType&&(sesType!=="custom"||customGroups.length>0)&&(
             <div style={{marginBottom:28}}>
               <Preview type={sesType} extended={ext}
                 opener={customOpener}
                 onPickOpener={()=>setShowOpenerPicker(true)}
+                customList={sesType==="custom"?build("custom",true):null}
+                customMuscles={sesType==="custom"
+                  ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
+                  : null}
               />
             </div>
           )}
@@ -1355,7 +1494,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
@@ -1433,10 +1572,10 @@ export default function IronGame(){
             </div>
             <div style={{overflowY:"auto",padding:"0 12px 36px"}}>
               {(()=>{
-                const {inCat,outCat}=exListForType(sesType,INIT_PRS);
+                const {inCat,outCat}=exListForType(sesType,INIT_PRS,customGroups);
                 const renderOpener=(name,inTemplate)=>{
                   const pr=INIT_PRS[name]; if(!pr) return null;
-                  const isActive=(customOpener||TMPLS[sesType][0]?.name)===name;
+                  const isActive=(customOpener||TMPLS[sesType]?.[0]?.name||(sesType==="custom"?buildCustomList(customGroups,ext)[0]?.name:null))===name;
                   return(
                     <button key={name} className="t"
                       onClick={()=>{setCustomOpener(name);setShowOpenerPicker(false);}}
@@ -2759,7 +2898,7 @@ export default function IronGame(){
             <div style={{overflowY:"auto",padding:"0 12px 32px"}}>
 
               {(()=>{
-                const {inCat,outCat}=exListForType(sesType,prs);
+                const {inCat,outCat}=exListForType(sesType,prs,customGroups);
                 // Muscle-group filter
                 const _musMatch = exFilter
                   ? (()=>{const _p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[];return n=>_p.includes(EX_PRIMARY[n]||"");})()
