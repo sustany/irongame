@@ -724,14 +724,16 @@ function FmtCard({label,sub,Icon,val,selected,onClick}){
 }
 
 // Session preview card
-function Preview({type, extended, opener, onPickOpener, customList, customMuscles}){
+function Preview({type, extended, opener, onPickOpener, list, customMuscles, onEdit, edited}){
   const isCustom = type==="custom";
   const p = isCustom
-    ? {muscles: customMuscles, opens: customList?.[0]?.name || "—"}
+    ? {muscles: customMuscles, opens: list?.[0]?.name || "—"}
     : PREV[type];
-  const n = isCustom ? (customList?.length||0) : (extended?6:5);
-  const dur = isCustom ? `~${Math.max(20, n*13)} MIN` : (extended?"70–75 MIN":"65 MIN");
-  const openerName = opener || p.opens;
+  const n = list?.length||0;
+  const dur = n===5?"65 MIN":n===6?"70–75 MIN":`~${Math.max(20, n*13)} MIN`;
+  // When the user has hand-edited the session, the list IS the truth —
+  // "Opens with" reflects list[0], not the opener override.
+  const openerName = edited ? (list?.[0]?.name||"—") : (opener || p.opens);
   return(
     <div className="pop" style={{
       background:STEEL,borderRadius:12,
@@ -748,7 +750,7 @@ function Preview({type, extended, opener, onPickOpener, customList, customMuscle
         color:C.wht,lineHeight:1,marginBottom:12}}>{p.muscles}</div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
         {[`${n} EXERCISES`, dur,
-          `${(isCustom?(customList||[]):TMPLS[type].slice(0,n)).reduce((s,e)=>s+e.sets,0)} SETS`
+          `${(list||[]).reduce((s,e)=>s+e.sets,0)} SETS`
         ].map(lbl=>(
           <span key={lbl} style={{
             fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
@@ -772,6 +774,16 @@ function Preview({type, extended, opener, onPickOpener, customList, customMuscle
           <span style={{fontSize:9,color:C.md,letterSpacing:"0.1em"}}>▼</span>
         </button>
       </div>
+      {/* F-PREVIEW1 — open the full session editor */}
+      <button className="t" onClick={onEdit} style={{
+        width:"100%",marginTop:14,height:44,borderRadius:9,cursor:"pointer",
+        background:"rgba(255,255,255,0.06)",
+        border:`1px solid ${edited?C.red:C.bdr}`,
+        fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+        color:edited?C.red:C.lt,letterSpacing:"0.14em",textTransform:"uppercase",
+        display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        {edited?"Session Edited · Review":"Preview & Edit Exercises"}
+      </button>
     </div>
   );
 }
@@ -854,6 +866,11 @@ export default function IronGame(){
   // F-CUSTOM1 — selected muscle groups for the Custom session type
   const [customGroups,  setCustomGroups]  = useState(()=> _saved?.customGroups ?? []);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
+  // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
+  // null = auto (build() at launch). Invalidated on type/group/opener change.
+  const [draftList, setDraftList] = useState(null);
+  const [showSessionEditor, setShowSessionEditor] = useState(false);
+  const [editorPick, setEditorPick] = useState(null); // null | slot index | "add"
   const [exSearch,         setExSearch]         = useState("");
   const [exFilter,         setExFilter]         = useState("");
 
@@ -1114,7 +1131,7 @@ export default function IronGame(){
     const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
-    setExList(build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
+    setExList(draftList?[...draftList]:build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
     setSessionStart(Date.now());
     setScreen("session");
@@ -1235,7 +1252,8 @@ export default function IronGame(){
 
   // ── SETUP ────────────────────────────────────────────────
   if(screen==="setup"){
-    const ready=!!sesType && (sesType!=="custom" || customGroups.length>0);
+    const ready=!!sesType && (sesType!=="custom" || customGroups.length>0)
+      && (draftList===null || draftList.length>0); // edited-to-empty blocks launch
 
     // Live day + date
     const now     = new Date();
@@ -1271,7 +1289,7 @@ export default function IronGame(){
               <button className="t" onClick={()=>{
                 try{localStorage.removeItem('ig_session');}catch{}
                 idbDel('ig_session');
-                setSesType(null);setCustomGroups([]);setExList([]);setExIdx(0);setSetIdx(0);
+                setSesType(null);setCustomGroups([]);setDraftList(null);setExList([]);setExIdx(0);setSetIdx(0);
                 setPrs(INIT_PRS);setLog([]);setLastRes(null);setLastWt(null);
                 setSessionStart(null);setSessionDate(null);setShowResume(false);
               }} style={{width:"100%",height:42,borderRadius:10,cursor:"pointer",
@@ -1400,17 +1418,17 @@ export default function IronGame(){
             <div style={{display:"flex",gap:10}}>
               <TypeCard type="push" label="Push"
                 muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);}}/>
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
               <TypeCard type="pull" label="Pull"
                 muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);}}/>
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
               <TypeCard type="legs" label="Legs"
                 muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);}}/>
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
             </div>
 
             {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
-            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);}} style={{
+            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
               width:"100%",marginTop:10,borderRadius:12,padding:"12px 14px",cursor:"pointer",
               background:sesType==="custom"?STEEL_SEL:STEEL,
               border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
@@ -1457,6 +1475,7 @@ export default function IronGame(){
                       <button key={g.id} className="t"
                         onClick={()=>{
                           setCustomOpener(null);
+                          setDraftList(null);
                           setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
                         }}
                         style={{
@@ -1482,7 +1501,9 @@ export default function IronGame(){
               <Preview type={sesType} extended={ext}
                 opener={customOpener}
                 onPickOpener={()=>setShowOpenerPicker(true)}
-                customList={sesType==="custom"?build("custom",true):null}
+                list={draftList||build(sesType,true)}
+                edited={!!draftList}
+                onEdit={()=>setShowSessionEditor(true)}
                 customMuscles={sesType==="custom"
                   ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
                   : null}
@@ -1500,7 +1521,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setDraftList(null); setShowSessionEditor(false); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
@@ -1551,6 +1572,183 @@ export default function IronGame(){
         </div>
 
       {/* ── OPENER PICKER OVERLAY ────────────────────────────── */}
+      {/* F-PREVIEW1: SESSION EDITOR OVERLAY */}
+      {showSessionEditor&&sesType&&(()=>{
+        const cur = draftList || build(sesType,true);
+        const cap = ext?6:5;
+        const totSets = cur.reduce((a,e)=>a+e.sets,0);
+        const estMin  = Math.round(totSets*3.8);
+        const mut = f => { const l=f(cur.map(e=>({...e}))); setDraftList(l); };
+        return(
+        <div style={{position:"fixed",inset:0,zIndex:300,
+          background:"rgba(0,0,0,0.85)",display:"flex",
+          flexDirection:"column",justifyContent:"flex-end"}}>
+          <div style={{background:"#1a1a1a",borderTop:`2px solid ${C.red}`,
+            borderRadius:"18px 18px 0 0",maxHeight:"85vh",
+            display:"flex",flexDirection:"column"}}>
+            <div style={{display:"flex",justifyContent:"space-between",
+              alignItems:"center",padding:"16px 18px 10px"}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                  color:C.wht,letterSpacing:"0.1em"}}>Session Editor</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                  color:C.md,fontWeight:600,marginTop:2}}>
+                  Reorder · swap · remove · add
+                </div>
+              </div>
+              <button className="t" onClick={()=>{setShowSessionEditor(false);setEditorPick(null);}}
+                style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
+                  fontSize:12,color:"#fff",letterSpacing:"0.12em",
+                  background:`linear-gradient(180deg,${C.red},${C.redDk})`,
+                  border:"none",borderRadius:7,padding:"8px 16px",cursor:"pointer"}}>
+                DONE
+              </button>
+            </div>
+            <div style={{overflowY:"auto",padding:"0 12px 8px",flex:1}}>
+              {cur.map((e,i)=>{
+                const pr=prs[e.name];
+                const Btn=({on,dis,ch})=>(
+                  <button className="t" onClick={on} disabled={dis} style={{
+                    width:34,height:34,borderRadius:8,cursor:dis?"default":"pointer",
+                    background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
+                    color:dis?"#3a3a3a":C.lt,fontSize:14,fontWeight:800,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    padding:0,flexShrink:0}}>{ch}</button>
+                );
+                return(
+                <div key={e.name+i} style={{display:"flex",alignItems:"center",gap:8,
+                  background:"rgba(255,255,255,0.03)",border:`1px solid ${C.bdr}`,
+                  borderRadius:10,padding:"10px 10px",marginBottom:6}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
+                    <Btn ch={"▲"} dis={i===0} on={()=>mut(l=>{[l[i-1],l[i]]=[l[i],l[i-1]];return l;})}/>
+                    <Btn ch={"▼"} dis={i===cur.length-1} on={()=>mut(l=>{[l[i+1],l[i]]=[l[i],l[i+1]];return l;})}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+                      color:C.wht,letterSpacing:"0.05em",lineHeight:1.1}}>{e.name}</div>
+                    <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                      color:C.md,fontWeight:600,marginTop:2}}>
+                      {e.sets} sets · {e.repRange} reps{pr?` · PR ${pr.weight}×${pr.reps}`:""}
+                    </div>
+                  </div>
+                  <Btn ch={"⇄"} on={()=>setEditorPick(i)}/>
+                  <Btn ch={"✕"} on={()=>mut(l=>{l.splice(i,1);return l;})}/>
+                </div>
+                );
+              })}
+              <button className="t" onClick={()=>setEditorPick("add")} style={{
+                width:"100%",height:46,borderRadius:10,cursor:"pointer",marginTop:2,
+                background:"transparent",border:`1px dashed ${C.md}`,
+                fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+                color:C.lt,letterSpacing:"0.14em",textTransform:"uppercase"}}>
+                + Add Exercise
+              </button>
+            </div>
+            <div style={{padding:"10px 18px 22px",borderTop:`1px solid ${C.bdr}`}}>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[`${cur.length} EXERCISES`,`${totSets} SETS`,`~${estMin} MIN`].map(l=>(
+                  <span key={l} style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
+                    fontSize:11,color:C.lt,background:C.inner,
+                    border:`1px solid ${C.bdr}`,borderRadius:5,
+                    padding:"4px 10px",letterSpacing:"0.08em"}}>{l}</span>
+                ))}
+              </div>
+              {cur.length>cap&&(
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:"#eab308",marginTop:8,letterSpacing:"0.04em"}}>
+                  ⚠ Over the {cap}-exercise plan cap — watch session time
+                </div>
+              )}
+              {cur.length===0&&(
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:C.red,marginTop:8}}>
+                  Session is empty — add at least one exercise
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+
+      {/* F-PREVIEW1: EDITOR EXERCISE PICKER */}
+      {editorPick!==null&&sesType&&(()=>{
+        const cur = draftList || build(sesType,true);
+        const inList = new Set(cur.map(e=>e.name));
+        const {inCat,outCat}=exListForType(sesType,prs,customGroups);
+        const pick=(name)=>{
+          const c=META[name]?.compound;
+          const entry={name,
+            sets:      editorPick==="add"?(c?4:3):cur[editorPick].sets,
+            repRange:  c?"6–10":"10–15",
+            targetReps:c?8:12};
+          const l=cur.map(e=>({...e}));
+          if(editorPick==="add") l.push(entry); else l[editorPick]=entry;
+          setDraftList(l); setEditorPick(null);
+        };
+        const row=(name)=>{
+          if(inList.has(name)&&(editorPick==="add"||cur[editorPick]?.name!==name)) return null;
+          const pr=prs[name];
+          return(
+            <button key={name} className="t" onClick={()=>pick(name)}
+              style={{width:"100%",display:"flex",justifyContent:"space-between",
+                alignItems:"center",background:"transparent",
+                border:`1px solid ${C.bdr}`,borderRadius:10,
+                padding:"12px 14px",marginBottom:6,cursor:"pointer",textAlign:"left"}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+                  color:C.wht,letterSpacing:"0.06em",lineHeight:1,marginBottom:2}}>{name}</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
+                  color:C.md,fontWeight:600}}>
+                  {META[name]?.compound?"Compound":"Isolation"}
+                </div>
+              </div>
+              {pr&&<div style={{textAlign:"right",flexShrink:0}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,
+                  color:C.lt,lineHeight:1}}>{pr.weight}</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,
+                  color:C.md,fontWeight:600}}>×{pr.reps} PR</div>
+              </div>}
+            </button>
+          );
+        };
+        return(
+        <div style={{position:"fixed",inset:0,zIndex:320,
+          background:"rgba(0,0,0,0.88)",display:"flex",
+          flexDirection:"column",justifyContent:"flex-end"}}>
+          <div style={{background:"#1a1a1a",borderTop:`2px solid ${C.red}`,
+            borderRadius:"18px 18px 0 0",maxHeight:"75vh",
+            display:"flex",flexDirection:"column"}}>
+            <div style={{display:"flex",justifyContent:"space-between",
+              alignItems:"center",padding:"16px 18px 12px"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                color:C.wht,letterSpacing:"0.1em"}}>
+                {editorPick==="add"?"Add Exercise":"Swap Exercise"}
+              </div>
+              <button className="t" onClick={()=>setEditorPick(null)}
+                style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                  fontSize:12,color:C.md,letterSpacing:"0.12em",
+                  background:"transparent",border:`1px solid ${C.bdr}`,
+                  borderRadius:7,padding:"6px 12px",cursor:"pointer"}}>
+                CANCEL
+              </button>
+            </div>
+            <div style={{overflowY:"auto",padding:"0 12px 36px"}}>
+              {inCat.map(n=>row(n))}
+              {outCat.length>0&&(
+                <>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                    fontSize:9,color:C.md,letterSpacing:"0.18em",
+                    textTransform:"uppercase",padding:"8px 4px 4px"}}>Other</div>
+                  {outCat.map(n=>row(n))}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+
       {showOpenerPicker&&sesType&&(
         <div style={{position:"fixed",inset:0,zIndex:300,
           background:"rgba(0,0,0,0.85)",display:"flex",
@@ -1584,7 +1782,7 @@ export default function IronGame(){
                   const isActive=(customOpener||TMPLS[sesType]?.[0]?.name||(sesType==="custom"?buildCustomList(customGroups,ext)[0]?.name:null))===name;
                   return(
                     <button key={name} className="t"
-                      onClick={()=>{setCustomOpener(name);setShowOpenerPicker(false);}}
+                      onClick={()=>{setCustomOpener(name);setDraftList(null);setShowOpenerPicker(false);}}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
                         background:isActive?"rgba(232,38,10,0.12)":"transparent",
@@ -1610,7 +1808,7 @@ export default function IronGame(){
                     </button>
                   );
                 };
-                const tmplNames=TMPLS[sesType].map(e=>e.name);
+                const tmplNames=(TMPLS[sesType]||buildCustomList(customGroups,ext)).map(e=>e.name);
                 const inTmpl=inCat.filter(n=>tmplNames.includes(n));
                 const inCatNotTmpl=inCat.filter(n=>!tmplNames.includes(n));
                 return(
