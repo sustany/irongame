@@ -680,8 +680,6 @@ function TypeCard({type,label,muscles,Icon,selected,onClick}){
           <IChk s={12}/>
         </div>
       )}
-      {/* Icon: always white — perfect contrast on both dark and red bg */}
-      <Icon sz={44} col="#ffffff"/>
       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
         letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>{label}</div>
       {/* Muscle groups — light enough to read from distance */}
