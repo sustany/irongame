@@ -549,7 +549,10 @@ function suggestW(name,si,lw,lr,prs,ow){
     const eq=eqOf(META[name]);
     if(lw&&lw>0) return lw;              // user already adjusted this session
     if(ow && ow[name]!==undefined) return ow[name]; // last session's opener (0 is valid)
-    return eq.barWt || 0;                // no history → empty-bar default (44 oly / 20 smith)
+    // B-OPENW1: no opener history on THIS device (ig_openwt is per-device
+    // localStorage until Supabase sync) → fall back to last-session weight
+    // (PR), matching the Last Session card — never a bare 0 on machines.
+    return w || eq.barWt || 0;
   }
   // Set 2+: progress from last working set based on result.
   // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
