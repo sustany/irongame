@@ -827,7 +827,7 @@ export default function IronGame(){
   const [sesType,   setSesType]   = useState(()=> _saved?.sesType   ?? null);
   const [showResume, setShowResume] = useState(()=> !!(_saved?.sesType && (_saved?.log?.length > 0 || _saved?.exIdx > 0)));
   const [ext,       setExt]       = useState(false);
-  const [tcMode,    setTcMode]    = useState(true);
+  const [tcMode,    setTcMode]    = useState(false);
   const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
   const [exList,    setExList]    = useState(()=> _saved?.exList    ?? []);
   const [exIdx,     setExIdx]     = useState(()=> _saved?.exIdx     ?? 0);
@@ -1337,25 +1337,6 @@ export default function IronGame(){
           {/* FORMAT — time constrained vs flexible */}
           <div style={{marginBottom:18}}>
             <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
-              {/* Time Constrained */}
-              <button className="t" onClick={()=>setTcMode(true)} style={{
-                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
-                background:tcMode?STEEL_SEL:STEEL,
-                border:`1px solid ${tcMode?C.red:C.bdr}`,
-                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
-                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
-                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
-                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
-                </div>
-              </button>
               {/* Flexible */}
               <button className="t" onClick={()=>setTcMode(false)} style={{
                 flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
@@ -1373,6 +1354,25 @@ export default function IronGame(){
                   color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
                   textTransform:"uppercase",letterSpacing:"0.06em"}}>
                   Optimize for best stimulus
+                </div>
+              </button>
+              {/* Time Constrained */}
+              <button className="t" onClick={()=>setTcMode(true)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
+                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
                 </div>
               </button>
             </div>
@@ -1413,21 +1413,9 @@ export default function IronGame(){
           {/* SESSION TYPE — second choice */}
           <div style={{marginBottom:18}}>
             <SL>Session Type (click to preview)</SL>
-            <div style={{display:"flex",gap:10}}>
-              <TypeCard type="push" label="Push"
-                muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="pull" label="Pull"
-                muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="legs" label="Legs"
-                muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-            </div>
-
             {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
             <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
-              width:"100%",marginTop:10,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+              width:"100%",borderRadius:12,padding:"12px 14px",cursor:"pointer",
               background:sesType==="custom"?STEEL_SEL:STEEL,
               border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
               borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
@@ -1491,6 +1479,19 @@ export default function IronGame(){
                 </div>
               </div>
             )}
+
+            <div style={{display:"flex",gap:10,marginTop:10}}>
+              <TypeCard type="push" label="Push"
+                muscles={"Chest\nShoulders · Triceps"}
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="pull" label="Pull"
+                muscles={"Back\nBiceps · Rear Delts"}
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="legs" label="Legs"
+                muscles={"Quads · Hams\nGlutes · Calves"}
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+            </div>
+
           </div>
 
           {/* PREVIEW */}
