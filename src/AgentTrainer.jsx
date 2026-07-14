@@ -420,6 +420,16 @@ const MUSCLE_GROUPS = [
 ];
 const groupPrimSet = (ids)=>new Set(
   MUSCLE_GROUPS.filter(g=>ids.includes(g.id)).flatMap(g=>g.prims));
+// B-ORDER1 — muscle-group size ranking (signed off 2026-07-13).
+// Custom session lists are presented largest muscle group first.
+const SIZE_RANK = {quads:1, back:2, glutes:3, chest:4, hamstrings:5,
+  shoulders:6, triceps:7, biceps:8, abs:9, calves:10};
+const PRIM_TO_GROUP = {};
+MUSCLE_GROUPS.forEach(g=>g.prims.forEach(pr=>{PRIM_TO_GROUP[pr]=g.id;}));
+const exSizeRank = (name)=>{
+  const gid = PRIM_TO_GROUP[(META[name]||{}).muscle];
+  return SIZE_RANK[gid] ?? 99;
+};
 // Curated exercises matching the selected groups — compounds first.
 function customCandidates(ids){
   const prim = groupPrimSet(ids||[]);
@@ -447,7 +457,11 @@ function buildCustomList(ids, ext){
       }
     }
   }
-  return out;
+  // B-ORDER1: round-robin guarantees per-group coverage; presentation
+  // order is largest muscle group first (stable sort keeps compound-first).
+  return out.map((e,i)=>[e,i])
+    .sort((a,b)=>(exSizeRank(a[0].name)-exSizeRank(b[0].name))||(a[1]-b[1]))
+    .map(x=>x[0]);
 }
 // Returns exercises for this session type first, then unrelated ones under "Other".
 // Browse-list fallback fix: entries WITHOUT PR history are no longer hidden.
