@@ -746,9 +746,6 @@ function Preview({type, extended, opener, onPickOpener, list, customMuscles, onE
     : PREV[type];
   const n = list?.length||0;
   const dur = n===5?"65 MIN":n===6?"70–75 MIN":`~${Math.max(20, n*13)} MIN`;
-  // When the user has hand-edited the session, the list IS the truth —
-  // "Opens with" reflects list[0], not the opener override.
-  const openerName = edited ? (list?.[0]?.name||"—") : (opener || p.opens);
   return(
     <div className="pop" style={{
       background:STEEL,borderRadius:12,
@@ -773,21 +770,6 @@ function Preview({type, extended, opener, onPickOpener, list, customMuscles, onE
             borderRadius:5,padding:"4px 10px",letterSpacing:"0.08em",
           }}>{lbl}</span>
         ))}
-      </div>
-      {/* Opens with — tappable to swap the first exercise */}
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:13,
-          color:C.md}}>Opens with</span>
-        <button className="t" onClick={onPickOpener} style={{
-          fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:13,
-          color:C.wht,background:"rgba(255,255,255,0.07)",
-          border:`1px solid ${C.bdr}`,borderRadius:7,
-          padding:"4px 10px",cursor:"pointer",letterSpacing:"0.03em",
-          display:"flex",alignItems:"center",gap:5,
-        }}>
-          {openerName}
-          <span style={{fontSize:9,color:C.md,letterSpacing:"0.1em"}}>▼</span>
-        </button>
       </div>
       {/* F-PREVIEW1 — open the full session editor */}
       <button className="t" onClick={onEdit} style={{
