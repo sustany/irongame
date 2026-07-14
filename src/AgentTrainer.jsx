@@ -426,6 +426,9 @@ const SIZE_RANK = {quads:1, back:2, glutes:3, chest:4, hamstrings:5,
   shoulders:6, triceps:7, biceps:8, abs:9, calves:10};
 const PRIM_TO_GROUP = {};
 MUSCLE_GROUPS.forEach(g=>g.prims.forEach(pr=>{PRIM_TO_GROUP[pr]=g.id;}));
+// F-HIST1 — session history helpers. History is keyed by LOCAL calendar day.
+const histDateKey=(d)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const histGroupLabels=(ids)=>MUSCLE_GROUPS.filter(g=>(ids||[]).includes(g.id)).map(g=>g.label).join(" & ");
 const exSizeRank = (name)=>{
   const gid = PRIM_TO_GROUP[(META[name]||{}).muscle];
   return SIZE_RANK[gid] ?? 99;
@@ -877,6 +880,17 @@ export default function IronGame(){
   const [customOpener,  setCustomOpener]  = useState(null);
   // F-CUSTOM1 — selected muscle groups for the Custom session type
   const [customGroups,  setCustomGroups]  = useState(()=> _saved?.customGroups ?? []);
+  // F-HIST1 — per-calendar-day session history (survives session lifecycle).
+  // Shape: { "YYYY-MM-DD": {status:'logged'|'recovery', groups:[gid], sesType?,
+  //          exercises?:[{name, sets:[{w,r}]}], source:'auto'|'backfill'} }
+  const [hist, setHist] = useState(()=>{
+    try{const v=localStorage.getItem('ig_history');return v?JSON.parse(v):{};}catch{return{};}
+  });
+  const [histExpanded, setHistExpanded] = useState(null); // dateKey | null
+  const [histEdit,     setHistEdit]     = useState(null); // dateKey | null
+  const [histEditGroups, setHistEditGroups] = useState([]);
+  const [histEditExs,    setHistEditExs]    = useState([]); // [{name, sets:[{w,r}]}]
+  const [histShowExAdd,  setHistShowExAdd]  = useState(false);
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
@@ -984,6 +998,45 @@ export default function IronGame(){
       }catch{}
     })();
   },[]); // mount only
+
+  // F-HIST1 — persist history map (localStorage + IDB mirror) and recover from IDB.
+  useEffect(()=>{
+    if(Object.keys(hist).length===0) return;
+    const raw=JSON.stringify(hist);
+    try{ localStorage.setItem('ig_history', raw); }catch{}
+    idbSet('ig_history', raw);
+  },[hist]);
+  useEffect(()=>{                       // recover from IDB if localStorage evicted
+    if(Object.keys(hist).length>0) return;
+    (async()=>{
+      const raw=await idbGet('ig_history');
+      if(!raw) return;
+      try{
+        const d=JSON.parse(raw);
+        if(d&&Object.keys(d).length>0){
+          setHist(d);
+          try{ localStorage.setItem('ig_history', raw); }catch{}
+        }
+      }catch{}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
+  // F-HIST1 — auto-archive the completed session into history (runs once per completion).
+  useEffect(()=>{
+    if(screen!=="complete"||log.length===0) return;
+    const dk = histDateKey(new Date());
+    const order=[]; const exMap={};
+    log.forEach(s=>{
+      if(!exMap[s.exercise]){exMap[s.exercise]=[];order.push(s.exercise);}
+      exMap[s.exercise].push({w:s.weight,r:s.reps});
+    });
+    const gids=[...new Set(order.map(n=>PRIM_TO_GROUP[(META[n]||{}).muscle]).filter(Boolean))];
+    const entry={status:'logged',groups:gids,sesType:sesType||null,
+      exercises:order.map(n=>({name:n,sets:exMap[n]})),source:'auto'};
+    setHist(h=>({...h,[dk]:entry}));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[screen]);
 
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
@@ -1346,6 +1399,222 @@ export default function IronGame(){
                 {dayName} &middot; {dateStr}
               </div>
             </div>
+          </div>
+
+          {/* F-HIST1 — SESSION HISTORY: last 4 calendar days */}
+          <div style={{marginBottom:18}}>
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+              color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
+              Last 4 Days
+            </div>
+            {Array.from({length:4},(_,i)=>{
+              const d=new Date(); d.setDate(d.getDate()-(i+1));
+              const dk=histDateKey(d);
+              const e=hist[dk];
+              const isExp=histExpanded===dk;
+              const isEd=histEdit===dk;
+              const openEditor=()=>{
+                setHistEdit(dk); setHistExpanded(null);
+                setHistEditGroups(e?.groups?[...e.groups]:[]);
+                setHistEditExs(e?.exercises
+                  ? e.exercises.map(x=>({name:x.name,
+                      sets:(x.sets||[]).map(s=>`${s.w}x${s.r}`).join(", ")}))
+                  : []);
+                setHistShowExAdd(!!(e?.exercises&&e.exercises.length));
+              };
+              const saveEditor=(mode)=>{
+                if(mode==='recovery'){
+                  setHist(h=>({...h,[dk]:{status:'recovery',source:'backfill'}}));
+                }else if(mode==='clear'){
+                  setHist(h=>{const n={...h};delete n[dk];return n;});
+                }else{ // trained
+                  const exercises=histEditExs
+                    .filter(x=>x.name.trim())
+                    .map(x=>({name:x.name.trim(),
+                      sets:x.sets.split(",").map(t=>t.trim()).filter(Boolean)
+                        .map(t=>{const[m,r]=t.toLowerCase().split("x");
+                          return{w:parseFloat(m)||0,r:parseInt(r)||0};})
+                        .filter(s=>s.w>0&&s.r>0)}))
+                    .filter(x=>x.name);
+                  setHist(h=>({...h,[dk]:{status:'logged',
+                    groups:[...histEditGroups],
+                    exercises:exercises.length?exercises:undefined,
+                    sesType:null,source:'backfill'}}));
+                }
+                setHistEdit(null);setHistEditGroups([]);setHistEditExs([]);setHistShowExAdd(false);
+              };
+              const statusTxt = e?.status==='logged' ? (histGroupLabels(e.groups)||"Trained")
+                : e?.status==='recovery' ? "Recovery / Off" : "Not logged";
+              const statusCol = e?.status==='logged' ? C.wht
+                : e?.status==='recovery' ? C.lt : "rgba(255,255,255,0.28)";
+              return(
+                <div key={dk} style={{background:STEEL,border:`1px solid ${C.bdr}`,
+                  borderTop:`1px solid ${C.bdrTop}`,borderRadius:10,marginBottom:6,
+                  boxShadow:"0 2px 8px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.04)",
+                  overflow:"hidden"}}>
+                  <button className="t" onClick={()=>{
+                      if(isEd) return;
+                      if(e?.status==='logged'){ setHistExpanded(isExp?null:dk); }
+                      else openEditor();
+                    }}
+                    style={{width:"100%",display:"flex",alignItems:"center",
+                      justifyContent:"space-between",gap:10,padding:"10px 14px",
+                      background:"transparent",border:"none",cursor:"pointer",textAlign:"left"}}>
+                    <div style={{display:"flex",alignItems:"baseline",gap:8,minWidth:0}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,
+                        letterSpacing:"0.08em",color:e?C.wht:C.md,whiteSpace:"nowrap"}}>
+                        {DAYS[d.getDay()]}
+                      </span>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                        color:C.md,letterSpacing:"0.1em",textTransform:"uppercase",whiteSpace:"nowrap"}}>
+                        {MONTHS[d.getMonth()]} {d.getDate()}
+                      </span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+                        color:statusCol,letterSpacing:"0.08em",textTransform:"uppercase",
+                        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                        {statusTxt}
+                      </span>
+                      {e?.status==='logged'&&(
+                        <span aria-hidden="true" style={{color:C.red,fontSize:11,
+                          transform:isExp?"rotate(90deg)":"none",transition:"transform 0.15s",
+                          display:"inline-block"}}>▶</span>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Expanded exercise detail */}
+                  {isExp&&e?.status==='logged'&&(
+                    <div style={{padding:"0 14px 12px",borderTop:`1px solid ${C.bdr}`}}>
+                      {(e.exercises&&e.exercises.length>0)?e.exercises.map((x,xi)=>(
+                        <div key={xi} style={{display:"flex",justifyContent:"space-between",
+                          gap:10,padding:"7px 0",
+                          borderBottom:xi<e.exercises.length-1?`1px solid rgba(255,255,255,0.05)`:"none"}}>
+                          <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                            fontSize:12,color:C.wht,minWidth:0,overflow:"hidden",
+                            textOverflow:"ellipsis"}}>{x.name}</span>
+                          <span style={{fontFamily:"'Inter',sans-serif",fontWeight:600,
+                            fontSize:12,color:C.lt,whiteSpace:"nowrap"}}>
+                            {(x.sets||[]).map(s=>`${s.w}×${s.r}`).join(" · ")}
+                          </span>
+                        </div>
+                      )):(
+                        <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
+                          color:C.md,padding:"8px 0"}}>
+                          Muscle groups only — no exercise detail recorded.
+                        </div>
+                      )}
+                      <button className="t" onClick={openEditor}
+                        style={{marginTop:8,background:"transparent",border:"none",cursor:"pointer",
+                          padding:0,fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                          color:C.red,letterSpacing:"0.14em",textTransform:"uppercase"}}>
+                        Edit
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Inline editor */}
+                  {isEd&&(
+                    <div style={{padding:"0 14px 14px",borderTop:`1px solid ${C.bdr}`}}>
+                      <div style={{display:"flex",gap:8,margin:"12px 0 10px"}}>
+                        <button className="t" onClick={()=>saveEditor('recovery')}
+                          style={{flex:1,height:38,borderRadius:8,cursor:"pointer",
+                            background:"transparent",border:`1px solid ${C.bdr}`,
+                            color:C.lt,fontFamily:"'Inter',sans-serif",fontWeight:800,
+                            fontSize:11,letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                          Recovery / Off
+                        </button>
+                        {e&&(
+                          <button className="t" onClick={()=>saveEditor('clear')}
+                            style={{flex:1,height:38,borderRadius:8,cursor:"pointer",
+                              background:"transparent",border:`1px solid ${C.bdr}`,
+                              color:C.md,fontFamily:"'Inter',sans-serif",fontWeight:800,
+                              fontSize:11,letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                            Not Logged
+                          </button>
+                        )}
+                      </div>
+                      <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                        color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:8}}>
+                        Or mark trained — pick muscle groups
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                        {MUSCLE_GROUPS.map(g=>{
+                          const on=histEditGroups.includes(g.id);
+                          return(
+                            <button key={g.id} className="t"
+                              onClick={()=>setHistEditGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id])}
+                              style={{padding:"6px 11px",borderRadius:16,cursor:"pointer",
+                                background:on?"rgba(232,38,10,0.16)":"transparent",
+                                border:`1px solid ${on?C.red:C.bdr}`,
+                                color:on?C.wht:C.lt,fontFamily:"'Inter',sans-serif",
+                                fontWeight:700,fontSize:11}}>
+                              {g.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Exception path — optional exercise detail */}
+                      {!histShowExAdd?(
+                        <button className="t" onClick={()=>{
+                            setHistShowExAdd(true);
+                            if(histEditExs.length===0) setHistEditExs([{name:"",sets:""}]);
+                          }}
+                          style={{background:"transparent",border:"none",cursor:"pointer",padding:0,
+                            fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                            color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:10}}>
+                          + Add exercise detail (optional)
+                        </button>
+                      ):(
+                        <div style={{marginBottom:10}}>
+                          {histEditExs.map((x,xi)=>(
+                            <div key={xi} style={{display:"flex",gap:6,marginBottom:6}}>
+                              <input value={x.name} placeholder="Exercise"
+                                onChange={ev=>setHistEditExs(l=>l.map((it,ii)=>ii===xi?{...it,name:ev.target.value}:it))}
+                                style={{flex:3,minWidth:0,background:"#111",border:`1px solid ${C.bdr}`,
+                                  borderRadius:8,color:"#fff",fontSize:13,padding:"8px 10px",
+                                  fontFamily:"'Inter',sans-serif"}}/>
+                              <input value={x.sets} placeholder="180x8, 170x8"
+                                onChange={ev=>setHistEditExs(l=>l.map((it,ii)=>ii===xi?{...it,sets:ev.target.value}:it))}
+                                style={{flex:2,minWidth:0,background:"#111",border:`1px solid ${C.bdr}`,
+                                  borderRadius:8,color:"#fff",fontSize:13,padding:"8px 10px",
+                                  fontFamily:"'Inter',sans-serif"}}/>
+                            </div>
+                          ))}
+                          <button className="t" onClick={()=>setHistEditExs(l=>[...l,{name:"",sets:""}])}
+                            style={{background:"transparent",border:"none",cursor:"pointer",padding:0,
+                              fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                              color:C.md,letterSpacing:"0.14em",textTransform:"uppercase"}}>
+                            + Another exercise
+                          </button>
+                        </div>
+                      )}
+                      <div style={{display:"flex",gap:8}}>
+                        <button className="t" onClick={()=>saveEditor('trained')}
+                          disabled={histEditGroups.length===0}
+                          style={{flex:1,height:42,borderRadius:8,
+                            cursor:histEditGroups.length?"pointer":"default",
+                            background:histEditGroups.length?"linear-gradient(180deg,#e8260a,#aa1a00)":"#222",
+                            border:"none",color:histEditGroups.length?"#fff":"#555",
+                            fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em"}}>
+                          Save
+                        </button>
+                        <button className="t" onClick={()=>{
+                            setHistEdit(null);setHistEditGroups([]);setHistEditExs([]);setHistShowExAdd(false);
+                          }}
+                          style={{flex:1,height:42,borderRadius:8,cursor:"pointer",
+                            background:"transparent",border:`1px solid ${C.bdr}`,
+                            color:C.md,fontFamily:"'Inter',sans-serif",fontWeight:800,
+                            fontSize:12,letterSpacing:"0.1em",textTransform:"uppercase"}}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* FORMAT — time constrained vs flexible */}
