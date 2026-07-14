@@ -5,6 +5,26 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-13 — iPhone Chat — QWIKFIX — OPEN
+
+**Governance change: QWIKFIX daily slot cap REMOVED (was 3/day).**
+Unlimited iPhone minor-fix pushes effective 2026-07-13 per Christian.
+Unchanged: minor-fix scope, npm build gate, A1 smoke test per push,
+no-deploy-during-active-workout, feature cap A2 (4/day, bug fixes exempt).
+Runbook created at 06_Handover/QWIKFIX.md (was referenced but missing).
+
+**Shipped today (QWIKFIX x3, pre-cap-removal):**
+1. a65aba6 — removed Push/Pull/Legs icons from session-type cards (bug fix).
+2. 704e82e — home screen reorder: Flexible = default + left, TC right;
+   Custom card above Push/Pull/Legs row (minor UI, explicitly requested).
+   NOTE: settles pending homescreen-redesign time-toggle default = Flexible.
+3. f13d8a7 — B-ORDER1: custom session lists sorted largest muscle group
+   first (SIZE_RANK: quads>back>glutes>chest>hams>shoulders>tri>bi>abs>
+   calves, signed off by Christian). Round-robin selection retained for
+   per-group coverage; stable sort keeps compound-first within group (bug fix).
+
+---
+
 ## 2026-07-12 (3) — iPhone Chat — QWIKFIX — OPEN
 
 **Shipped (QWIKFIX: bar weight constants):** Olympic bar = 44 lbs (20 kg,
