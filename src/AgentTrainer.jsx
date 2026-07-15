@@ -982,8 +982,13 @@ export default function IronGame(){
   },[]); // mount only
 
   // F-HIST1 — persist history map (localStorage + IDB mirror) and recover from IDB.
+  // histTouched: user mutated hist this session — from then on, persist even an
+  // empty map so deletions stick (previously the empty-map guard resurrected
+  // cleared entries on reload).
+  const histTouched=useRef(false);
   useEffect(()=>{
-    if(Object.keys(hist).length===0) return;
+    if(Object.keys(hist).length===0&&!histTouched.current) return;
+    histTouched.current=true;
     const raw=JSON.stringify(hist);
     try{ localStorage.setItem('ig_history', raw); }catch{}
     idbSet('ig_history', raw);
@@ -996,7 +1001,9 @@ export default function IronGame(){
       try{
         const d=JSON.parse(raw);
         if(d&&Object.keys(d).length>0){
-          setHist(d);
+          // Merge-safe: never clobber entries the user added while idbGet was
+          // in flight; live edits win over the recovered mirror.
+          setHist(h=>(histTouched.current?{...d,...h}:d));
           try{ localStorage.setItem('ig_history', raw); }catch{}
         }
       }catch{}
@@ -1414,12 +1421,17 @@ export default function IronGame(){
                     .filter(x=>x.name.trim())
                     .map(x=>({name:x.name.trim(),
                       sets:x.sets.split(",").map(t=>t.trim()).filter(Boolean)
-                        .map(t=>{const[m,r]=t.toLowerCase().split("x");
+                        .map(t=>{const[m,r]=t.toLowerCase().split(/[x×*]/);
                           return{w:parseFloat(m)||0,r:parseInt(r)||0};})
                         .filter(s=>s.w>0&&s.r>0)}))
                     .filter(x=>x.name);
+                  // Derive muscle groups from typed exercise names when chips weren't picked.
+                  const derived=exercises
+                    .map(x=>PRIM_TO_GROUP[(META[x.name]||{}).muscle]).filter(Boolean);
+                  const groups=[...new Set([...histEditGroups,...derived])];
+                  if(groups.length===0&&exercises.length===0) return; // nothing to save
                   setHist(h=>({...h,[dk]:{status:'logged',
-                    groups:[...histEditGroups],
+                    groups,
                     exercises:exercises.length?exercises:undefined,
                     sesType:null,source:'backfill'}}));
                 }
@@ -1573,15 +1585,17 @@ export default function IronGame(){
                         </div>
                       )}
                       <div style={{display:"flex",gap:8}}>
+                        {(()=>{const canSave=histEditGroups.length>0||histEditExs.some(x=>x.name.trim());
+                          return(
                         <button className="t" onClick={()=>saveEditor('trained')}
-                          disabled={histEditGroups.length===0}
+                          disabled={!canSave}
                           style={{flex:1,height:42,borderRadius:8,
-                            cursor:histEditGroups.length?"pointer":"default",
-                            background:histEditGroups.length?"linear-gradient(180deg,#e8260a,#aa1a00)":"#222",
-                            border:"none",color:histEditGroups.length?"#fff":"#555",
+                            cursor:canSave?"pointer":"default",
+                            background:canSave?"linear-gradient(180deg,#e8260a,#aa1a00)":"#222",
+                            border:"none",color:canSave?"#fff":"#555",
                             fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em"}}>
                           Save
-                        </button>
+                        </button>);})()}
                         <button className="t" onClick={()=>{
                             setHistEdit(null);setHistEditGroups([]);setHistEditExs([]);setHistShowExAdd(false);
                           }}
