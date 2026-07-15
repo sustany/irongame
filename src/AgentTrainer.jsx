@@ -676,11 +676,11 @@ const RedBtn=({onClick,disabled,children,h=66})=>(
 );
 
 // Session type selector card
-function TypeCard({type,label,muscles,Icon,selected,onClick}){
+function TypeCard({type,label,muscles,Icon,selected,onClick,compact}){
   const on=selected===type;
   return(
     <button className="t" onClick={()=>onClick(type)} style={{
-      flex:1,borderRadius:12,padding:"16px 6px 14px",cursor:"pointer",
+      flex:1,borderRadius:12,padding:compact?"14px 6px 12px":"16px 6px 14px",cursor:"pointer",
       background:on?STEEL_SEL:STEEL,
       border:`1px solid ${on?C.red:C.bdr}`,
       borderTop:`1px solid ${on?"#f03010":C.bdrTop}`,
@@ -699,12 +699,13 @@ function TypeCard({type,label,muscles,Icon,selected,onClick}){
       )}
       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
         letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>{label}</div>
-      {/* Muscle groups — light enough to read from distance */}
+      {/* Muscle groups — hidden in compact mode (Custom selected) */}
+      {!compact&&(
       <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
         lineHeight:1.35,color:on?"rgba(255,255,255,0.88)":C.lt,
         textAlign:"center",textTransform:"uppercase",letterSpacing:"0.07em"}}>
         {muscles}
-      </div>
+      </div>)}
     </button>
   );
 }
@@ -1760,13 +1761,13 @@ export default function IronGame(){
             )}
 
             <div style={{display:"flex",gap:10,marginTop:10}}>
-              <TypeCard type="push" label="Push"
+              <TypeCard type="push" label="Push" compact={sesType==="custom"}
                 muscles={"Chest\nShoulders · Triceps"}
                 Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="pull" label="Pull"
+              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
                 muscles={"Back\nBiceps · Rear Delts"}
                 Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="legs" label="Legs"
+              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
                 muscles={"Quads · Hams\nGlutes · Calves"}
                 Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
             </div>
