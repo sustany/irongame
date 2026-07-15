@@ -1397,7 +1397,7 @@ export default function IronGame(){
               Last 4 Days
             </div>
             {Array.from({length:4},(_,i)=>{
-              const d=new Date(); d.setDate(d.getDate()-(i+1));
+              const d=new Date(); d.setDate(d.getDate()-(4-i)); // oldest first, newest last
               const dk=histDateKey(d);
               const e=hist[dk];
               const isExp=histExpanded===dk;
