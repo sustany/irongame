@@ -762,26 +762,10 @@ function Preview({type, extended, opener, onPickOpener, list, customMuscles, onE
       padding:"18px 18px 16px",
       boxShadow:"0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05)",
     }}>
-      <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
-        color:C.red,letterSpacing:"0.24em",textTransform:"uppercase",marginBottom:10}}>
-        Session Preview
-      </div>
-      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:25,letterSpacing:"0.05em",
-        color:C.wht,lineHeight:1,marginBottom:12}}>{p.muscles}</div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
-        {[`${n} EXERCISES`, dur,
-          `${(list||[]).reduce((s,e)=>s+e.sets,0)} SETS`
-        ].map(lbl=>(
-          <span key={lbl} style={{
-            fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
-            color:C.lt,background:C.inner,border:`1px solid ${C.bdr}`,
-            borderRadius:5,padding:"4px 10px",letterSpacing:"0.08em",
-          }}>{lbl}</span>
-        ))}
-      </div>
+      {/* F-PREVIEW2: box reduced to the edit button only — heading, muscle title, and stat chips removed per request */}
       {/* F-PREVIEW1 — open the full session editor */}
       <button className="t" onClick={onEdit} style={{
-        width:"100%",marginTop:14,height:44,borderRadius:9,cursor:"pointer",
+        width:"100%",marginTop:0,height:44,borderRadius:9,cursor:"pointer",
         background:"rgba(255,255,255,0.06)",
         border:`1px solid ${edited?C.red:C.bdr}`,
         fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
@@ -1699,7 +1683,7 @@ export default function IronGame(){
 
           {/* SESSION TYPE — second choice */}
           <div style={{marginBottom:18}}>
-            <SL>Session Type (click to preview)</SL>
+            <SL>Session Type</SL>
             {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
             <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
               width:"100%",borderRadius:12,padding:"12px 14px",cursor:"pointer",
