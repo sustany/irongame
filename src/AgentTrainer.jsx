@@ -553,32 +553,39 @@ function calcPlates(target, from, bilateral, maxPlate=45) {
 // Generates "Loaded: 2×45 + 2×25 + 2×10 = 160" from adjWt + fromWt
 // Removed 2026-05-24: visible plate badges replaced this text breakdown.
 
-function suggestW(name,si,lw,lr,prs,ow){
-  const pr=prs[name];
-  if(!pr||pr.bw) return 0;
-  const w=pr.weight;
-  // Set 1: open with a warm-up load, NOT last session's working max.
-  //   • Barbell lifts   → empty bar (45 lb)
-  //   • Hack squat / plate-loaded / Smith / machines → unloaded (bodyweight only)
-  // The user ramps up from here. If they already adjusted the weight this
-  // session (lw>0), respect that instead.
+// B-NEWDEF1: plates the straight barbell preloads for a brand-new exercise
+// (no PR history). Bar 44 + 25/side = 94 lb — the stated usual starting load.
+// Single tunable point. Other bar gear (Smith) floors at the bar only; non-bar
+// loaded gear opens at 0 and is remembered thereafter via ig_openwt.
+const BARBELL_OPEN_PLATES = 25; // lb per side
+
+function suggestW(name,si,lw,lr,prs,ow,meta){
+  const M  = meta || META[name] || {};
+  const pr = prs[name];
+  if(pr&&pr.bw) return 0;               // bodyweight PR → no external load
+  const eqM = eqOf(M);
+  const bar = eqM.barWt||0;             // 44 barbell, 20 Smith, 0 machines
+  // Opener default when this exercise has no PR history on THIS device.
+  // A loaded lift must never open at 0. Barbell = bar + 25/side; any other bar
+  // lift floors at the bar; non-bar loaded gear stays 0 (no universal floor).
+  const newDef = bar + (M.eq==="barbell" ? BARBELL_OPEN_PLATES*2 : 0);
+  // Set 1: open with a sane load, NOT last session's working max.
   if(si===0){
-    const eq=eqOf(META[name]);
-    if(lw&&lw>0) return lw;              // user already adjusted this session
-    if(ow && ow[name]!==undefined) return ow[name]; // last session's opener (0 is valid)
-    // B-OPENW1 rev2: no opener history on THIS device (ig_openwt is
-    // per-device localStorage until Supabase sync) → open at a WARM-UP
-    // load, ~50% of last-session weight, snapped to the exercise
-    // increment. Never bare 0 on machines, never the full PR.
-    const snap = META[name]?.snap || eq.snap || 5;
-    const warm = Math.round((w*0.5)/snap)*snap;
-    return Math.max(warm, eq.barWt||0);
+    if(lw&&lw>0) return lw;                            // adjusted this session
+    if(ow && ow[name]!==undefined) return ow[name];   // last session's opener (0 valid)
+    if(!pr) return newDef;                            // brand-new → equipment default
+    // Has PR: warm-up ~50% of last weight, snapped, never below the bar.
+    const snap = M.snap || eqM.snap || 5;
+    const warm = Math.round((pr.weight*0.5)/snap)*snap;
+    return Math.max(warm, bar);
   }
-  // Set 2+: progress from last working set based on result.
-  // No more hardcoded set-2-is-82%-PR — that ignored the user's actual set-1 effort.
-  if(!lw) return w;
-  if(lr==="exceeded")   return Math.round(Math.min(lw+5,w*1.08)/5)*5;
-  if(lr==="fell_short") return Math.round(Math.max(lw-10,w*0.75)/5)*5;
+  // Set 2+: progress from last working set. With a PR, cap against it; without
+  // one, progress off the logged set (no PR-relative cap to distort it).
+  if(!lw) return pr ? pr.weight : newDef;
+  const ceil   = pr ? pr.weight*1.08 : lw+5;
+  const floorW = pr ? pr.weight*0.75 : lw-10;
+  if(lr==="exceeded")   return Math.round(Math.min(lw+5, ceil)/5)*5;
+  if(lr==="fell_short") return Math.round(Math.max(lw-10, floorW)/5)*5;
   return lw;
 }
 function calcScore(log,prs,ext){
@@ -1111,7 +1118,7 @@ export default function IronGame(){
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
 
   const isBw = m.eq === "bodyweight";
-  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt):0;
+  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt,m):0;
 
   // ── Double progression rep adaptation ──────────────────────
   // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
