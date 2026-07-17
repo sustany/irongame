@@ -2746,24 +2746,47 @@ export default function IronGame(){
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"14px 18px",marginBottom:12,
                 boxShadow:"0 3px 14px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+                {/* F-HRREPS1 — text labels replaced by icons. Heart (HR) and a
+                   circular-arrows+tally glyph (reps) sit to the LEFT of each
+                   value, vertically centered with it. Icon box tracks the value
+                   font-size (HRREPS_ICON) so heights match. */}
+                {(()=>{ const HRREPS_ICON=42; const VAL_FS=44; return (
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div>
-                    <SL color={C.md}>Start HR</SL>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
-                      lineHeight:1,color:isCompound?C.red:C.wht,marginTop:2}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <svg width={HRREPS_ICON} height={HRREPS_ICON} viewBox="0 0 24 24"
+                      aria-hidden="true" style={{flexShrink:0,display:"block",color:C.red}}>
+                      <path fill="currentColor" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:VAL_FS,
+                      lineHeight:1,color:isCompound?C.red:C.wht}}>
                       {m.tier==="P1" ? START_HR.compound_p1
                         : isCompound ? START_HR.compound_p2
                         : START_HR.isolation}
                     </div>
                   </div>
-                  <div style={{textAlign:"right"}}>
-                    <SL color={C.md}>Reps</SL>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,
-                      lineHeight:1,color:C.lt,marginTop:2}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <svg width={HRREPS_ICON} height={HRREPS_ICON} viewBox="0 0 24 24" fill="none"
+                      stroke={C.lt} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                      aria-hidden="true" style={{flexShrink:0,display:"block"}}>
+                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                      <path d="M21 3v5h-5"/>
+                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                      <path d="M3 21v-5h5"/>
+                      <g strokeWidth="1.7">
+                        <line x1="9" y1="9.3" x2="9" y2="14.7"/>
+                        <line x1="11" y1="9.3" x2="11" y2="14.7"/>
+                        <line x1="13" y1="9.3" x2="13" y2="14.7"/>
+                        <line x1="15" y1="9.3" x2="15" y2="14.7"/>
+                        <line x1="8.2" y1="14.9" x2="15.8" y2="9.1"/>
+                      </g>
+                    </svg>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:VAL_FS,
+                      lineHeight:1,color:C.lt}}>
                       {ex.repRange}
                     </div>
                   </div>
                 </div>
+                ); })()}
               </div>
               <div style={{flex:1}}/>
             </>
