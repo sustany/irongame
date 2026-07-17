@@ -861,6 +861,7 @@ export default function IronGame(){
     try{const v=localStorage.getItem('ig_history');return v?JSON.parse(v):{};}catch{return{};}
   });
   const [histExpanded, setHistExpanded] = useState(null); // dateKey | null
+  const [histOpen, setHistOpen] = useState(false); // F-HISTCOLLAPSE: Last-4-Days minimized by default
   const [histEdit,     setHistEdit]     = useState(null); // dateKey | null
   const [histEditGroups, setHistEditGroups] = useState([]);
   const [histEditExs,    setHistEditExs]    = useState([]); // [{name, sets:[{w,r}]}]
@@ -1382,13 +1383,96 @@ export default function IronGame(){
             </div>
           </div>
 
+          {/* FORMAT — time constrained vs flexible */}
+          <div style={{marginBottom:18}}>
+            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
+              {/* Flexible */}
+              <button className="t" onClick={()=>setTcMode(false)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:!tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${!tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${!tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:!tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IPlus s={16} style={{color:!tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Flexible</span>
+                  {!tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  Optimize for best stimulus
+                </div>
+              </button>
+              {/* Time Constrained */}
+              <button className="t" onClick={()=>setTcMode(true)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
+                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
+                </div>
+              </button>
+            </div>
+            {/* Departure time picker — only in TC mode */}
+            {tcMode&&(
+              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+                borderRadius:10,padding:"12px 14px",
+                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
+                  I need to leave by
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <input type="time" value={depTime}
+                    onChange={e=>setDepTime(e.target.value)}
+                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
+                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
+                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                      lineHeight:1,color:C.red}}>
+                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
+                    </div>
+                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
+                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* F-HIST1 — SESSION HISTORY: last 4 calendar days */}
           <div style={{marginBottom:18}}>
-            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-              color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
-              Last 4 Days
-            </div>
-            {Array.from({length:4},(_,i)=>{
+            <button className="t" onClick={()=>setHistOpen(o=>!o)} style={{
+              display:"flex",alignItems:"center",gap:7,background:"none",border:"none",
+              padding:0,margin:0,marginBottom:histOpen?8:0,cursor:"pointer"}}>
+              <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"
+                style={{flexShrink:0,transform:histOpen?"rotate(90deg)":"rotate(0deg)",
+                  transition:"transform 0.15s ease"}}>
+                <path d="M2 1 L8 5 L2 9 Z" fill={C.md}/>
+              </svg>
+              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>
+                Last 4 Days
+              </span>
+            </button>
+            {histOpen && Array.from({length:4},(_,i)=>{
               const d=new Date(); d.setDate(d.getDate()-(4-i)); // oldest first, newest last
               const dk=histDateKey(d);
               const e=hist[dk];
@@ -1605,79 +1689,6 @@ export default function IronGame(){
             })}
           </div>
 
-          {/* FORMAT — time constrained vs flexible */}
-          <div style={{marginBottom:18}}>
-            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
-              {/* Flexible */}
-              <button className="t" onClick={()=>setTcMode(false)} style={{
-                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
-                background:!tcMode?STEEL_SEL:STEEL,
-                border:`1px solid ${!tcMode?C.red:C.bdr}`,
-                borderTop:`1px solid ${!tcMode?"#f03010":C.bdrTop}`,
-                boxShadow:!tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <IPlus s={16} style={{color:!tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Flexible</span>
-                  {!tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
-                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  Optimize for best stimulus
-                </div>
-              </button>
-              {/* Time Constrained */}
-              <button className="t" onClick={()=>setTcMode(true)} style={{
-                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
-                background:tcMode?STEEL_SEL:STEEL,
-                border:`1px solid ${tcMode?C.red:C.bdr}`,
-                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
-                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
-                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
-                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
-                </div>
-              </button>
-            </div>
-            {/* Departure time picker — only in TC mode */}
-            {tcMode&&(
-              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-                borderRadius:10,padding:"12px 14px",
-                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
-                  I need to leave by
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <input type="time" value={depTime}
-                    onChange={e=>setDepTime(e.target.value)}
-                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
-                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
-                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
-                  <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                      lineHeight:1,color:C.red}}>
-                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
-                    </div>
-                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
-                  </div>
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
-                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
-                </div>
-              </div>
-            )}
-          </div>
 
 
 
