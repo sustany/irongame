@@ -1078,6 +1078,61 @@ export default function IronGame(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[screen]);
 
+  // F-BACKUP3 — restore training data FROM the private ironq-data repo.
+  // Destructive: overwrites local ig_history, ig_openwt, and prs with the backup.
+  // Fetches first, shows the backup timestamp, and confirms before applying (unless
+  // opts.force). Rehydrates both localStorage + IDB and live React state. Intended to
+  // run at the setup screen; running mid-session is possible via console but will
+  // reset PRs under an already-built session.
+  async function restoreFromGitHub(opts){
+    opts = opts || {};
+    const silent = !!opts.silent;
+    let pat=null; try{ pat=localStorage.getItem('ig_pat'); }catch{}
+    if(!pat){ if(!silent) alert('Restore: no ig_pat token set. Open the app once with ?pat=TOKEN first.'); return false; }
+    const api='https://api.github.com/repos/sustany/ironq-data/contents/data/backup.json';
+    let data;
+    try{
+      const r=await fetch(api,{headers:{Authorization:'Bearer '+pat, Accept:'application/vnd.github+json'}});
+      if(!r.ok){ if(!silent) alert('Restore failed: HTTP '+r.status+(r.status===404?' (no backup.json yet)':'')); return false; }
+      const j=await r.json();
+      const b64=String(j.content||'').replace(/\n/g,'');
+      const json=decodeURIComponent(escape(atob(b64)));
+      data=JSON.parse(json);
+    }catch(e){ if(!silent) alert('Restore error: '+(e&&e.message||e)); return false; }
+    if(!data || typeof data!=='object'){ if(!silent) alert('Restore: backup payload unreadable.'); return false; }
+    const stamp=data.updated||'unknown time';
+    const hCount=data.ig_history?Object.keys(data.ig_history).length:0;
+    const prCount=data.prs?Object.keys(data.prs).length:0;
+    if(!opts.force){
+      const ok=window.confirm('Restore backup from '+stamp+'?\n\n'+hCount+' history day(s) + '+prCount+' PR record(s) will OVERWRITE current local data. This cannot be undone.');
+      if(!ok) return false;
+    }
+    try{
+      if(data.ig_history){ const raw=JSON.stringify(data.ig_history); try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(data.ig_history); }
+      if(data.ig_openwt){ const raw=JSON.stringify(data.ig_openwt); try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(data.ig_openwt); }
+      if(data.prs){ setPrs(data.prs); }
+      if(!silent) alert('Restore OK — '+stamp+'.\nHistory, open-weights, and PRs rehydrated.');
+      return true;
+    }catch(e){ if(!silent) alert('Restore apply error: '+(e&&e.message||e)); return false; }
+  }
+  // manual trigger for console/testing: window.igRestore()
+  useEffect(()=>{ window.igRestore=()=>restoreFromGitHub({}); },[]);
+
+  // F-BACKUP3 — one-time restore bootstrap from URL (?restore=1), then scrub the param.
+  // Runs at mount (screen is always "setup" on boot), confirms before overwriting.
+  useEffect(()=>{
+    try{
+      const p=new URLSearchParams(window.location.search);
+      if(p.get('restore')==='1'){
+        p.delete('restore');
+        const qs=p.toString();
+        window.history.replaceState(null,'',window.location.pathname+(qs?('?'+qs):'')+window.location.hash);
+        restoreFromGitHub({});
+      }
+    }catch{}
+  },[]); // mount only
+
+
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
     // Clear the saved session ONLY when a workout actually finishes.
