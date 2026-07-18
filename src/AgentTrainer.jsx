@@ -560,7 +560,13 @@ function plateBreakdown(total, barWt, bilateral, maxPlate=45) {
   const counts = {};
   for (const p of sizes) while (rem >= p-0.01) { counts[p]=(counts[p]||0)+1; rem-=p; }
   const mult = bilateral ? 2 : 1;
-  return sizes.filter(p=>counts[p]).map(p=>({plate:p, count:counts[p]*mult}));
+  const out = sizes.filter(p=>counts[p]).map(p=>({plate:p, count:counts[p]*mult}));
+  // B-PLREM1: phantom-weight remainder (B-SNAP1 Option A allows totals not
+  // decomposable into plate pairs, e.g. 25 bilateral = 12.5/side). Previously
+  // dropped silently, so chips didn't sum to the displayed total. Surface it
+  // as a dim "+N" row so plates + bar + remainder always equal the total.
+  if (rem > 0.01) out.push({ plate: Math.round(rem*mult*10)/10, count: 0, rem: true });
+  return out;
 }
 function calcPlates(target, from, bilateral, maxPlate=45) {
   const diff = target - from;
@@ -2820,17 +2826,19 @@ export default function IronGame(){
                       {eq.showPlates&&loadout.length>0&&(
                         <div style={{display:"flex",flexDirection:"column",
                           gap:3,alignSelf:"center",flexShrink:0}}>
-                          {loadout.map(({plate,count})=>(
-                            <div key={plate} style={{display:"flex",alignItems:"center",gap:4}}>
+                          {loadout.map(({plate,count,rem})=>(
+                            <div key={rem?"rem":plate} style={{display:"flex",alignItems:"center",gap:4}}>
                               <span style={{fontFamily:"'Bebas Neue',sans-serif",
-                                fontSize:14,color:C.lt,minWidth:22,textAlign:"right"}}>
-                                {count}x</span>
+                                fontSize:14,color:rem?C.md:C.lt,minWidth:22,textAlign:"right"}}>
+                                {rem?"+":`${count}x`}</span>
                               <div style={{
-                                background:PC[plate],color:plate===5?"#111":"#fff",
+                                background:rem?"transparent":PC[plate],
+                                color:rem?C.md:(plate===5?"#111":"#fff"),
+                                border:rem?`1px dashed ${C.bdrTop}`:"none",
                                 fontFamily:"'Bebas Neue',sans-serif",fontSize:13,
                                 padding:"2px 6px",borderRadius:4,
                                 minWidth:26,textAlign:"center",
-                                boxShadow:"0 2px 6px rgba(0,0,0,0.4)",
+                                boxShadow:rem?"none":"0 2px 6px rgba(0,0,0,0.4)",
                               }}>{plate}</div>
                             </div>
                           ))}
