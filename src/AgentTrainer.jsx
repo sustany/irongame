@@ -1020,6 +1020,64 @@ export default function IronGame(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[screen]);
 
+  // F-BACKUP2 — one-time PAT bootstrap from URL (?pat=...), then scrub from the bar.
+  // Minimal-footprint token entry for iPad: open <app-url>?pat=TOKEN once; it self-stores
+  // to ig_pat and strips the param. No visible UI added.
+  useEffect(()=>{
+    try{
+      const p=new URLSearchParams(window.location.search);
+      const pat=p.get('pat');
+      if(pat){
+        localStorage.setItem('ig_pat', pat);
+        p.delete('pat');
+        const qs=p.toString();
+        const url=window.location.pathname+(qs?('?'+qs):'')+window.location.hash;
+        window.history.replaceState(null,'',url);
+      }
+    }catch{}
+  },[]); // mount only
+
+  // F-BACKUP2 — push a snapshot of training data to the private ironq-data repo.
+  // ig_history + ig_openwt are read from localStorage (they survive completion); prs is
+  // passed from state because PERSIST1 removes ig_session on complete. Silent no-op when
+  // ig_pat is unset. Never throws into render — failures are swallowed so a backup issue
+  // can never block session completion.
+  async function backupToGitHub(prsSnapshot){
+    let pat=null; try{ pat=localStorage.getItem('ig_pat'); }catch{}
+    if(!pat) return;
+    let history={}, openwt={};
+    try{ history=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+    try{ openwt=JSON.parse(localStorage.getItem('ig_openwt')||'{}'); }catch{}
+    const payload={schema:1, updated:new Date().toISOString(),
+      ig_history:history, ig_openwt:openwt, prs:prsSnapshot||{}};
+    const body=JSON.stringify(payload);
+    let content; try{ content=btoa(unescape(encodeURIComponent(body))); }catch{ return; }
+    const api='https://api.github.com/repos/sustany/ironq-data/contents/data/backup.json';
+    const hdr={Authorization:'Bearer '+pat, Accept:'application/vnd.github+json'};
+    try{
+      let sha;
+      const g=await fetch(api,{headers:hdr});
+      if(g.ok){ const j=await g.json(); sha=j.sha; }
+      await fetch(api,{method:'PUT',headers:{...hdr,'Content-Type':'application/json'},
+        body:JSON.stringify({message:'auto-backup '+new Date().toISOString(),
+          content, ...(sha?{sha}:{})})});
+    }catch{ /* swallow — backup must never block the session */ }
+  }
+  // manual trigger for console/testing: window.igBackupNow()
+  useEffect(()=>{ window.igBackupNow=()=>backupToGitHub(prs); },[prs]);
+
+  // F-BACKUP2 — auto-backup once per completion. Fires on entry to "complete"; a short
+  // delay lets F-HIST1 setHist + PERSIST writes land in localStorage first.
+  const backupDone = useRef(false);
+  useEffect(()=>{
+    if(screen!=="complete"){ backupDone.current=false; return; }
+    if(backupDone.current) return;
+    backupDone.current=true;
+    const t=setTimeout(()=>{ backupToGitHub(prs); }, 900);
+    return ()=>clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[screen]);
+
   // PERSIST1 — write session state to localStorage on every relevant change
   useEffect(()=>{
     // Clear the saved session ONLY when a workout actually finishes.
