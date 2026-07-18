@@ -5,6 +5,19 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-18 — Mobile Chat — SUPABASE MIGRATION Day 1 — RESOLVED
+
+**M-PLAN1 shipped:** 06_Handover/SUPABASE-MIGRATION.md created — day-by-day
+plan (Days 1-20, phases P0-P5) + locked DDL/RLS for profiles, sessions,
+session_sets, prs, open_weights. Owner-CRUD RLS, (user_id, exercise) PKs.
+File was referenced by the handoff but never committed by origin chat.
+Build green. Next: Day 2 — verify ig_history/prs/ig_openwt exact shapes
+in AgentTrainer.jsx (no code change).
+OPEN carried: burned all-repos PAT still needs revocation (Christian,
+Safari → github.com/settings/personal-access-tokens).
+
+---
+
 ## 2026-07-13 — iPhone Chat — QWIKFIX — OPEN
 
 **Governance change: QWIKFIX daily slot cap REMOVED (was 3/day).**
