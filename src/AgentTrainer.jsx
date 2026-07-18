@@ -344,6 +344,28 @@ const eqOf = (m) => EQUIPMENT[m?.eq] || EQUIPMENT["plate-loaded"];
 // Map a master-DB equip value to an EQUIPMENT key (cable/machine behave as stack).
 const eqKeyFromDB = (equip) => EQUIPMENT[equip] ? equip
   : (equip==="cable"||equip==="machine") ? "stack-pin" : "plate-loaded";
+// B-EQHEAL1: canonical name → EQUIPMENT key from the master DB. Lazy-built once.
+let _EQ_BY_NAME = null;
+const eqKeyForName = (name) => {
+  if (!_EQ_BY_NAME) {
+    _EQ_BY_NAME = {};
+    for (const e of getMasterDB()) _EQ_BY_NAME[e.canonical] = eqKeyFromDB(e.equip);
+  }
+  return _EQ_BY_NAME[name];
+};
+// B-EQHEAL1: heal userMeta entries persisted before the eq field existed.
+// A missing eq made library picks (e.g. Smith Machine Squat) fall back to
+// plate-loaded — wrong panel label, no Smith bar weight, broken plate math.
+const healUserMeta = (u) => {
+  let dirty = false; const nu = { ...u };
+  for (const k of Object.keys(nu)) {
+    if (nu[k] && !nu[k].eq) {
+      const eqk = eqKeyForName(k);
+      if (eqk) { nu[k] = { ...nu[k], eq: eqk }; dirty = true; }
+    }
+  }
+  return dirty ? nu : u;
+};
 
 const META = {
   "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
@@ -880,7 +902,7 @@ export default function IronGame(){
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
   // Each entry can supply { eq, compound, ... } to drive equipment behavior.
-  const [userMeta, setUserMeta] = useState(()=> _saved?.userMeta ?? {});
+  const [userMeta, setUserMeta] = useState(()=> healUserMeta(_saved?.userMeta ?? {}));
   // newExEq: equipment type chosen on the New Exercise form.
   const [newExEq, setNewExEq] = useState("plate-loaded");
 
@@ -913,7 +935,7 @@ export default function IronGame(){
       setPrs(d.prs??INIT_PRS); setLog(d.log??[]);
       setLastRes(d.lastRes??null); setLastWt(d.lastWt??null);
       setSessionStart(d.sessionStart??null); setSessionDate(d.sessionDate??null);
-      setUserMeta(d.userMeta??{});
+      setUserMeta(healUserMeta(d.userMeta??{}));
       try{ localStorage.setItem("ig_session", raw); }catch{}
       setShowResume(true);
     })();
@@ -3274,8 +3296,9 @@ export default function IronGame(){
                       <button key={s.canonical} className="t"
                         onClick={()=>{
                           if(cur){setShowExPicker(false);setExSearch("");setExFilter("");return;}
-                          if(!META[s.canonical]&&!userMeta[s.canonical]){
-                            setUserMeta(u=>({...u,[s.canonical]:{eq:eqKeyFromDB(s.equip),
+                          if(!META[s.canonical]&&(!userMeta[s.canonical]||!userMeta[s.canonical].eq)){
+                            setUserMeta(u=>({...u,[s.canonical]:{...(u[s.canonical]||{}),
+                              eq:eqKeyFromDB(s.equip),
                               prPts:s.prPts||3,...(s.compound?{compound:true}:{})}}));
                           }
                           const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===s.canonical);
