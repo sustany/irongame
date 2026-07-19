@@ -1025,6 +1025,41 @@ export default function IronGame(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only
 
+  // MIG-HT1 — ONE-TIME data migration (2026-07-19). REMOVE BEFORE COMMERCIAL LAUNCH.
+  // Sat 2026-07-18 Hip Thrust sets were performed on the LF Smith (20 lb bar)
+  // but logged under the barbell entry (44 lb bar): plates on the bar were
+  // identical, so stored totals overstate by the 24 lb bar delta. Renames the
+  // exercise to "Hip Thrust (Smith)" and subtracts 24 in ig_history[2026-07-18]
+  // and ig_openwt. Flag-guarded (ig_mig_ht1); no-op on devices without the data.
+  // Rollback: localStorage.removeItem('ig_mig_ht1') re-arms; revert commit removes.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_ht1')) return;
+      const DK='2026-07-18', OLD='Hip Thrust', NEW='Hip Thrust (Smith)', DELTA=24, BARW=20;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      const day=h[DK]; let touched=false;
+      if(day&&Array.isArray(day.exercises)){
+        day.exercises.forEach(e=>{
+          if(e.name===OLD){
+            e.name=NEW;
+            (e.sets||[]).forEach(s=>{ if(s.w>0) s.w=Math.max(BARW, s.w-DELTA); });
+            touched=true;
+          }
+        });
+        if(touched){ const raw=JSON.stringify(h);
+          try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      }
+      let ow={}; try{ ow=JSON.parse(localStorage.getItem('ig_openwt')||'{}'); }catch{}
+      if(ow[OLD]!==undefined){
+        ow[NEW]=Math.max(BARW,(ow[OLD]||0)-DELTA); delete ow[OLD];
+        const raw=JSON.stringify(ow);
+        try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow);
+      }
+      localStorage.setItem('ig_mig_ht1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
   // F-HIST1 — auto-archive the completed session into history (runs once per completion).
   useEffect(()=>{
     if(screen!=="complete"||log.length===0) return;
