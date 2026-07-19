@@ -21,7 +21,7 @@
 
 - **Day 1 — DONE 2026-07-18:** Commit this plan file (M-PLAN1).
 - **Day 2:** Verify exact data shapes in `AgentTrainer.jsx`: `ig_history` entry fields, `prs` value shape vs `INIT_PRS` + PR-update code, `ig_openwt` scalar-vs-object. Record findings below in "Verified shapes." No code change.
-- **Day 3 — IN PROGRESS 2026-07-19:** Supabase project created: ref `drgffhoigdocwbusincp`, URL `https://drgffhoigdocwbusincp.supabase.co`, status Healthy. DDL run pending (Christian, dashboard SQL editor).
+- **Day 3 — DONE 2026-07-19:** Supabase project ref `drgffhoigdocwbusincp`, URL `https://drgffhoigdocwbusincp.supabase.co`. DDL executed in dashboard SQL editor: Success, no rows returned. Five tables + RLS + own-rows policies live.
 - **Day 4:** Enable + verify RLS: policy tester shows anon denied on all five tables; authed user CRUDs own rows only. P0 gate.
 - **Day 5:** `npm i @supabase/supabase-js`; add `src/supabase.js` client init from `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (Netlify env vars, not committed). No app wiring.
 - **Day 6:** Magic-link auth flow behind `?authtest=1` URL flag — isolated test path, zero production surface.

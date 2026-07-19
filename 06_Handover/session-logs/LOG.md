@@ -5,6 +5,14 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-19 — Mobile Chat — SUPABASE MIGRATION Day 3 — RESOLVED
+
+**Supabase project live.** Ref drgffhoigdocwbusincp. DDL run by Christian
+in dashboard SQL editor: Success, no rows returned. profiles, sessions,
+session_sets, prs, open_weights created with RLS enabled + own-rows
+policies. Next: Day 4 — RLS verification (anon insert must fail,
+policy check via role impersonation). P0 gate after Day 4.
+
 ## 2026-07-18 — Mobile Chat — SUPABASE MIGRATION Day 2 — RESOLVED
 
 **Shape verification complete (read-only, no code change).**
