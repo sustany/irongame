@@ -392,7 +392,7 @@ const META = {
   "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "LF Bicep Curl":         { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "Dead Hang":             { muscle:"lats", tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
-  "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith" },
+  "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith", brand:"LF", brandFull:"Life Fitness Smith Machine" },
   "Seated Leg Curl":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
   "Linear Hack Squat PL":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Leg Extension":         { muscle:"quads", tier:"ISO",prPts:3, eq:"stack-pin" },
