@@ -5,6 +5,17 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-07-18 — Mobile Chat — SUPABASE MIGRATION Day 2 — RESOLVED
+
+**Shape verification complete (read-only, no code change).**
+ig_history: 3 variants (auto / backfill-trained / recovery); backfill
+entries may OMIT exercises key; recovery has no groups. dateKey local
+YYYY-MM-DD. prs values: {muscle?, weight, reps, bw?, gymMax?} — manual
+adds (L3459) lack muscle. ig_openwt: SCALAR number per exercise.
+Locked DDL unchanged — raw jsonb columns absorb variance.
+Next: Day 3 — create Supabase project, run DDL (Christian action:
+create project at supabase.com, then paste DDL or grant ref).
+
 ## 2026-07-18 — Mobile Chat — SUPABASE MIGRATION Day 1 — RESOLVED
 
 **M-PLAN1 shipped:** 06_Handover/SUPABASE-MIGRATION.md created — day-by-day

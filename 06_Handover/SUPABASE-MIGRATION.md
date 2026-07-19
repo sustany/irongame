@@ -40,11 +40,23 @@
 - **Day 19:** Retire GitHub backup path: demote F-BACKUP2 auto-fire (or delete), revoke `ig_pat` client token, keep `restoreFromGitHub` dormant one more phase as emergency hatch.
 - **Day 20:** Cross-user RLS verification (second test account cannot read Christian's rows). Retrospective logged to LOG.md. P5 gate. Project close.
 
-## Verified shapes (fill on Day 2)
+## Verified shapes (Day 2 — verified 2026-07-18 against AgentTrainer.jsx)
 
-- `ig_history[dateKey]`: _pending_
-- `prs[exercise]`: _pending_
-- `ig_openwt[exercise]`: _pending_
+**`ig_history[dateKey]`** — dateKey = `YYYY-MM-DD` **local time** (histDateKey, L452). Three variants:
+1. Auto-archive (F-HIST1, L1073): `{status:'logged', groups:[gid...], sesType:string|null, exercises:[{name, sets:[{w:number, r:int}]}], source:'auto'}`. `w` is parseFloat — decimals possible.
+2. Backfill trained (L1678): `{status:'logged', groups:[...], exercises:[{name,sets}]|`**`undefined`**`, sesType:null, source:'backfill'}`. **Groups-only entries with no exercises key exist** — importer must handle missing `exercises`.
+3. Recovery (L1661): `{status:'recovery', source:'backfill'}` — no groups, no sesType, no exercises.
+Deletion = key removed entirely (clear mode, L1663).
+
+**`prs[exercise]`** — object keyed by canonical exercise name. Value shape: `{muscle?:string, weight:number, reps:int, bw?:true, gymMax?:int}`.
+- INIT_PRS (L294): 33 entries `{muscle, weight, reps}`, 2 carry `bw:` flag.
+- PR-on-set (L1447) and undo-recompute (L1378) spread existing value → preserve `muscle`/`bw`.
+- **Manual exercise add (L3459) writes `{weight, reps, gymMax?}` with NO `muscle` field** — user-added exercises lack `muscle`; `gymMax` optional int.
+→ Schema fit: `prs.weight/reps` columns + full value into `prs.raw` jsonb (carries muscle/bw/gymMax losslessly).
+
+**`ig_openwt[exercise]`** — **scalar number** per exercise name (L1444: `[ex.name]:wt`). Not an object. Bodyweight exercises never written (`!isBw` guard). → `open_weights.weight numeric` fits; `raw` column unnecessary but harmless.
+
+**DDL impact:** none — locked DDL stands. `sessions.raw` jsonb captures variant differences; `session_sets` only populated when `exercises` present; `status` column carries `'recovery'`.
 
 ## DDL (run on Day 3)
 
