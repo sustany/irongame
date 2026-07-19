@@ -783,25 +783,18 @@ function Preview({type, extended, opener, onPickOpener, list, customMuscles, onE
   const n = list?.length||0;
   const dur = n===5?"65 MIN":n===6?"70–75 MIN":`~${Math.max(20, n*13)} MIN`;
   return(
-    <div className="pop" style={{
-      background:STEEL,borderRadius:12,
-      border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-      borderLeft:`5px solid ${C.red}`,
-      padding:"18px 18px 16px",
-      boxShadow:"0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.05)",
-    }}>
-      {/* F-PREVIEW2: box reduced to the edit button only — heading, muscle title, and stat chips removed per request */}
-      {/* F-PREVIEW1 — open the full session editor */}
-      <button className="t" onClick={onEdit} style={{
-        width:"100%",marginTop:0,height:44,borderRadius:9,cursor:"pointer",
-        background:"rgba(255,255,255,0.06)",
-        border:`1px solid ${edited?C.red:C.bdr}`,
-        fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
-        color:edited?C.red:C.lt,letterSpacing:"0.14em",textTransform:"uppercase",
-        display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        {edited?"Session Edited · Review":"Preview & Edit Exercises"}
-      </button>
-    </div>
+    /* F-PREVIEW3: outer card shell removed — after F-PREVIEW2 reduced the card
+       to the edit button only, the wrapper's border + red accent read as a
+       double outline. Button now renders bare, matching sibling buttons. */
+    <button className="t pop" onClick={onEdit} style={{
+      width:"100%",marginTop:0,height:44,borderRadius:9,cursor:"pointer",
+      background:"rgba(255,255,255,0.06)",
+      border:`1px solid ${edited?C.red:C.bdr}`,
+      fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+      color:edited?C.red:C.lt,letterSpacing:"0.14em",textTransform:"uppercase",
+      display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      {edited?"Session Edited · Review":"Preview & Edit Exercises"}
+    </button>
   );
 }
 
@@ -1610,7 +1603,7 @@ export default function IronGame(){
               </svg>
               <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                 color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>
-                Last 4 Days
+                Session History
               </span>
             </button>
             {histOpen && Array.from({length:4},(_,i)=>{
