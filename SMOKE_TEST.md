@@ -59,9 +59,10 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 ### 1a. Plate-loaded equipment (e.g. Linear Hack Squat PL, Plate-Loaded Military Press)
 
 - [ ] Weight panel label reads "PLATE LOADED"
-- [ ] Current total weight displayed as large numeric
-- [ ] Increment buttons present and functional: +5, +10, +25
-- [ ] Decrement buttons present and functional: -5, -10, -25
+- [ ] Current total weight displayed as large numeric (red — F-PLVIZ1 2026-07-20)
+- [ ] Plate loadout rendered as per-denomination circle stacks left of total; only identical weights overlap; count digit below each stack (F-PLVIZ1)
+- [ ] Add controls present and functional: 2x2 circle picker right of total — 45 25 / 10 5, filtered by maxPlate; tap adds one plate (a pair on bilateral) (F-PLVIZ1, supersedes legacy +5/+10/+25)
+- [ ] Remove control functional: tap a loaded stack removes one plate (a pair on bilateral) (F-PLVIZ1, supersedes legacy -5/-10/-25)
 - [ ] If exercise is bodyweight-implicit (e.g., user is on machine without plates): display mode pending design decision per Obs #2b (default behaviour MUST NOT be a numeric 0 — show "BW" or per resolved spec)
 
 ### 1b. Stack-loaded equipment (e.g. Seated Leg Curl, Calf Press, Lat Pull-Down)
@@ -90,7 +91,7 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 
 - [ ] Weight panel label reads "ADDED LOAD" or equivalent
 - [ ] Added-load value displayed (defaults to 0 lb)
-- [ ] Increment/decrement buttons present for the added-load value
+- [ ] Add control: circle picker present (F-PLVIZ1; bw-load is showPlates equipment). Removal via stack tap once load > 0; at 0 no stacks render, preventing negative load
 - [ ] Reps target still displayed
 
 ---

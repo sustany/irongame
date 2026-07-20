@@ -2849,42 +2849,89 @@ export default function IronGame(){
                     <div style={{display:"flex",alignItems:"flex-start",
                       gap:10,marginBottom:8}}>
 
-                      {/* LEFT: F-PLATES1 — absolute plate loadout, TOTAL counts,
-                          stacked "2x (45)" lines. Hidden for stack machines. */}
+                      {/* F-PLVIZ1 — LEFT: plate loadout as per-denomination circle
+                          stacks. Only identical weights overlap (each disc covers
+                          80% of the one below). Count digit below each stack.
+                          Tap a stack to remove one plate (a pair on bilateral).
+                          Monochrome per spec 2026-07-20. Hidden for stack machines. */}
                       {eq.showPlates&&loadout.length>0&&(
-                        <div style={{display:"flex",flexDirection:"column",
-                          gap:3,alignSelf:"center",flexShrink:0}}>
-                          {loadout.map(({plate,count,rem})=>(
-                            <div key={rem?"rem":plate} style={{display:"flex",alignItems:"center",gap:4}}>
-                              <span style={{fontFamily:"'Bebas Neue',sans-serif",
-                                fontSize:14,color:rem?C.md:C.lt,minWidth:22,textAlign:"right"}}>
-                                {rem?"+":`${count}x`}</span>
-                              <div style={{
-                                background:rem?"transparent":PC[plate],
-                                color:rem?C.md:(plate===5?"#111":"#fff"),
-                                border:rem?`1px dashed ${C.bdrTop}`:"none",
-                                fontFamily:"'Bebas Neue',sans-serif",fontSize:13,
-                                padding:"2px 6px",borderRadius:4,
-                                minWidth:26,textAlign:"center",
-                                boxShadow:rem?"none":"0 2px 6px rgba(0,0,0,0.4)",
-                              }}>{plate}</div>
-                            </div>
-                          ))}
+                        <div style={{display:"flex",alignItems:"flex-end",
+                          gap:8,alignSelf:"center",flexShrink:0}}>
+                          {loadout.filter(l=>!l.rem).map(({plate,count})=>{
+                            const SZ={45:34,25:30,10:26,5:22}[plate]||22;
+                            const step=Math.max(4,Math.round(SZ*0.2));
+                            const h=SZ+step*(count-1);
+                            return (
+                              <div key={plate} className="t"
+                                onClick={()=>setWeightAdj(a=>a-plate*(eq.bilateral?2:1))}
+                                style={{display:"flex",flexDirection:"column",
+                                  alignItems:"center",gap:3,cursor:"pointer"}}>
+                                <div style={{position:"relative",width:SZ,height:h}}>
+                                  {Array.from({length:count}).map((_,i)=>(
+                                    <div key={i} style={{position:"absolute",left:0,
+                                      bottom:i*step,width:SZ,height:SZ,
+                                      borderRadius:"50%",background:"#2c2c2e",
+                                      border:"1.5px solid #48484a",
+                                      display:"flex",alignItems:"center",
+                                      justifyContent:"center",
+                                      fontFamily:"'Bebas Neue',sans-serif",
+                                      fontSize:Math.round(SZ*0.4),color:C.lt}}>
+                                      {plate}</div>
+                                  ))}
+                                </div>
+                                <div style={{fontFamily:"'Bebas Neue',sans-serif",
+                                  fontSize:13,color:C.md,lineHeight:1}}>{count}</div>
+                              </div>
+                            );
+                          })}
+                          {loadout.some(l=>l.rem)&&(
+                            <div style={{fontFamily:"'Bebas Neue',sans-serif",
+                              fontSize:12,color:C.md,alignSelf:"center"}}>
+                              +{loadout.find(l=>l.rem).plate}</div>
+                          )}
                           {m.maxPlate&&m.maxPlate<45&&(
                             <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
-                              color:C.md,marginTop:1}}>max {m.maxPlate}lb</div>
+                              color:C.md,alignSelf:"center"}}>max {m.maxPlate}lb</div>
                           )}
                         </div>
                       )}
 
-                      {/* CENTER: weight number only */}
+                      {/* CENTER: weight number only. F-PLVIZ1: red when the
+                          plate visualization is active. */}
                       <div style={{flexShrink:0}}>
                         <div style={{fontFamily:"'Bebas Neue',sans-serif",
-                          fontSize:80,lineHeight:1,color:C.wht,
+                          fontSize:80,lineHeight:1,
+                          color:eq.showPlates?C.red:C.wht,
                           textShadow:"0 0 30px rgba(255,255,255,0.07)"}}>{adjWt}</div>
                       </div>
 
-                      {/* RIGHT: ±adjustment buttons — plus top, minus bottom */}
+                      {/* RIGHT — F-PLVIZ1: plate equipment gets a 2x2 circle
+                          picker (45 25 / 10 5); tap adds one plate (a pair on
+                          bilateral). Removal = tap the loaded stack on the left.
+                          Non-plate equipment keeps legacy ± step buttons. */}
+                      {eq.showPlates ? (
+                        <div style={{display:"flex",flexDirection:"column",
+                          gap:8,marginLeft:"auto",alignSelf:"center"}}>
+                          {[[45,25],[10,5]].map((rowP,ri)=>(
+                            <div key={ri} style={{display:"flex",gap:8}}>
+                              {rowP.filter(p=>p<=(m.maxPlate||45)).map(p=>(
+                                <button key={p} className="t"
+                                  onClick={()=>setWeightAdj(a=>a+p*(eq.bilateral?2:1))}
+                                  style={{width:34,height:34,borderRadius:"50%",
+                                    fontFamily:"'Bebas Neue',sans-serif",
+                                    fontSize:13,color:C.md,
+                                    background:"transparent",
+                                    border:"1.5px solid #48484a",
+                                    display:"flex",alignItems:"center",
+                                    justifyContent:"center",cursor:"pointer",
+                                    padding:0,letterSpacing:"0.02em"}}>
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
                       <div style={{flex:1,display:"flex",
                         flexDirection:"column",gap:5,marginLeft:"auto"}}>
                         {/* Plus row — top */}
@@ -2918,6 +2965,7 @@ export default function IronGame(){
                           ))}
                         </div>
                       </div>
+                      )}
                     </div>
                   </>
                 )}
