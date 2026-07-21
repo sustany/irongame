@@ -2846,9 +2846,12 @@ export default function IronGame(){
                   </div>
                 ):(
                   <>
-                    {/* 3-column load row: [plates] [weight] [±buttons] */}
-                    <div style={{display:"flex",alignItems:"flex-start",
-                      gap:10,marginBottom:8}}>
+                    {/* 3-column load row: [plates] [weight] [±buttons].
+                        F-PLVIZ2: center column is flex:1 so the total is
+                        centered in the space between the fixed side columns,
+                        independent of how many plate stacks are on the left. */}
+                    <div style={{display:"flex",alignItems:"center",
+                      gap:8,marginBottom:8}}>
 
                       {/* F-PLVIZ1 — LEFT: plate loadout as per-denomination circle
                           stacks. Only identical weights overlap (each disc covers
@@ -2885,10 +2888,22 @@ export default function IronGame(){
                               </div>
                             );
                           })}
+                          {/* F-PLVIZ2: phantom-weight remainder (B-SNAP1 Option A)
+                              rendered as a distinct dim chip with a "+" and an
+                              "add" label — NOT a plate circle — so it can't be
+                              mistaken for a physical plate (e.g. 2.5/side on 115). */}
                           {loadout.some(l=>l.rem)&&(
-                            <div style={{fontFamily:"'Bebas Neue',sans-serif",
-                              fontSize:12,color:C.md,alignSelf:"center"}}>
-                              +{loadout.find(l=>l.rem).plate}</div>
+                            <div style={{display:"flex",flexDirection:"column",
+                              alignItems:"center",gap:3,alignSelf:"flex-end"}}>
+                              <div style={{fontFamily:"'Bebas Neue',sans-serif",
+                                fontSize:13,color:C.md,lineHeight:1,
+                                border:`1px dashed ${C.bdr}`,borderRadius:5,
+                                padding:"3px 6px"}}>
+                                +{loadout.find(l=>l.rem).plate}</div>
+                              <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
+                                color:C.md,letterSpacing:"0.06em",
+                                textTransform:"uppercase",lineHeight:1}}>extra</div>
+                            </div>
                           )}
                           {m.maxPlate&&m.maxPlate<45&&(
                             <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
@@ -2897,9 +2912,10 @@ export default function IronGame(){
                         </div>
                       )}
 
-                      {/* CENTER: weight number only. F-PLVIZ1: red when the
-                          plate visualization is active. */}
-                      <div style={{flexShrink:0}}>
+                      {/* CENTER: weight number. F-PLVIZ1 red when plate viz
+                          active. F-PLVIZ2: flex:1 + centered so it sits in the
+                          middle of the field regardless of left cluster width. */}
+                      <div style={{flex:1,minWidth:0,textAlign:"center"}}>
                         <div style={{fontFamily:"'Bebas Neue',sans-serif",
                           fontSize:80,lineHeight:1,
                           color:eq.showPlates?C.red:C.wht,
@@ -2912,7 +2928,7 @@ export default function IronGame(){
                           Non-plate equipment keeps legacy ± step buttons. */}
                       {eq.showPlates ? (
                         <div style={{display:"flex",flexDirection:"column",
-                          gap:8,marginLeft:"auto",alignSelf:"center"}}>
+                          gap:8,flexShrink:0,alignSelf:"center"}}>
                           {[[45,25],[10,5]].map((rowP,ri)=>(
                             <div key={ri} style={{display:"flex",gap:8}}>
                               {rowP.filter(p=>p<=(m.maxPlate||45)).map(p=>(
