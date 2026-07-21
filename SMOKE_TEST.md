@@ -125,6 +125,9 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 - [ ] Each alternative is selectable
 - [ ] Confirm / cancel mechanism
 - [ ] Back navigation to pre-set screen without losing session state
+- [ ] F-MVGROUP1: search returns movement rows (clustered) + direct rows; a movement expands to equipment variants; picking a variant selects that exact canonical (own PR track)
+- [ ] F-MVGROUP1: active muscle pill browses FULL library for that group (clustered), not just PR history; Recommended Alternatives still float on top
+- [ ] F-MVGROUP1: expandedMv resets on cancel, pill-change, and after selection
 
 ---
 

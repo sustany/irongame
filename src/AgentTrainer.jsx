@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { findDuplicate } from "./exerciseLibrary";
-import { searchMaster, getMasterDB, PREWARM_PRIMARIES } from "./exerciseDB";
+import { searchMaster, getMasterDB, PREWARM_PRIMARIES, searchMovements, browseMovementsByGroup, MOVEMENT_CLUSTERS, CANON_TO_MOVEMENT } from "./exerciseDB";
 
 // ─────────────────────────────────────────────────────────────
 // DURABLE SESSION STORAGE
@@ -895,6 +895,8 @@ export default function IronGame(){
   const [editorPick, setEditorPick] = useState(null); // null | slot index | "add"
   const [exSearch,         setExSearch]         = useState("");
   const [exFilter,         setExFilter]         = useState("");
+  // F-MVGROUP1: which movement cluster is expanded to show equipment variants
+  const [expandedMv,       setExpandedMv]       = useState(null);
 
   // ── Music player state ────────────────────────────────────
   // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
@@ -1454,6 +1456,118 @@ export default function IronGame(){
     setSetIdx(s=>s+1);
     setPhase("ready");
   };
+  // F-MVGROUP1 — single selection path for both browse + search + variant
+  // picks. `entry` is the master-DB row (for equip metadata); may be null
+  // for names already in META. Mirrors the original inline search handler.
+  const applyExerciseChoice = (name, entry=null) => {
+    if(exList[exIdx]?.name===name){
+      setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);return;
+    }
+    if(entry && !META[name] && (!userMeta[name] || !userMeta[name].eq)){
+      setUserMeta(u=>({...u,[name]:{...(u[name]||{}),
+        eq:eqKeyFromDB(entry.equip),
+        prPts:entry.prPts||3,...(entry.compound?{compound:true}:{})}}));
+    }
+    const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===name);
+    const updated=[...exList];
+    updated[exIdx]={...updated[exIdx],name,
+      sets:       tmpl?.sets       ?? updated[exIdx].sets,
+      repRange:   tmpl?.repRange   ?? (META[name]?.compound?"6–10":"10–15"),
+      targetReps: tmpl?.targetReps ?? (META[name]?.compound?8:12),
+    };
+    setExList(updated);
+    setSetIdx(0);setLastRes(null);setLastWt(null);
+    setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);
+  };
+
+  // F-MVGROUP1 — row renderers for the Change Exercise picker.
+  // ExerciseRow: a single direct pick. MovementRow: a clustered movement
+  // that expands to its equipment variants (each variant = its own PR track).
+  const ExerciseRow = ({entry, tag=null}) => {
+    const cur = exList[exIdx]?.name===entry.canonical;
+    if(!cur && exList.some((e,i)=>e.name===entry.canonical&&i!==exIdx)) return null;
+    return(
+      <button className="t" onClick={()=>applyExerciseChoice(entry.canonical, entry)}
+        style={{width:"100%",display:"flex",justifyContent:"space-between",
+          alignItems:"center",background:cur?"rgba(232,38,10,0.12)":"transparent",
+          border:`1px solid ${cur?C.red:C.bdr}`,borderRadius:10,
+          padding:"12px 14px",marginBottom:6,cursor:"pointer",textAlign:"left"}}>
+        <div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+            color:cur?C.red:C.wht,letterSpacing:"0.06em",lineHeight:1,marginBottom:2}}>
+            {entry.canonical}</div>
+          <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:C.md,fontWeight:600}}>
+            {tag&&<span style={{marginRight:4}}>{tag} · </span>}
+            {entry.primary} · {entry.equip}</div>
+        </div>
+        {cur&&(
+          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+            color:C.red,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
+            Current</div>
+        )}
+      </button>
+    );
+  };
+  const MovementRow = ({row}) => {
+    const open = expandedMv===row.movement;
+    // members not already elsewhere in the list (allow current)
+    const members = row.members.filter(mem =>
+      exList[exIdx]?.name===mem.canonical ||
+      !exList.some((e,i)=>e.name===mem.canonical&&i!==exIdx));
+    if(members.length===0) return null;
+    const curInHere = members.some(mem=>exList[exIdx]?.name===mem.canonical);
+    return(
+      <div style={{marginBottom:6}}>
+        <button className="t" onClick={()=>setExpandedMv(open?null:row.movement)}
+          style={{width:"100%",display:"flex",justifyContent:"space-between",
+            alignItems:"center",
+            background:curInHere?"rgba(232,38,10,0.10)":"transparent",
+            border:`1px solid ${open||curInHere?C.red:C.bdr}`,
+            borderRadius:10,padding:"12px 14px",cursor:"pointer",textAlign:"left"}}>
+          <div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+              color:open||curInHere?C.red:C.wht,letterSpacing:"0.06em",
+              lineHeight:1,marginBottom:2}}>{row.label}</div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,color:C.md,fontWeight:600}}>
+              {row.primary} · {members.length} variant{members.length!==1?"s":""}</div>
+          </div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,
+            color:C.md,flexShrink:0,transform:open?"rotate(90deg)":"none",
+            transition:"transform 0.15s"}}>›</div>
+        </button>
+        {open&&(
+          <div style={{paddingLeft:12,marginTop:4}}>
+            {members.map(mem=>{
+              const cur=exList[exIdx]?.name===mem.canonical;
+              return(
+                <button key={mem.canonical} className="t"
+                  onClick={()=>applyExerciseChoice(mem.canonical, mem)}
+                  style={{width:"100%",display:"flex",justifyContent:"space-between",
+                    alignItems:"center",
+                    background:cur?"rgba(232,38,10,0.12)":"rgba(255,255,255,0.03)",
+                    border:`1px solid ${cur?C.red:C.bdr}`,borderRadius:9,
+                    padding:"10px 12px",marginBottom:5,cursor:"pointer",textAlign:"left"}}>
+                  <div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,
+                      color:cur?C.red:C.wht,letterSpacing:"0.05em",lineHeight:1,marginBottom:2}}>
+                      {mem.canonical}</div>
+                    <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:C.md,fontWeight:600}}>
+                      {mem.equip}</div>
+                  </div>
+                  {cur&&(
+                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:9,
+                      color:C.red,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
+                      Current</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const reset=()=>{
     try{ localStorage.removeItem('ig_session'); }catch{}
     idbDel('ig_session');
@@ -3318,7 +3432,7 @@ export default function IronGame(){
                     borderRadius:8,padding:"7px 14px",cursor:"pointer"}}>
                   + New
                 </button>
-                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);setExSearch("");setExFilter("");}}
+                <button className="t" onClick={()=>{setShowExPicker(false);setShowNewExForm(false);setExSearch("");setExFilter("");setExpandedMv(null);}}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                     fontSize:12,color:C.md,letterSpacing:"0.12em",
                     background:"transparent",border:`1px solid ${C.bdr}`,
@@ -3378,7 +3492,7 @@ export default function IronGame(){
                     const active = exFilter===pill.label;
                     return(
                       <button key={pill.label} className="t"
-                        onClick={()=>setExFilter(active?"":pill.label)}
+                        onClick={()=>{setExFilter(active?"":pill.label);setExpandedMv(null);}}
                         style={{flexShrink:0,fontFamily:"'Bebas Neue',sans-serif",
                           fontSize:13,letterSpacing:"0.1em",
                           padding:"5px 11px",borderRadius:20,cursor:"pointer",
@@ -3393,73 +3507,30 @@ export default function IronGame(){
               );
             })()}
 
-            {/* ── Search results (replaces normal list when query active) ── */}
+            {/* ── Search results (replaces normal list when query active).
+                F-MVGROUP1: movement-aware. Clustered movements collapse to
+                one row that expands to equipment variants; single-equipment
+                exercises stay direct picks. ── */}
             {exSearch.length>=2&&(()=>{
-              const filterMatch = exFilter
-                ? (()=>{const p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[]; return s=>p.includes(s.primary);})()
-                : ()=>true;
-              const hits = searchMaster(exSearch, {limit:60}).filter(s=>{
-                if(!filterMatch(s)) return false;
-                return !exList.some((e,i)=>e.name===s.canonical&&i!==exIdx);
+              const primOf = ({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||null;
+              const rows = searchMovements(exSearch, {limit:80}).filter(r=>{
+                if(primOf){ if(!primOf.includes(r.primary)) return false; }
+                if(r.kind==="exercise")
+                  return !exList.some((e,i)=>e.name===r.canonical&&i!==exIdx);
+                return true; // movement rows always shown; members filtered at expand
               });
-              const isCurrent = name => exList[exIdx]?.name===name;
               return(
                 <div style={{overflowY:"auto",padding:"0 12px 32px",flex:1}}>
-                  {hits.length===0&&(
+                  {rows.length===0&&(
                     <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,
                       color:C.md,textAlign:"center",padding:"24px 0"}}>
                       No matches
                     </div>
                   )}
-                  {hits.map(s=>{
-                    const cur = isCurrent(s.canonical);
-                    return(
-                      <button key={s.canonical} className="t"
-                        onClick={()=>{
-                          if(cur){setShowExPicker(false);setExSearch("");setExFilter("");return;}
-                          if(!META[s.canonical]&&(!userMeta[s.canonical]||!userMeta[s.canonical].eq)){
-                            setUserMeta(u=>({...u,[s.canonical]:{...(u[s.canonical]||{}),
-                              eq:eqKeyFromDB(s.equip),
-                              prPts:s.prPts||3,...(s.compound?{compound:true}:{})}}));
-                          }
-                          const tmpl=(TMPLS[sesType]||[]).find(e=>e.name===s.canonical);
-                          const updated=[...exList];
-                          updated[exIdx]={...updated[exIdx],name:s.canonical,
-                            sets:       tmpl?.sets       ?? updated[exIdx].sets,
-                            repRange:   tmpl?.repRange   ?? (META[s.canonical]?.compound?"6–10":"10–15"),
-                            targetReps: tmpl?.targetReps ?? (META[s.canonical]?.compound?8:12),
-                          };
-                          setExList(updated);
-                          setSetIdx(0);setLastRes(null);setLastWt(null);
-                          setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");
-                        }}
-                        style={{width:"100%",display:"flex",
-                          justifyContent:"space-between",alignItems:"center",
-                          background:cur?"rgba(232,38,10,0.12)":"transparent",
-                          border:`1px solid ${cur?C.red:C.bdr}`,
-                          borderRadius:10,padding:"12px 14px",marginBottom:6,
-                          cursor:"pointer",textAlign:"left"}}>
-                        <div>
-                          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
-                            color:cur?C.red:C.wht,letterSpacing:"0.06em",
-                            lineHeight:1,marginBottom:2}}>
-                            {s.canonical}
-                          </div>
-                          <div style={{fontFamily:"'Inter',sans-serif",fontSize:11,
-                            color:C.md,fontWeight:600}}>
-                            {s.primary} · {s.equip}
-                          </div>
-                        </div>
-                        {cur&&(
-                          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
-                            fontSize:10,color:C.red,letterSpacing:"0.1em",
-                            textTransform:"uppercase",flexShrink:0}}>
-                            Current
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                  {rows.map(r=> r.kind==="movement"
+                    ? <MovementRow key={"mv:"+r.movement} row={r} />
+                    : <ExerciseRow key={r.canonical} entry={r} />
+                  )}
                 </div>
               );
             })()}
@@ -3734,11 +3805,25 @@ export default function IronGame(){
                         <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
                           color:C.md,letterSpacing:"0.22em",textTransform:"uppercase",
                           padding:"14px 4px 6px"}}>
-                          All {sesType.charAt(0).toUpperCase()+sesType.slice(1)} Exercises
+                          {exFilter?`All ${exFilter.charAt(0)+exFilter.slice(1).toLowerCase()} Exercises`
+                                    :`All ${sesType.charAt(0).toUpperCase()+sesType.slice(1)} Exercises`}
                         </div>
                       </>
                     )}
-                    {inCatRemaining.map(n=>renderEx(n,null))}
+                    {/* F-MVGROUP1: when a muscle pill is active, browse the FULL
+                        library for that group (clustered), not just PR history —
+                        fixes the "pill shows only 2 exercises" discoverability
+                        trap. No pill → keep the session-scoped history list. */}
+                    {exFilter
+                      ? browseMovementsByGroup(exFilter)
+                          .filter(r=> r.kind==="exercise"
+                            ? !altSet.has(r.canonical)
+                            : true)
+                          .map(r=> r.kind==="movement"
+                            ? <MovementRow key={"mv:"+r.movement} row={r} />
+                            : <ExerciseRow key={r.canonical} entry={r} />)
+                      : inCatRemaining.map(n=>renderEx(n,null))
+                    }
                   </>
                 );
               })()}
