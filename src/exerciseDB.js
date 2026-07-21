@@ -240,3 +240,112 @@ export const searchMaster = (query, { group = null, limit = 60, db = getMasterDB
   }
   return scored.sort((a, b) => b.score - a.score || a.canonical.localeCompare(b.canonical)).slice(0, limit);
 };
+
+// ─────────────────────────────────────────────────────────────
+// F-MVGROUP1 (2026-07-21) — movement→equipment two-step picker.
+//
+// 20 movement clusters in the master DB span >1 equipment type
+// (e.g. "hack squat" = Hack Squat/machine + Linear Hack Squat PL/
+// plate-loaded). Rather than force the user to know the exact
+// canonical variant name, the picker lets them search the MOVEMENT,
+// then choose the equipment variant. Each variant keeps its own
+// canonical name → its own PR track (option a, locked invariant:
+// equipment is a variant dimension with separate PR tracks).
+//
+// Clustering is driven by an EXPLICIT map keyed to canonical names,
+// not runtime regex — no mis-grouping, and single-equipment
+// exercises (~120) are untouched and still pick directly.
+// ─────────────────────────────────────────────────────────────
+export const MOVEMENT_CLUSTERS = {
+  "Bench Press":       ["Barbell Bench Press","Dumbbell Bench Press","Smith Machine Bench Press"],
+  "Bicep Curl":        ["LF Bicep Curl","Machine Bicep Curl"],
+  "Calf Raise":        ["Seated Calf Raise","Smith Calf Raise"],
+  "Curl (Free)":       ["Barbell Curl","Dumbbell Curl","Cable Curl"],
+  "Dip":               ["Assisted Dip","LF Seated Dip","Seated PL Dip Machine"],
+  "Front Raise":       ["Front Raise","Cable Front Raise"],
+  "Good Morning":      ["Good Morning","Seated Good Morning"],
+  "Hack Squat":        ["Hack Squat","Linear Hack Squat PL"],
+  "High Row":          ["LF High Row","Cable High Row"],
+  "Incline Press":     ["Incline Dumbbell Press","Incline Machine Press"],
+  "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown PL"],
+  "Lateral Raise":     ["Dumbbell Lateral Raise","Seated Lateral Raise","Cable Lateral Raise","Machine Lateral Raise"],
+  "Overhead Extension":["Overhead Cable Extension","Overhead Dumbbell Extension"],
+  "Pullover":          ["Dumbbell Pullover","Cable Pullover","Machine Pullover"],
+  "RDL":               ["Dumbbell RDL","Barbell RDL"],
+  "Rear Delt Fly":     ["Rear Delt Fly","Cable Rear Delt Fly"],
+  "Row":               ["Barbell Row","Dumbbell Row","Seated Cable Row","LF Row","Lever Seated Row","Smith Machine Row"],
+  "Shoulder Press":    ["Dumbbell Shoulder Press","Machine Shoulder Press","LF Shoulder Press"],
+  "Shrug":             ["Barbell Shrug","Dumbbell Shrug","Machine Shrug"],
+  "Upright Row":       ["Barbell Upright Row","Dumbbell Upright Row","Cable Upright Row"],
+};
+
+// canonical name → movement label (reverse index)
+export const CANON_TO_MOVEMENT = (() => {
+  const m = {};
+  for (const [mv, members] of Object.entries(MOVEMENT_CLUSTERS))
+    for (const c of members) m[c] = mv;
+  return m;
+})();
+
+// Movement-aware search. Returns a flat, ordered list of "rows" where
+// each row is either:
+//   { kind:"movement", movement, label, members:[{...entry}], primary, equips:[...] }
+//   { kind:"exercise", ...entry }
+// Clustered members are collapsed into ONE movement row (dedup); every
+// unclustered hit stays a direct exercise row. Ordering preserves the
+// underlying searchMaster() relevance for whichever member/exercise
+// scored highest.
+export const searchMovements = (query, opts = {}) => {
+  const hits = searchMaster(query, { ...opts, limit: opts.limit || 80 });
+  const out = [];
+  const seenMv = new Set();
+  for (const h of hits) {
+    const mv = CANON_TO_MOVEMENT[h.canonical];
+    if (mv) {
+      if (seenMv.has(mv)) continue;
+      seenMv.add(mv);
+      const memberNames = MOVEMENT_CLUSTERS[mv];
+      const members = memberNames
+        .map((n) => hits.find((x) => x.canonical === n)
+                 || getMasterDB().find((x) => x.canonical === n))
+        .filter(Boolean);
+      out.push({
+        kind: "movement",
+        movement: mv,
+        label: mv,
+        members,
+        primary: members[0]?.primary || h.primary,
+        equips: members.map((x) => x.equip),
+      });
+    } else {
+      out.push({ kind: "exercise", ...h });
+    }
+  }
+  return out;
+};
+
+// Browse a muscle group as movement rows (no text query). Used by the
+// pill browse so a group shows the full library for that muscle,
+// clustered — fixes the "only my history shows" discoverability trap.
+export const browseMovementsByGroup = (group, db = getMasterDB()) => {
+  const set = new Set(GROUP_FILTERS[group] || []);
+  const entries = db.filter((e) => set.has(e.primary));
+  const out = [];
+  const seenMv = new Set();
+  for (const e of entries) {
+    const mv = CANON_TO_MOVEMENT[e.canonical];
+    if (mv) {
+      if (seenMv.has(mv)) continue;
+      seenMv.add(mv);
+      const members = MOVEMENT_CLUSTERS[mv]
+        .map((n) => db.find((x) => x.canonical === n))
+        .filter(Boolean);
+      out.push({ kind:"movement", movement:mv, label:mv, members,
+        primary: members[0]?.primary || e.primary,
+        equips: members.map((x) => x.equip) });
+    } else {
+      out.push({ kind:"exercise", ...e });
+    }
+  }
+  return out;
+};
