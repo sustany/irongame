@@ -44,7 +44,7 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 
 - [ ] Header: exercise position indicator (e.g. "1 / 5")
 - [ ] Header: back / navigation control (per Obs #3b — pending implementation, becomes required once shipped)
-- [ ] Header: set position indicator (e.g. "2 / 15")
+- [ ] Header: set position indicator (e.g. "2 / 15"; F-OPENSETS1: numerator may exceed denominator — denominator is the plan, sets count up freely)
 - [ ] Header: elapsed session time
 - [ ] Header: session date
 - [ ] Exercise name (large display text)

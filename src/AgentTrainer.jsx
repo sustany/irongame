@@ -1447,10 +1447,11 @@ export default function IronGame(){
       setPrs(p=>({...p,[ex.name]:{...p[ex.name],weight:wt,reps:ex.targetReps}}));
       setPrFlash(ex.name);setTimeout(()=>setPrFlash(null),2800);
     }
-    if(setIdx+1>=ex.sets){
-      if(exIdx+1>=exList.length){setSessionEnd(Date.now());setScreen("complete");return;}
-      setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
-    } else setSetIdx(s=>s+1);
+    // F-OPENSETS1 (2026-07-20): fixed per-exercise set caps removed. Sets
+    // count up without limit; the user advances exercises manually via the
+    // NEXT EXERCISE button. ex.sets is retained as the PLAN for header
+    // denominator + scoring benchmark (option b) but never gates logging.
+    setSetIdx(s=>s+1);
     setPhase("ready");
   };
   const reset=()=>{
@@ -3032,7 +3033,8 @@ export default function IronGame(){
               </div>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",
                 fontSize:18,color:C.md,marginTop:8,letterSpacing:"0.12em"}}>
-                {setIdx+1}/{ex.sets}
+                {/* F-OPENSETS1: count-up, no per-exercise cap */}
+                Set {setIdx+1}
               </div>
             </div>
           )}
@@ -3042,9 +3044,28 @@ export default function IronGame(){
       {/* BOTTOM — THUMB ZONE */}
       <div style={{padding:"14px 18px 42px",background:C.page,borderTop:`2px solid ${C.bdr}`}}>
         {phase==="ready"?(
+          <>
           <RedBtn onClick={()=>setPhase("logging")} h={70}>
             {`Begin Set ${setIdx+1}`}
           </RedBtn>
+          {/* F-OPENSETS1 — manual exercise advance replaces the removed
+              auto-advance. On the last exercise this finishes the session. */}
+          <button className="t" onClick={()=>{
+              if(exIdx+1>=exList.length){
+                if(!window.confirm('Last exercise — finish session?')) return;
+                setSessionEnd(Date.now());setScreen("complete");return;
+              }
+              setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);
+              setLastWt(null);setWeightAdj(0);setPhase("ready");
+            }}
+            style={{width:"100%",height:46,marginTop:8,
+              background:"transparent",border:`1px solid ${C.bdr}`,
+              borderRadius:10,cursor:"pointer",
+              fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
+              color:C.lt,letterSpacing:"0.12em"}}>
+            {exIdx+1>=exList.length?"Finish Session →":"Next Exercise →"}
+          </button>
+          </>
         ):phase==="phr"?(
           /* ── PHR ENTRY ───────────────────────────────────── */
           <div>
