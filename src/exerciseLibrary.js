@@ -96,7 +96,7 @@ export const EXERCISE_LIBRARY = [
   { canonical: "Arnold Press",                aliases: ["arnold dumbbell press"], primary: "front delts", secondary: ["side delts","triceps"], equip: "dumbbell", type: "compound" },
   { canonical: "Military Press PL Machine",   aliases: ["plate loaded military press", "pl shoulder press", "pl ohp"], primary: "front delts", secondary: ["triceps","side delts"], equip: "plate-loaded", type: "compound" },
   { canonical: "Machine Shoulder Press",      aliases: ["seated shoulder press machine", "shoulder press machine"], primary: "front delts", secondary: ["triceps","side delts"], equip: "machine", type: "compound" },
-  { canonical: "LF Shoulder Press",           aliases: ["life fitness shoulder press"], primary: "front delts", secondary: ["triceps","side delts"], equip: "plate-loaded", type: "compound" },
+  { canonical: "Shoulder Press",           aliases: ["life fitness shoulder press","lf shoulder press","plate loaded shoulder press"], primary: "front delts", secondary: ["triceps","side delts"], equip: "plate-loaded", type: "compound", brand: "Life Fitness" },
   { canonical: "Landmine Press",              aliases: ["landmine shoulder press"], primary: "front delts", secondary: ["triceps","upper chest"], equip: "barbell", type: "compound" },
   { canonical: "Dumbbell Lateral Raise",      aliases: ["db lateral raise", "side lateral", "lat raise"], primary: "side delts", secondary: [], equip: "dumbbell", type: "isolation" },
   { canonical: "Seated Lateral Raise",        aliases: ["seated db lateral", "seated side raise"], primary: "side delts", secondary: [], equip: "dumbbell", type: "isolation" },

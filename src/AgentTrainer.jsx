@@ -293,8 +293,8 @@ const kcalPerMin = (hr, weightKg, age) =>
 // ─────────────────────────────────────────────────────────────
 const INIT_PRS = {
   "High Row PL":           { muscle:"back", weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
-  "LF Incline Press":      { muscle:"chest", weight:240,  reps:10 },
-  "LF Shoulder Press":     { muscle:"shoulders", weight:255,  reps:7  },
+  "Incline Press":      { muscle:"chest", weight:240,  reps:10 },
+  "Shoulder Press":     { muscle:"shoulders", weight:255,  reps:7  },
   "Bench Press, Smith Machine": { muscle:"chest", weight:235, reps:8 },
   "Military Press PL Machine":  { muscle:"shoulders", weight:180, reps:8 },
   "Seated PL Dip Machine":       { muscle:"chest", weight:320, reps:10},
@@ -369,8 +369,8 @@ const healUserMeta = (u) => {
 
 const META = {
   "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
-  "LF Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "LF Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Bench Press, Smith Machine": { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"smith" },
   "Military Press PL Machine":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Seated PL Dip Machine":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
@@ -406,7 +406,7 @@ const META = {
 // Category membership controls which exercises appear in pickers per session type.
 // Exercises not listed appear under "Other" at the bottom of pickers.
 const CATEGORY = {
-  push: ["LF Incline Press","LF Shoulder Press","Bench Press, Smith Machine",
+  push: ["Incline Press","Shoulder Press","Bench Press, Smith Machine",
          "Military Press PL Machine","Seated PL Dip Machine","LF Seated Dip",
          "HS Decline Press","Pec Deck","Cable Pushdown","Seated Lateral Raise",
          "Weighted Crunches","DB Flys","Assisted Dips"],
@@ -514,8 +514,8 @@ const EX_PRIMARY = Object.fromEntries(
 );
 const TMPLS = {
   push:[
-    {name:"LF Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
-    {name:"LF Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press PL Machine","Seated PL Dip Machine"]},
+    {name:"Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
+    {name:"Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press PL Machine","Seated PL Dip Machine"]},
     {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Cable Pushdown","Seated PL Dip Machine"]},
     {name:"Seated Lateral Raise", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
     {name:"Weighted Crunches",    sets:3,repRange:"8–10", targetReps:10, alts:["Captain's Chair"]},
@@ -539,7 +539,7 @@ const TMPLS = {
   ],
 };
 const PREV={
-  push:{muscles:"Chest · Shoulders · Triceps",opens:"LF Incline Press",note:"Elbow-safe pressing only. No barbell flat or incline bench."},
+  push:{muscles:"Chest · Shoulders · Triceps",opens:"Incline Press",note:"Elbow-safe pressing only. No barbell flat or incline bench."},
   pull:{muscles:"Back · Biceps · Rear Delts",opens:"Lat Pull-Down PL",note:"Dead hang mandatory every session."},
   legs:{muscles:"Quads · Hamstrings · Glutes · Calves",opens:"Barbell RDL → Linear Hack Squat PL",note:"Hip hinge priority. Hyperextensions mandatory every session."},
 };
@@ -1058,6 +1058,40 @@ export default function IronGame(){
         try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow);
       }
       localStorage.setItem('ig_mig_ht1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
+  // MIG-LF1 — strip "LF" (Life Fitness) manufacturer prefix from canonical
+  // names and re-key on-device data so PR tracks follow the rename
+  // (LF Incline Press→Incline Press, LF Shoulder Press→Shoulder Press).
+  // Pure rename, no weight delta. Flag-guarded (ig_mig_lf1); no-op if already
+  // run or the device has no matching data. Rollback: revert commit (re-key is
+  // one-way — old keys are removed once run).
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_lf1')) return;
+      const RENAMES=[['LF Incline Press','Incline Press'],['LF Shoulder Press','Shoulder Press']];
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)){
+          day.exercises.forEach(e=>{
+            const hit=RENAMES.find(r=>r[0]===e.name);
+            if(hit){ e.name=hit[1]; touched=true; }
+          });
+        }
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      let ow={}; try{ ow=JSON.parse(localStorage.getItem('ig_openwt')||'{}'); }catch{}
+      let owTouched=false;
+      RENAMES.forEach(([OLD,NEW])=>{
+        if(ow[OLD]!==undefined){ if(ow[NEW]===undefined) ow[NEW]=ow[OLD]; delete ow[OLD]; owTouched=true; }
+      });
+      if(owTouched){ const raw=JSON.stringify(ow);
+        try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow); }
+      localStorage.setItem('ig_mig_lf1','1');
     }catch{}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only

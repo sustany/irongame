@@ -28,7 +28,7 @@ const slug = (s) =>
 // ── Step 3a: runtime metadata for the 23 library-matched names ──
 // canonical name (exact library match) → scoring metadata
 const RUNTIME_META = {
-  "LF Shoulder Press":          { tier:"P1", prPts:8, compound:true },
+  "Shoulder Press":          { tier:"P1", prPts:8, compound:true },
   "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true },
   "Seated PL Dip Machine":      { tier:"P2", prPts:5, compound:true },
   "LF Seated Dip":              { tier:"P2", prPts:5, compound:true },
@@ -57,7 +57,7 @@ const RUNTIME_META = {
 // canonical = EXACT runtime key (INIT_PRS/META/TMPLS) so selecting
 // a search hit preserves all progression/scoring lookups.
 const RUNTIME_ONLY = [
-  { canonical:"LF Incline Press", aliases:["seated plate-loaded incline bench press","incline machine press lf","life fitness incline press"],
+  { canonical:"Incline Press", brand:"Life Fitness", aliases:["seated plate-loaded incline bench press","incline machine press lf","life fitness incline press","lf incline press"],
     primary:"chest", secondary:["front delts","triceps"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
   { canonical:"Bench Press, Smith Machine", aliases:["smith bench press","smith machine bench","flat smith press"],
     primary:"chest", secondary:["front delts","triceps"], equip:"smith", type:"compound", tier:"P1", prPts:8, compound:true },
@@ -97,7 +97,7 @@ export const GROUP_FILTERS = {
 // carries progression data. Distinct-equipment variants (e.g. cable
 // Lat Pulldown vs plate-loaded) are intentionally NOT merged.
 const CONSOLIDATE = {
-  "LF Incline Press":           ["Incline Machine Press"],
+  "Incline Press":           ["Incline Machine Press"],
   "Bench Press, Smith Machine": ["Smith Machine Bench Press"],
   "HS Decline Press":           ["Hammer Strength Decline"],
   "DB Flys":                    ["Dumbbell Fly"],
@@ -266,7 +266,6 @@ export const MOVEMENT_CLUSTERS = {
   "Good Morning":      ["Good Morning","Seated Good Morning"],
   "Hack Squat":        ["Hack Squat","Linear Hack Squat PL"],
   "High Row":          ["LF High Row","Cable High Row"],
-  "Incline Press":     ["Incline Dumbbell Press","Incline Machine Press"],
   "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown PL"],
   "Lateral Raise":     ["Dumbbell Lateral Raise","Seated Lateral Raise","Cable Lateral Raise","Machine Lateral Raise"],
   "Overhead Extension":["Overhead Cable Extension","Overhead Dumbbell Extension"],
@@ -274,7 +273,6 @@ export const MOVEMENT_CLUSTERS = {
   "RDL":               ["Dumbbell RDL","Barbell RDL"],
   "Rear Delt Fly":     ["Rear Delt Fly","Cable Rear Delt Fly"],
   "Row":               ["Barbell Row","Dumbbell Row","Seated Cable Row","LF Row","Lever Seated Row","Smith Machine Row"],
-  "Shoulder Press":    ["Dumbbell Shoulder Press","Machine Shoulder Press","LF Shoulder Press"],
   "Shrug":             ["Barbell Shrug","Dumbbell Shrug","Machine Shrug"],
   "Upright Row":       ["Barbell Upright Row","Dumbbell Upright Row","Cable Upright Row"],
 };
