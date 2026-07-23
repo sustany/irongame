@@ -1701,79 +1701,90 @@ export default function IronGame(){
             </div>
           </div>
 
-          {/* FORMAT — time constrained vs flexible */}
+          {/* CHOOSE YOUR WORKOUT — first choice */}
           <div style={{marginBottom:18}}>
-            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
-              {/* Flexible */}
-              <button className="t" onClick={()=>setTcMode(false)} style={{
-                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
-                background:!tcMode?STEEL_SEL:STEEL,
-                border:`1px solid ${!tcMode?C.red:C.bdr}`,
-                borderTop:`1px solid ${!tcMode?"#f03010":C.bdrTop}`,
-                boxShadow:!tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <IPlus s={16} style={{color:!tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Flexible</span>
-                  {!tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+            <SL>Choose Your Workout</SL>
+            {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
+            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
+              width:"100%",borderRadius:12,padding:"12px 14px",cursor:"pointer",
+              background:sesType==="custom"?STEEL_SEL:STEEL,
+              border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
+              borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
+              boxShadow:sesType==="custom"
+                ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
+                :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`,
+              display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
+              <IconCustom sz={38} col="#ffffff"/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
+                  letterSpacing:"0.12em",lineHeight:1,color:C.wht,marginBottom:4}}>Custom</div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                  color:sesType==="custom"?"rgba(255,255,255,0.88)":C.lt,
+                  textTransform:"uppercase",letterSpacing:"0.07em",
+                  whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                  {customGroups.length
+                    ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
+                    : "Pick your muscle groups"}
                 </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
-                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  Optimize for best stimulus
+              </div>
+              {sesType==="custom"&&(
+                <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
+                  width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <IChk s={12}/>
                 </div>
-              </button>
-              {/* Time Constrained */}
-              <button className="t" onClick={()=>setTcMode(true)} style={{
-                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
-                background:tcMode?STEEL_SEL:STEEL,
-                border:`1px solid ${tcMode?C.red:C.bdr}`,
-                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
-                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
-                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
-                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
-                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
-                </div>
-              </button>
-            </div>
-            {/* Departure time picker — only in TC mode */}
-            {tcMode&&(
-              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-                borderRadius:10,padding:"12px 14px",
+              )}
+            </button>
+
+            {/* Muscle group multi-select — visible only in Custom mode */}
+            {sesType==="custom"&&(
+              <div style={{marginTop:10,background:STEEL,borderRadius:12,
+                border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+                padding:"12px 12px 10px",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
-                  I need to leave by
+                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:10}}>
+                  Muscle groups · pick one or more
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <input type="time" value={depTime}
-                    onChange={e=>setDepTime(e.target.value)}
-                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
-                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
-                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
-                  <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                      lineHeight:1,color:C.red}}>
-                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
-                    </div>
-                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
-                  </div>
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
-                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {MUSCLE_GROUPS.map(g=>{
+                    const on=customGroups.includes(g.id);
+                    return(
+                      <button key={g.id} className="t"
+                        onClick={()=>{
+                          setCustomOpener(null);
+                          setDraftList(null);
+                          setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
+                        }}
+                        style={{
+                          padding:"9px 14px",borderRadius:20,cursor:"pointer",
+                          background:on?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
+                          border:`1px solid ${on?"#f03010":C.bdr}`,
+                          fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+                          color:on?"#fff":C.lt,letterSpacing:"0.08em",
+                          textTransform:"uppercase",
+                          boxShadow:on?`0 2px 12px ${C.redGlow}`:"none"}}>
+                        {g.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
+
+            <div style={{display:"flex",gap:10,marginTop:10}}>
+              <TypeCard type="push" label="Push" compact={sesType==="custom"}
+                muscles={"Chest\nShoulders · Triceps"}
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
+                muscles={"Back\nBiceps · Rear Delts"}
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
+                muscles={"Quads · Hams\nGlutes · Calves"}
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+            </div>
+
           </div>
+
 
           {/* F-HIST1 — SESSION HISTORY: last 4 calendar days */}
           <div style={{marginBottom:18}}>
@@ -2010,88 +2021,78 @@ export default function IronGame(){
 
 
 
-          {/* SESSION TYPE — second choice */}
+          {/* FORMAT — time constrained vs flexible (below workout picker) */}
           <div style={{marginBottom:18}}>
-            <SL>Session Type</SL>
-            {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
-            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
-              width:"100%",borderRadius:12,padding:"12px 14px",cursor:"pointer",
-              background:sesType==="custom"?STEEL_SEL:STEEL,
-              border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
-              borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
-              boxShadow:sesType==="custom"
-                ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
-                :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`,
-              display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
-              <IconCustom sz={38} col="#ffffff"/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
-                  letterSpacing:"0.12em",lineHeight:1,color:C.wht,marginBottom:4}}>Custom</div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                  color:sesType==="custom"?"rgba(255,255,255,0.88)":C.lt,
-                  textTransform:"uppercase",letterSpacing:"0.07em",
-                  whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                  {customGroups.length
-                    ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
-                    : "Pick your muscle groups"}
+            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
+              {/* Flexible */}
+              <button className="t" onClick={()=>setTcMode(false)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:!tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${!tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${!tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:!tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IPlus s={16} style={{color:!tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Flexible</span>
+                  {!tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
                 </div>
-              </div>
-              {sesType==="custom"&&(
-                <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
-                  width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <IChk s={12}/>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:!tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  Optimize for best stimulus
                 </div>
-              )}
-            </button>
-
-            {/* Muscle group multi-select — visible only in Custom mode */}
-            {sesType==="custom"&&(
-              <div style={{marginTop:10,background:STEEL,borderRadius:12,
-                border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-                padding:"12px 12px 10px",
+              </button>
+              {/* Time Constrained */}
+              <button className="t" onClick={()=>setTcMode(true)} style={{
+                flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
+                background:tcMode?STEEL_SEL:STEEL,
+                border:`1px solid ${tcMode?C.red:C.bdr}`,
+                borderTop:`1px solid ${tcMode?"#f03010":C.bdrTop}`,
+                boxShadow:tcMode?`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`:`0 3px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)`,
+                display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
+                  {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
+                  textTransform:"uppercase",letterSpacing:"0.06em"}}>
+                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
+                </div>
+              </button>
+            </div>
+            {/* Departure time picker — only in TC mode */}
+            {tcMode&&(
+              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
+                borderRadius:10,padding:"12px 14px",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:10}}>
-                  Muscle groups · pick one or more
+                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
+                  I need to leave by
                 </div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                  {MUSCLE_GROUPS.map(g=>{
-                    const on=customGroups.includes(g.id);
-                    return(
-                      <button key={g.id} className="t"
-                        onClick={()=>{
-                          setCustomOpener(null);
-                          setDraftList(null);
-                          setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
-                        }}
-                        style={{
-                          padding:"9px 14px",borderRadius:20,cursor:"pointer",
-                          background:on?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
-                          border:`1px solid ${on?"#f03010":C.bdr}`,
-                          fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
-                          color:on?"#fff":C.lt,letterSpacing:"0.08em",
-                          textTransform:"uppercase",
-                          boxShadow:on?`0 2px 12px ${C.redGlow}`:"none"}}>
-                        {g.label}
-                      </button>
-                    );
-                  })}
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <input type="time" value={depTime}
+                    onChange={e=>setDepTime(e.target.value)}
+                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
+                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
+                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                      lineHeight:1,color:C.red}}>
+                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
+                    </div>
+                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
+                  </div>
+                </div>
+                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
+                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
+                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
                 </div>
               </div>
             )}
-
-            <div style={{display:"flex",gap:10,marginTop:10}}>
-              <TypeCard type="push" label="Push" compact={sesType==="custom"}
-                muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
-                muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
-                muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-            </div>
-
           </div>
 
           {/* PREVIEW */}
