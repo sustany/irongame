@@ -1731,8 +1731,8 @@ export default function IronGame(){
             </div>
             <Div/>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:12,
-                color:C.md,letterSpacing:"0.2em",textTransform:"uppercase"}}>
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:11,
+                color:C.wht,letterSpacing:"0.2em",textTransform:"uppercase"}}>
                 AI BODY EVOLUTION
               </div>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
@@ -1744,10 +1744,9 @@ export default function IronGame(){
 
           {/* CHOOSE YOUR WORKOUT — first choice */}
           <div style={{marginBottom:18}}>
-            <SL>Choose Your Workout</SL>
             {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
             <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
-              width:"100%",borderRadius:12,padding:"12px 14px",cursor:"pointer",
+              width:"100%",borderRadius:12,padding:"16px 14px",cursor:"pointer",
               background:sesType==="custom"?STEEL_SEL:STEEL,
               border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
               borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
@@ -1755,18 +1754,9 @@ export default function IronGame(){
                 ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
                 :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`,
               display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
-              <IconCustom sz={38} col="#ffffff"/>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:21,
-                  letterSpacing:"0.12em",lineHeight:1,color:C.wht,marginBottom:4}}>Custom</div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                  color:sesType==="custom"?"rgba(255,255,255,0.88)":C.lt,
-                  textTransform:"uppercase",letterSpacing:"0.07em",
-                  whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                  {customGroups.length
-                    ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
-                    : "Pick your muscle groups"}
-                </div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                  letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>Pick Your Muscle Groups</div>
               </div>
               {sesType==="custom"&&(
                 <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
