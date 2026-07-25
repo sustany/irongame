@@ -1648,7 +1648,12 @@ export default function IronGame(){
     // F-PREVIEW4 — Preview mounts directly beneath the selection that produced
     // it: under the muscle-group chips in Custom mode, under the Push/Pull/Legs
     // row otherwise. Single element, two mount points.
-    const previewEl = (
+    // GUARD: props are evaluated eagerly at element-construction time, so this
+    // must NOT be built when there is no session type — build(null) spreads
+    // TMPLS[null] (undefined) and throws during render. This mirrors the guard
+    // that the old inline {sesType && ...} conditional provided implicitly.
+    const previewReady = !!sesType && (sesType!=="custom" || customGroups.length>0);
+    const previewEl = !previewReady ? null : (
       <div style={{marginTop:10}}>
         <Preview type={sesType} extended={ext}
           opener={customOpener}
