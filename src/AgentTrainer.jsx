@@ -710,6 +710,24 @@ const RedBtn=({onClick,disabled,children,h=66})=>(
   }}>{children}</button>
 );
 
+// Primary GOLD launch button — reserved for the single session-launch CTA.
+// Gold is the only non-red action colour in the app; it exists so the launch
+// control cannot be confused with the red selection cards above it.
+// Dark label text: white on #f5c000 is 1.7:1 (fails); #140f00 is ~12.4:1 (AAA).
+const GoBtn=({onClick,disabled,children,h=66})=>(
+  <button className="t" onClick={onClick} disabled={disabled} style={{
+    width:"100%",height:h,border:"none",borderRadius:10,
+    cursor:disabled?"not-allowed":"pointer",
+    background:disabled?"#252525":`linear-gradient(170deg,${C.gld} 0%,#c28a00 100%)`,
+    color:disabled?"#777":"#140f00",
+    fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:"0.14em",
+    boxShadow:disabled?"none":"0 0 36px rgba(245,192,0,0.42),0 4px 20px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.22)",
+    opacity:disabled?0.42:1,
+    display:"flex",alignItems:"center",justifyContent:"center",
+    borderTop:disabled?"1px solid #333":"1px solid #ffdb5c",
+  }}>{children}</button>
+);
+
 // Session type selector card
 function TypeCard({type,label,muscles,Icon,selected,onClick,compact}){
   const on=selected===type;
@@ -2113,9 +2131,7 @@ export default function IronGame(){
           <div style={{flex:1}}/>
 
           {ready&&(
-            <RedBtn onClick={()=>launch()}>
-              {`Begin ${sesType.charAt(0).toUpperCase()+sesType.slice(1)} Session`}
-            </RedBtn>
+            <GoBtn onClick={()=>launch()}>Start</GoBtn>
           )}
 
 
