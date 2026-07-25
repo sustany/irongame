@@ -1645,6 +1645,24 @@ export default function IronGame(){
     const dayName = DAYS[now.getDay()];
     const dateStr = `${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
+    // F-PREVIEW4 — Preview mounts directly beneath the selection that produced
+    // it: under the muscle-group chips in Custom mode, under the Push/Pull/Legs
+    // row otherwise. Single element, two mount points.
+    const previewEl = (
+      <div style={{marginTop:10}}>
+        <Preview type={sesType} extended={ext}
+          opener={customOpener}
+          onPickOpener={()=>setShowOpenerPicker(true)}
+          list={draftList||build(sesType,true)}
+          edited={!!draftList}
+          onEdit={()=>setShowSessionEditor(true)}
+          customMuscles={sesType==="custom"
+            ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
+            : null}
+        />
+      </div>
+    );
+
     return(
       <div style={shell}>
         {/* PERSIST1 — Resume session modal */}
@@ -1759,10 +1777,6 @@ export default function IronGame(){
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"12px 12px 10px",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:10}}>
-                  Muscle groups · pick one or more
-                </div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                   {MUSCLE_GROUPS.map(g=>{
                     const on=customGroups.includes(g.id);
@@ -1789,6 +1803,8 @@ export default function IronGame(){
               </div>
             )}
 
+            {sesType==="custom" && customGroups.length>0 && previewEl}
+
             <div style={{display:"flex",gap:10,marginTop:10}}>
               <TypeCard type="push" label="Push" compact={sesType==="custom"}
                 muscles={"Chest\nShoulders · Triceps"}
@@ -1800,6 +1816,8 @@ export default function IronGame(){
                 muscles={"Quads · Hams\nGlutes · Calves"}
                 Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
             </div>
+
+            {!!sesType && sesType!=="custom" && previewEl}
 
           </div>
 
@@ -2113,21 +2131,6 @@ export default function IronGame(){
             )}
           </div>
 
-          {/* PREVIEW */}
-          {sesType&&(sesType!=="custom"||customGroups.length>0)&&(
-            <div style={{marginBottom:28}}>
-              <Preview type={sesType} extended={ext}
-                opener={customOpener}
-                onPickOpener={()=>setShowOpenerPicker(true)}
-                list={draftList||build(sesType,true)}
-                edited={!!draftList}
-                onEdit={()=>setShowSessionEditor(true)}
-                customMuscles={sesType==="custom"
-                  ? MUSCLE_GROUPS.filter(g=>customGroups.includes(g.id)).map(g=>g.label).join(" · ")
-                  : null}
-              />
-            </div>
-          )}
           <div style={{flex:1}}/>
 
           {ready&&(
