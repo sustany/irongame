@@ -1769,10 +1769,18 @@ export default function IronGame(){
             {/* Muscle group multi-select — always expanded on the setup screen so
                 the groups are visible the moment the app opens. Tapping any chip
                 selects the Custom session type implicitly. */}
-            {(
+            {(()=>{
+              // Dim-and-preserve: when Push/Pull/Legs is active the chip
+              // selection is kept but greyed, so two session types are never
+              // shown as simultaneously live. Chips stay tappable — a tap
+              // re-selects Custom and un-dims.
+              const chipsDim = !!sesType && sesType!=="custom";
+              return(
               <div style={{marginTop:10,background:STEEL,borderRadius:12,
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"12px 12px 10px",
+                opacity:chipsDim?0.38:1,
+                transition:"opacity 140ms ease",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                   {MUSCLE_GROUPS.map(g=>{
@@ -1799,7 +1807,8 @@ export default function IronGame(){
                   })}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {sesType==="custom" && customGroups.length>0 && previewEl}
 
@@ -1810,13 +1819,13 @@ export default function IronGame(){
             <div style={{display:"flex",gap:10}}>
               <TypeCard type="push" label="Push" compact={sesType==="custom"}
                 muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
               <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
                 muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
               <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
                 muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
             </div>
 
             {!!sesType && sesType!=="custom" && previewEl}
