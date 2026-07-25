@@ -1756,7 +1756,7 @@ export default function IronGame(){
               display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                  letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>Pick Your Muscle Groups</div>
+                  letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>Pick Muscle Groups</div>
               </div>
               {sesType==="custom"&&(
                 <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
@@ -1766,8 +1766,10 @@ export default function IronGame(){
               )}
             </button>
 
-            {/* Muscle group multi-select — visible only in Custom mode */}
-            {sesType==="custom"&&(
+            {/* Muscle group multi-select — always expanded on the setup screen so
+                the groups are visible the moment the app opens. Tapping any chip
+                selects the Custom session type implicitly. */}
+            {(
               <div style={{marginTop:10,background:STEEL,borderRadius:12,
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
                 padding:"12px 12px 10px",
@@ -1778,6 +1780,7 @@ export default function IronGame(){
                     return(
                       <button key={g.id} className="t"
                         onClick={()=>{
+                          setSesType("custom");
                           setCustomOpener(null);
                           setDraftList(null);
                           setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
@@ -1800,16 +1803,20 @@ export default function IronGame(){
 
             {sesType==="custom" && customGroups.length>0 && previewEl}
 
-            <div style={{display:"flex",gap:10,marginTop:10}}>
+            <div style={{marginTop:16,marginBottom:8}}>
+              <SL>Or Pick A Workout</SL>
+            </div>
+
+            <div style={{display:"flex",gap:10}}>
               <TypeCard type="push" label="Push" compact={sesType==="custom"}
                 muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
               <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
                 muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
               <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
                 muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setCustomGroups([]);}}/>
             </div>
 
             {!!sesType && sesType!=="custom" && previewEl}
