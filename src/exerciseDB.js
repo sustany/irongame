@@ -89,6 +89,24 @@ export const GROUP_FILTERS = {
   LEGS:      ["quads","hamstrings","glutes","calves","hip flexors"],
   CORE:      ["abs","obliques","core","neck"],
 };
+// B-ARMPILL1 (2026-07-26) — the Change Exercise picker renders SIX pills and
+// merges biceps+triceps into one ARMS pill, but GROUP_FILTERS only carried the
+// seven-group homescreen model. browseMovementsByGroup("ARMS") therefore
+// resolved to an empty primary set and the ARMS pill rendered a blank list.
+// ARMS is now a first-class key and PICKER_GROUPS is the single source of
+// truth for the picker — the three inline literal copies in AgentTrainer.jsx
+// are gone, so the maps can no longer drift apart.
+GROUP_FILTERS.ARMS = [
+  ...new Set([...GROUP_FILTERS.BICEPS, ...GROUP_FILTERS.TRICEPS]),
+];
+export const PICKER_GROUPS = {
+  CHEST:     GROUP_FILTERS.CHEST,
+  BACK:      GROUP_FILTERS.BACK,
+  SHOULDERS: GROUP_FILTERS.SHOULDERS,
+  ARMS:      GROUP_FILTERS.ARMS,
+  LEGS:      GROUP_FILTERS.LEGS,
+  CORE:      GROUP_FILTERS.CORE,
+};
 
 // ── Step 6: duplicate consolidation ──
 // Generic library entries that describe the SAME machine/movement as a
@@ -217,28 +235,103 @@ export const PREWARM_PRIMARIES = {
   biceps:     [...GROUP_FILTERS.BACK],
 };
 
-// ── Search over the master DB (query + optional 7-group filter) ──
+// ── B-EXSEARCH1 (2026-07-26) — muscle-aware, token-order-free search ──
+// The previous matcher scored the WHOLE query string against canonical/alias
+// text only. Three consequences, all reproduced from the field:
+//   1. "Triceps" -> 0 hits. No canonical or alias contains the literal string
+//      "triceps"; the singular "tricep" appears in several. Plural killed it.
+//   2. "Triceps, Seated Dip Machine" -> 0 hits. Substring matching cannot skip
+//      an interposed word, so it never reached "Seated PL Dip Machine".
+//   3. Muscle groups were not searchable at all — the DB carries primary /
+//      secondary but nothing ever read them at query time.
+// Replacement: tokenise, stem trailing plurals, match tokens in any order, and
+// treat muscle words as a separate constraint dimension rather than name text.
+const TOKENS = (t) => t.toLowerCase().split(/[^a-z0-9]+/i).filter(Boolean);
+// Drop a trailing plural "s" on words of 4+ chars ("triceps"->"tricep",
+// "curls"->"curl"). "-ss" is protected so "press" survives intact.
+const STEM = (w) =>
+  w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
+
+// Query word -> the primary/secondary values it constrains to.
+const MUSCLE_TERMS = {
+  chest:["chest"], pec:["chest"], pecs:["chest"], pectoral:["chest"], pectorals:["chest"],
+  back:["lats","mid back","lower back","traps"],
+  lat:["lats"], lats:["lats"], trap:["traps"], traps:["traps"],
+  shoulder:["front delts","side delts","rear delts"],
+  shoulders:["front delts","side delts","rear delts"],
+  delt:["front delts","side delts","rear delts"],
+  delts:["front delts","side delts","rear delts"],
+  deltoid:["front delts","side delts","rear delts"],
+  arm:["biceps","triceps","forearms"], arms:["biceps","triceps","forearms"],
+  bicep:["biceps"], biceps:["biceps"], brachialis:["biceps"],
+  tricep:["triceps"], triceps:["triceps"],
+  forearm:["forearms"], forearms:["forearms"], grip:["forearms"],
+  leg:["quads","hamstrings","glutes","calves","hip flexors"],
+  legs:["quads","hamstrings","glutes","calves","hip flexors"],
+  quad:["quads"], quads:["quads"], quadricep:["quads"], quadriceps:["quads"],
+  hamstring:["hamstrings"], hamstrings:["hamstrings"], ham:["hamstrings"], hams:["hamstrings"],
+  glute:["glutes"], glutes:["glutes"],
+  calf:["calves"], calves:["calves"],
+  core:["abs","obliques","core"], ab:["abs"], abs:["abs"],
+  oblique:["obliques"], obliques:["obliques"], neck:["neck"],
+};
+const musclesFor = (w) => MUSCLE_TERMS[w] || MUSCLE_TERMS[STEM(w)] || null;
+
 export const searchMaster = (query, { group = null, limit = 60, db = getMasterDB() } = {}) => {
   const q = (query || "").toLowerCase().trim();
   const groupSet = group ? new Set(GROUP_FILTERS[group] || []) : null;
-  const wordStart = (t) => t.split(/[\s,()/\-_.°]+/).filter(Boolean).some((w) => w.startsWith(q));
+  const qTok = TOKENS(q);
+
+  // Split the query into muscle constraints and name text.
+  const muscleSet = new Set();
+  const nameTok = [];
+  for (const w of qTok) {
+    const m = musclesFor(w);
+    if (m) m.forEach((x) => muscleSet.add(x));
+    else nameTok.push(w);
+  }
+  // A muscle word that is ALSO plausible name text (calf, back, neck) stays
+  // eligible as name text too — handled by the all-token rule below.
+  const qStems = qTok.map(STEM);
+  const nameStems = nameTok.map(STEM);
+
+  // How many of `want` are word-prefix present in candidate token list `have`.
+  const coverage = (have, want) =>
+    want.length === 0 ? 1 : want.filter((w) => have.some((h) => h.startsWith(w))).length / want.length;
+
   const scored = [];
   for (const e of db) {
     if (groupSet && !groupSet.has(e.primary)) continue;
     if (!q) { scored.push({ ...e, score: 0.5 }); continue; }
-    const cands = [e.canonical.toLowerCase(), ...e.aliases.map((a) => a.toLowerCase())];
+
+    const texts = [e.canonical.toLowerCase(), ...e.aliases.map((a) => a.toLowerCase())];
+    const primHit = muscleSet.size > 0 && muscleSet.has(e.primary);
+    const secHit  = muscleSet.size > 0 && (e.secondary || []).some((x) => muscleSet.has(x));
+
     let best = 0;
-    for (const t of cands) {
+    for (const t of texts) {
+      const tStems = TOKENS(t).map(STEM);
       let s = 0;
-      if (t === q) s = 1.0;
-      else if (t.startsWith(q)) s = 0.95;
-      else if (wordStart(t)) s = 0.9;
-      else if (q.length >= 4 && t.includes(q)) s = 0.65;
+      if (t === q) s = 1.0;                                   // exact name
+      else if (t.startsWith(q)) s = 0.95;                     // prefix
+      else if (coverage(tStems, qStems) === 1) s = 0.90;      // all query words, any order
+      else if (q.length >= 4 && t.includes(q)) s = 0.72;      // loose phrase
       if (s > best) best = s;
+
+      if (muscleSet.size > 0 && (primHit || secHit)) {
+        const cov = coverage(tStems, nameStems);
+        let ms = 0;
+        if (nameStems.length === 0) ms = primHit ? 0.80 : 0.62;        // pure muscle query
+        else if (cov === 1)         ms = primHit ? 0.86 : 0.70;        // muscle + full name
+        else if (cov >= 0.6)        ms = (primHit ? 0.62 : 0.60) + 0.12 * cov; // partial
+        if (ms > best) best = ms;
+      }
     }
     if (best >= 0.6) scored.push({ ...e, score: best });
   }
-  return scored.sort((a, b) => b.score - a.score || a.canonical.localeCompare(b.canonical)).slice(0, limit);
+  return scored
+    .sort((a, b) => b.score - a.score || a.canonical.localeCompare(b.canonical))
+    .slice(0, limit);
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -257,16 +350,19 @@ export const searchMaster = (query, { group = null, limit = 60, db = getMasterDB
 // exercises (~120) are untouched and still pick directly.
 // ─────────────────────────────────────────────────────────────
 export const MOVEMENT_CLUSTERS = {
-  "Bench Press":       ["Barbell Bench Press","Dumbbell Bench Press","Smith Machine Bench Press"],
+  // B-MVDEAD1 (2026-07-26): members below are the POST-consolidation canonicals.
+  // Any name listed here that no longer exists in the master DB is dropped
+  // silently by .filter(Boolean) — the variant just disappears from the picker.
+  "Bench Press":       ["Barbell Bench Press","Dumbbell Bench Press","Bench Press, Smith Machine"],
   "Bicep Curl":        ["LF Bicep Curl","Machine Bicep Curl"],
   "Calf Raise":        ["Seated Calf Raise","Smith Calf Raise"],
   "Curl (Free)":       ["Barbell Curl","Dumbbell Curl","Cable Curl"],
-  "Dip":               ["Assisted Dip","LF Seated Dip","Seated PL Dip Machine"],
+  "Dip":               ["LF Seated Dip","Seated PL Dip Machine","Assisted Dips"],
   "Front Raise":       ["Front Raise","Cable Front Raise"],
   "Good Morning":      ["Good Morning","Seated Good Morning"],
   "Hack Squat":        ["Hack Squat","Linear Hack Squat PL"],
-  "High Row":          ["LF High Row","Cable High Row"],
-  "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown PL"],
+  "High Row":          ["High Row PL","Cable High Row"],
+  "Lat Pulldown":      ["Lat Pulldown","Lat Pull-Down PL"],
   "Lateral Raise":     ["Dumbbell Lateral Raise","Seated Lateral Raise","Cable Lateral Raise","Machine Lateral Raise"],
   "Overhead Extension":["Overhead Cable Extension","Overhead Dumbbell Extension"],
   "Pullover":          ["Dumbbell Pullover","Cable Pullover","Machine Pullover"],
@@ -312,7 +408,7 @@ export const searchMovements = (query, opts = {}) => {
         movement: mv,
         label: mv,
         members,
-        primary: members[0]?.primary || h.primary,
+        primary: h.primary || members[0]?.primary,
         equips: members.map((x) => x.equip),
       });
     } else {
@@ -339,7 +435,7 @@ export const browseMovementsByGroup = (group, db = getMasterDB()) => {
         .map((n) => db.find((x) => x.canonical === n))
         .filter(Boolean);
       out.push({ kind:"movement", movement:mv, label:mv, members,
-        primary: members[0]?.primary || e.primary,
+        primary: e.primary || members[0]?.primary,
         equips: members.map((x) => x.equip) });
     } else {
       out.push({ kind:"exercise", ...e });

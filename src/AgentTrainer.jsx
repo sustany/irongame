@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { findDuplicate } from "./exerciseLibrary";
-import { searchMaster, getMasterDB, PREWARM_PRIMARIES, searchMovements, browseMovementsByGroup, MOVEMENT_CLUSTERS, CANON_TO_MOVEMENT } from "./exerciseDB";
+import { searchMaster, getMasterDB, PREWARM_PRIMARIES, searchMovements, browseMovementsByGroup, MOVEMENT_CLUSTERS, CANON_TO_MOVEMENT, PICKER_GROUPS } from "./exerciseDB";
 
 // ─────────────────────────────────────────────────────────────
 // DURABLE SESSION STORAGE
@@ -3490,7 +3490,7 @@ export default function IronGame(){
                 color:C.wht,letterSpacing:"0.1em"}}>Change Exercise</div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {/* + New Exercise button */}
-                <button className="t" onClick={()=>{setShowNewExForm(v=>!v);setNewExName("");setNewExWeight("");setNewExReps("10");setNewExMaxWt("");setNewExPicked(false);}}
+                <button className="t" onClick={()=>{const opening=!showNewExForm;setShowNewExForm(opening);setNewExName(opening?exSearch.trim():"");setNewExWeight("");setNewExReps("10");setNewExMaxWt("");setNewExPicked(false);setNewExDuplicate(null);}}
                   style={{fontFamily:"'Bebas Neue',sans-serif",fontWeight:700,
                     fontSize:14,color:"#fff",letterSpacing:"0.1em",
                     background:C.red,border:"none",
@@ -3535,14 +3535,8 @@ export default function IronGame(){
             {/* ── Muscle-group filter pills ──────────────────────────────── */}
             {(()=>{
               // pill label → primary[] it matches
-              const PILL_MAP = [
-                {label:"CHEST",     match:["chest"]},
-                {label:"BACK",      match:["lats","mid back","lower back","traps"]},
-                {label:"SHOULDERS", match:["front delts","side delts","rear delts"]},
-                {label:"ARMS",      match:["biceps","triceps","forearms"]},
-                {label:"LEGS",      match:["quads","hamstrings","glutes","calves"]},
-                {label:"CORE",      match:["abs","obliques"]},
-              ];
+              const PILL_MAP = Object.entries(PICKER_GROUPS)
+                .map(([label,match])=>({label,match}));
               // session-aware ordering
               const sesOrder = sesType==="push"  ? ["CHEST","SHOULDERS","ARMS","BACK","LEGS","CORE"]
                              : sesType==="pull"  ? ["BACK","ARMS","SHOULDERS","CHEST","LEGS","CORE"]
@@ -3576,8 +3570,8 @@ export default function IronGame(){
                 F-MVGROUP1: movement-aware. Clustered movements collapse to
                 one row that expands to equipment variants; single-equipment
                 exercises stay direct picks. ── */}
-            {exSearch.length>=2&&(()=>{
-              const primOf = ({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||null;
+            {!showNewExForm&&exSearch.length>=2&&(()=>{
+              const primOf = PICKER_GROUPS[exFilter]||null;
               const rows = searchMovements(exSearch, {limit:80}).filter(r=>{
                 if(primOf){ if(!primOf.includes(r.primary)) return false; }
                 if(r.kind==="exercise")
@@ -3587,9 +3581,20 @@ export default function IronGame(){
               return(
                 <div style={{overflowY:"auto",padding:"0 12px 32px",flex:1}}>
                   {rows.length===0&&(
-                    <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,
-                      color:C.md,textAlign:"center",padding:"24px 0"}}>
-                      No matches
+                    <div style={{textAlign:"center",padding:"20px 0 8px"}}>
+                      <div style={{fontFamily:"'Inter',sans-serif",fontSize:13,
+                        color:C.md,marginBottom:12}}>
+                        No matches
+                      </div>
+                      <button className="t"
+                        onClick={()=>{setShowNewExForm(true);setNewExName(exSearch.trim());
+                          setNewExWeight("");setNewExReps("10");setNewExMaxWt("");
+                          setNewExPicked(false);setNewExDuplicate(null);}}
+                        style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,
+                          color:"#fff",background:C.red,border:"none",borderRadius:9,
+                          padding:"10px 18px",cursor:"pointer",letterSpacing:"0.08em"}}>
+                        + Create "{exSearch.trim()}"
+                      </button>
                     </div>
                   )}
                   {rows.map(r=> r.kind==="movement"
@@ -3601,11 +3606,12 @@ export default function IronGame(){
             })()}
 
             {/* Inline new exercise form */}
-            {exSearch.length<2&&showNewExForm&&(()=>{
+            {showNewExForm&&(()=>{
               const suggestions = searchMaster(newExName, {limit:5});
               return (
               <div style={{margin:"0 12px 10px",background:"rgba(232,38,10,0.08)",
-                border:`1px solid ${C.red}`,borderRadius:12,padding:"14px"}}>
+                border:`1px solid ${C.red}`,borderRadius:12,padding:"14px",
+                overflowY:"auto",flexShrink:1,minHeight:0}}>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                   color:C.red,letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:10}}>
                   New Exercise
@@ -3795,14 +3801,14 @@ export default function IronGame(){
             })()}
 
             {/* Exercise list — filtered by session type, sourced from live prs */}
-            {exSearch.length<2&&(
+            {!showNewExForm&&exSearch.length<2&&(
             <div style={{overflowY:"auto",padding:"0 12px 32px"}}>
 
               {(()=>{
                 const {inCat,outCat}=exListForType(sesType,prs,customGroups);
                 // Muscle-group filter
                 const _musMatch = exFilter
-                  ? (()=>{const _p=({CHEST:["chest"],BACK:["lats","mid back","lower back","traps"],SHOULDERS:["front delts","side delts","rear delts"],ARMS:["biceps","triceps","forearms"],LEGS:["quads","hamstrings","glutes","calves"],CORE:["abs","obliques"]})[exFilter]||[];return n=>_p.includes(EX_PRIMARY[n]||"");})()
+                  ? (()=>{const _p=PICKER_GROUPS[exFilter]||[];return n=>_p.includes(EX_PRIMARY[n]||"");})()
                   : ()=>true;
                 // Slot-specific alternatives from TMPLS — show first, badge as RECOMMENDED.
                 const slotAlts = (TMPLS[sesType]?.[exIdx]?.alts || [])
