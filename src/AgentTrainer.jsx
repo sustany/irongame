@@ -854,7 +854,7 @@ export default function IronGame(){
   })();
 
   const [screen,    setScreen]    = useState("setup");
-  const [sesType,   setSesType]   = useState(()=> _saved?.sesType   ?? null);
+  const [sesType,   setSesType]   = useState(()=> _saved?.sesType   ?? "custom"); // B-CUSTDEF1
   const [showResume, setShowResume] = useState(()=> !!(_saved?.sesType && (_saved?.log?.length > 0 || _saved?.exIdx > 0)));
   const [ext,       setExt]       = useState(false);
   const [tcMode,    setTcMode]    = useState(false);
@@ -1623,7 +1623,7 @@ export default function IronGame(){
   const reset=()=>{
     try{ localStorage.removeItem('ig_session'); }catch{}
     idbDel('ig_session');
-    setSesType(null);setExList([]);setExIdx(0);setSetIdx(0);
+    setSesType("custom");setExList([]);setExIdx(0);setSetIdx(0); // B-CUSTDEF1
     setLog([]);setLastRes(null);setLastWt(null);setPhase("ready");setScreen("setup");
     setSessionStart(null);setSessionEnd(null);
   };
@@ -1695,7 +1695,7 @@ export default function IronGame(){
               <button className="t" onClick={()=>{
                 try{localStorage.removeItem('ig_session');}catch{}
                 idbDel('ig_session');
-                setSesType(null);setCustomGroups([]);setDraftList(null);setExList([]);setExIdx(0);setSetIdx(0);
+                setSesType("custom");setCustomGroups([]);setDraftList(null);setExList([]);setExIdx(0);setSetIdx(0); // B-CUSTDEF1
                 setPrs(INIT_PRS);setLog([]);setLastRes(null);setLastWt(null);
                 setSessionStart(null);setSessionDate(null);setShowResume(false);
               }} style={{width:"100%",height:42,borderRadius:10,cursor:"pointer",
