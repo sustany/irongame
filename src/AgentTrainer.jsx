@@ -1846,45 +1846,44 @@ export default function IronGame(){
 
             {sesType==="custom" && customGroups.length>0 && previewEl}
 
-            <div style={{marginTop:16,marginBottom:8}}>
-              <SL>Or Pick A Workout</SL>
-            </div>
-
-            <div style={{display:"flex",gap:10}}>
-              <TypeCard type="push" label="Push" compact={sesType==="custom"}
-                muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
-                muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
-                muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-            </div>
-
-            {!!sesType && sesType!=="custom" && previewEl}
-
-          </div>
-
-
-          {/* F-HIST1 — SESSION HISTORY: last 4 calendar days */}
-          <div style={{marginBottom:18}}>
+          {/* F-HIST2 — LAST WORKOUT: collapsed one-liner under the muscle picker.
+              "(show more)" expands to the last five LOGGED workouts (recovery/off
+              days excluded). Replaces the old last-4-calendar-days list. */}
+          {(()=>{
+            const loggedKeys=Object.keys(hist)
+              .filter(k=>hist[k]?.status==='logged')
+              .sort().reverse();
+            const lastGroups=loggedKeys[0]
+              ? (MUSCLE_GROUPS.filter(g=>(hist[loggedKeys[0]].groups||[]).includes(g.id))
+                  .map(g=>g.label).join(", ")||"Logged")
+              : null;
+            return(
+          <div style={{marginTop:12}}>
             <button className="t" onClick={()=>setHistOpen(o=>!o)} style={{
-              display:"flex",alignItems:"center",gap:7,background:"none",border:"none",
-              padding:0,margin:0,marginBottom:histOpen?8:0,cursor:"pointer"}}>
-              <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"
-                style={{flexShrink:0,transform:histOpen?"rotate(90deg)":"rotate(0deg)",
-                  transition:"transform 0.15s ease"}}>
-                <path d="M2 1 L8 5 L2 9 Z" fill={C.md}/>
-              </svg>
+              display:"flex",alignItems:"baseline",flexWrap:"wrap",gap:6,background:"none",border:"none",
+              padding:0,margin:0,marginBottom:histOpen?8:0,cursor:"pointer",textAlign:"left"}}>
               <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                 color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>
-                Session History
+                Last Workout:
+              </span>
+              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                color:C.wht,letterSpacing:"0.18em",textTransform:"uppercase"}}>
+                {lastGroups||"None logged"}
+              </span>
+              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
+                color:C.red,letterSpacing:"0.08em"}}>
+                ({histOpen?"show less":"show more"})
               </span>
             </button>
-            {histOpen && Array.from({length:4},(_,i)=>{
-              const d=new Date(); d.setDate(d.getDate()-(4-i)); // oldest first, newest last
-              const dk=histDateKey(d);
+            {histOpen && loggedKeys.length===0 && (
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
+                color:C.md,padding:"4px 0 2px"}}>
+                No workouts logged yet.
+              </div>
+            )}
+            {histOpen && loggedKeys.slice(0,5).map((dk)=>{
+              const [_y,_m,_dd]=dk.split('-').map(Number);
+              const d=new Date(_y,_m-1,_dd);
               const e=hist[dk];
               const isExp=histExpanded===dk;
               const isEd=histEdit===dk;
@@ -2098,7 +2097,28 @@ export default function IronGame(){
               );
             })}
           </div>
+            );
+          })()}
 
+            <div style={{marginTop:16,marginBottom:8}}>
+              <SL>Or Pick A Workout</SL>
+            </div>
+
+            <div style={{display:"flex",gap:10}}>
+              <TypeCard type="push" label="Push" compact={sesType==="custom"}
+                muscles={"Chest\nShoulders · Triceps"}
+                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
+                muscles={"Back\nBiceps · Rear Delts"}
+                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
+                muscles={"Quads · Hams\nGlutes · Calves"}
+                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+            </div>
+
+            {!!sesType && sesType!=="custom" && previewEl}
+
+          </div>
 
 
 
@@ -2181,24 +2201,11 @@ export default function IronGame(){
           {/* F-JUSTSTART1 — START is always available. With a valid selection
               it launches it; with nothing selected it launches the PPL-rotation
               recommendation. Only an explicitly edited-to-empty draft blocks. */}
+          {/* F-JUSTSTART2 caption removed 2026-07-27 — START stands alone; the
+              PPL-rotation recommendation still powers a blind Start. */}
           {(ready||!(draftList!==null&&draftList.length===0))&&(()=>{
             const rec=ready?null:recommendType();
-            const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-            return(<>
-              <GoBtn onClick={()=>ready?launch():launch(rec.type)}>Start</GoBtn>
-              {/* F-JUSTSTART2 — rotation caption: tell the user WHAT a blind
-                  Start will launch and why, instead of surprising them on the
-                  session screen. Renders only in rotation mode. */}
-              {rec&&(
-                <div style={{marginTop:8,textAlign:"center",
-                  fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
-                  color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>
-                  &rarr; {rec.type}{rec.lastDate
-                    ?` · last trained ${MO[rec.lastDate.getMonth()]} ${rec.lastDate.getDate()}`
-                    :" · not trained recently"}
-                </div>
-              )}
-            </>);
+            return <GoBtn onClick={()=>ready?launch():launch(rec.type)}>Start</GoBtn>;
           })()}
 
 
