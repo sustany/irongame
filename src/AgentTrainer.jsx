@@ -1396,12 +1396,40 @@ export default function IronGame(){
     }
     return a;
   };
-  const launch=()=>{
+  // F-JUSTSTART1 (2026-07-26) — pick the next session type by PPL rotation.
+  // Scans the last 14 days of hist; each type's recency = the newest day whose
+  // trained groups intersect that type's muscle set. Returns the type trained
+  // longest ago (never-trained wins). Tie order: push → pull → legs.
+  const recommendType=()=>{
+    const TYPE_GROUPS={push:["chest","shoulders","triceps"],
+                       pull:["back","biceps"],
+                       legs:["quads","hamstrings","glutes","calves"]};
+    const lastSeen={push:-1,pull:-1,legs:-1};
+    for(let i=0;i<14;i++){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const e=hist[histDateKey(d)];
+      const gs=e?.groups||[];
+      if(!gs.length) continue;
+      for(const t of Object.keys(TYPE_GROUPS)){
+        if(lastSeen[t]===-1 && TYPE_GROUPS[t].some(g=>gs.includes(g)))
+          lastSeen[t]=14-i; // higher = more recent
+      }
+    }
+    let best="push",bestSeen=Infinity;
+    for(const t of ["push","pull","legs"]){
+      const seen=lastSeen[t]===-1?-Infinity:lastSeen[t];
+      if(seen<bestSeen){best=t;bestSeen=seen;}
+    }
+    return best;
+  };
+  const launch=(typeOverride)=>{
+    const t=typeOverride??sesType;
+    if(typeOverride){setSesType(typeOverride);setCustomOpener(null);setDraftList(null);}
     const now=new Date();
     const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
-    setExList(draftList?[...draftList]:build(sesType,true));setExIdx(0);setSetIdx(0);setLog([]);
+    setExList((!typeOverride&&draftList)?[...draftList]:build(t,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
     setSessionStart(Date.now());
     setScreen("session");
@@ -2144,8 +2172,11 @@ export default function IronGame(){
 
           <div style={{flex:1}}/>
 
-          {ready&&(
-            <GoBtn onClick={()=>launch()}>Start</GoBtn>
+          {/* F-JUSTSTART1 — START is always available. With a valid selection
+              it launches it; with nothing selected it launches the PPL-rotation
+              recommendation. Only an explicitly edited-to-empty draft blocks. */}
+          {(ready||!(draftList!==null&&draftList.length===0))&&(
+            <GoBtn onClick={()=>ready?launch():launch(recommendType())}>Start</GoBtn>
           )}
 
 
