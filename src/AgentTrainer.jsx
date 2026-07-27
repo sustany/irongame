@@ -1420,7 +1420,13 @@ export default function IronGame(){
       const seen=lastSeen[t]===-1?-Infinity:lastSeen[t];
       if(seen<bestSeen){best=t;bestSeen=seen;}
     }
-    return best;
+    // F-JUSTSTART2 — caption data: when was `best` last trained (null = never)
+    let lastDate=null;
+    if(bestSeen!==-Infinity){
+      const daysAgo=14-bestSeen;
+      const d=new Date(); d.setDate(d.getDate()-daysAgo); lastDate=d;
+    }
+    return {type:best,lastDate};
   };
   const launch=(typeOverride)=>{
     const t=typeOverride??sesType;
@@ -2175,9 +2181,25 @@ export default function IronGame(){
           {/* F-JUSTSTART1 — START is always available. With a valid selection
               it launches it; with nothing selected it launches the PPL-rotation
               recommendation. Only an explicitly edited-to-empty draft blocks. */}
-          {(ready||!(draftList!==null&&draftList.length===0))&&(
-            <GoBtn onClick={()=>ready?launch():launch(recommendType())}>Start</GoBtn>
-          )}
+          {(ready||!(draftList!==null&&draftList.length===0))&&(()=>{
+            const rec=ready?null:recommendType();
+            const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+            return(<>
+              <GoBtn onClick={()=>ready?launch():launch(rec.type)}>Start</GoBtn>
+              {/* F-JUSTSTART2 — rotation caption: tell the user WHAT a blind
+                  Start will launch and why, instead of surprising them on the
+                  session screen. Renders only in rotation mode. */}
+              {rec&&(
+                <div style={{marginTop:8,textAlign:"center",
+                  fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                  color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>
+                  &rarr; {rec.type}{rec.lastDate
+                    ?` · last trained ${MO[rec.lastDate.getMonth()]} ${rec.lastDate.getDate()}`
+                    :" · not trained recently"}
+                </div>
+              )}
+            </>);
+          })()}
 
 
           {/* Reset — only shows after selections made */}
