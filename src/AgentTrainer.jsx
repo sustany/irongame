@@ -597,11 +597,32 @@ function suggestW(name,si,lw,lr,prs,ow,meta){
   // A loaded lift must never open at 0. Barbell = bar + 25/side; any other bar
   // lift floors at the bar; non-bar loaded gear stays 0 (no universal floor).
   const newDef = bar + (M.eq==="barbell" ? BARBELL_OPEN_PLATES*2 : 0);
+  // B-STACKZERO1: a loaded lift must NEVER open at 0 — that includes stack,
+  // cable, machine, and dumbbell gear (previously only barbell had a floor).
+  // Fallback chain when this exercise has no history on this device:
+  //   1. Sibling in the same MOVEMENT_CLUSTER with a PR → 85% of it, snapped.
+  //   2. Per-equipment floor: dumbbell 15, cable/stack 30, machine/PL 45.
+  // Bodyweight gear is exempt (handled above via pr.bw / isBw).
+  // Keys match EQUIPMENT table. bw-load intentionally 0 (added load on top of
+  // bodyweight is legitimately zero); smith floors at its bar via `bar`.
+  const EQ_FLOOR = { "dumbbell":15, "stack-pin":30, "plate-loaded":45 };
+  const seedNoHistory = () => {
+    const snap = M.snap || eqM.snap || 5;
+    const mv = CANON_TO_MOVEMENT[name];
+    if (mv) {
+      const sibs = (MOVEMENT_CLUSTERS[mv]||[]).filter(n=>n!==name);
+      let best = 0;
+      for (const sib of sibs) if (prs[sib]?.weight > best) best = prs[sib].weight;
+      if (best > 0) return Math.max(Math.round((best*0.85)/snap)*snap, bar);
+    }
+    const fl = EQ_FLOOR[M.eq] ?? 0;
+    return Math.max(newDef, fl, bar);
+  };
   // Set 1: open with a sane load, NOT last session's working max.
   if(si===0){
     if(lw&&lw>0) return lw;                            // adjusted this session
-    if(ow && ow[name]!==undefined) return ow[name];   // last session's opener (0 valid)
-    if(!pr) return newDef;                            // brand-new → equipment default
+    if(ow && ow[name]!==undefined && ow[name]>0) return ow[name]; // last opener (B-STACKZERO1: stored 0 no longer valid for loaded gear)
+    if(!pr) return seedNoHistory();                   // brand-new → anchored seed, never 0
     // Has PR: warm-up ~50% of last weight, snapped, never below the bar.
     const snap = M.snap || eqM.snap || 5;
     const warm = Math.round((pr.weight*0.5)/snap)*snap;
@@ -609,7 +630,7 @@ function suggestW(name,si,lw,lr,prs,ow,meta){
   }
   // Set 2+: progress from last working set. With a PR, cap against it; without
   // one, progress off the logged set (no PR-relative cap to distort it).
-  if(!lw) return pr ? pr.weight : newDef;
+  if(!lw) return pr ? pr.weight : seedNoHistory();
   const ceil   = pr ? pr.weight*1.08 : lw+5;
   const floorW = pr ? pr.weight*0.75 : lw-10;
   if(lr==="exceeded")   return Math.round(Math.min(lw+5, ceil)/5)*5;
