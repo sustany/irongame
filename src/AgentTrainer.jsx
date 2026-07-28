@@ -3298,6 +3298,17 @@ export default function IronGame(){
                 )}
               </div>
 
+              {/* F-BTNPOS1: primary CTA moved into the flow directly below
+                  the weight card, above the HR card. NEXT EXERCISE and
+                  END SESSION stay bottom-anchored per user decision. */}
+              {phase==="ready"&&(
+                <div style={{marginBottom:12}}>
+                  <RedBtn onClick={()=>setPhase("logging")} h={70}>
+                    {`Begin Set ${setIdx+1}`}
+                  </RedBtn>
+                </div>
+              )}
+
               {/* HR card */}
               <div style={{background:STEEL,borderRadius:12,
                 border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
@@ -3371,9 +3382,7 @@ export default function IronGame(){
       <div style={{padding:"14px 18px 42px",background:C.page,borderTop:`2px solid ${C.bdr}`}}>
         {phase==="ready"?(
           <>
-          <RedBtn onClick={()=>setPhase("logging")} h={70}>
-            {`Begin Set ${setIdx+1}`}
-          </RedBtn>
+          {/* F-BTNPOS1: Begin Set relocated above the HR card. */}
           {/* F-OPENSETS1 — manual exercise advance replaces the removed
               auto-advance. On the last exercise this finishes the session. */}
           <button className="t" onClick={()=>{
