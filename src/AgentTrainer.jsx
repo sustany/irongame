@@ -1315,11 +1315,13 @@ export default function IronGame(){
     window.history.replaceState(null,'','/');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // F-TIMER1: total wall-clock from session start as h:mm:ss, live tick.
   const elapsedStr = () => {
-    if (!sessionStart) return "0";
+    if (!sessionStart) return "0:00:00";
     const ms   = (sessionEnd || Date.now()) - sessionStart;
-    const mins = Math.floor(ms / 60000);
-    return `${mins}`;
+    const sec  = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(sec/3600), mm = Math.floor((sec%3600)/60), ss = sec%60;
+    return `${h}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
   };
 
   const ex     = exList[exIdx]||null;
@@ -2947,13 +2949,16 @@ export default function IronGame(){
           </div>
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
             color:C.md,letterSpacing:"0.06em",marginTop:1}}>
-            {elapsedStr()} MIN
             {sessionDate&&(
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:9,
                 color:"rgba(255,255,255,0.3)",letterSpacing:"0.06em",marginTop:1}}>
                 {sessionDate}
               </div>
             )}
+            {/* F-TIMER1: live h:mm:ss below date; tabular-nums stops jitter */}
+            <div style={{fontVariantNumeric:"tabular-nums",marginTop:1}}>
+              {elapsedStr()}
+            </div>
           </div>
         </div>
       </div>
