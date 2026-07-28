@@ -292,38 +292,38 @@ const kcalPerMin = (hr, weightKg, age) =>
 // DATA
 // ─────────────────────────────────────────────────────────────
 const INIT_PRS = {
-  "High Row PL":           { muscle:"back", weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
+  "High Row, Machine, Plate-Loaded":           { muscle:"back", weight:110,  reps:12 },  // PR set May 19 2026 · Life Fitness PL machine
   "Incline Press":      { muscle:"chest", weight:240,  reps:10 },
   "Shoulder Press":     { muscle:"shoulders", weight:255,  reps:7  },
   "Bench Press, Smith Machine": { muscle:"chest", weight:235, reps:8 },
-  "Military Press PL Machine":  { muscle:"shoulders", weight:180, reps:8 },
-  "Seated PL Dip Machine":       { muscle:"chest", weight:320, reps:10},
+  "Military Press, Machine, Plate-Loaded":  { muscle:"shoulders", weight:180, reps:8 },
+  "Dip, Machine, Plate-Loaded, Seated":       { muscle:"chest", weight:320, reps:10},
   "LF Seated Dip":         { muscle:"chest", weight:290,  reps:10 },
   "HS Decline Press":      { muscle:"chest", weight:90,   reps:9  },
   "Pec Deck":              { muscle:"chest", weight:230,  reps:12 },
   "Pushdown, Cable":        { muscle:"triceps", weight:80,   reps:14 },
-  "Seated Lateral Raise":  { muscle:"shoulders", weight:37.5, reps:15 },
-  "Weighted Crunches":     { muscle:"abs", weight:120,  reps:6  },
+  "Lateral Raise, Dumbbell, Seated":  { muscle:"shoulders", weight:37.5, reps:15 },
+  "Crunches, Machine, Plate-Loaded":     { muscle:"abs", weight:120,  reps:6  },
   "Captain's Chair":       { muscle:"abs", weight:0,    reps:12, bw:true },
   "RDL, Barbell":           { muscle:"hamstrings", weight:225,  reps:6  },
-  "Lat Pull-Down PL": { muscle:"lats", weight:240,  reps:10 },
+  "Lat Pulldown, Machine, Plate-Loaded": { muscle:"lats", weight:240,  reps:10 },
   "LF Row":                { muscle:"back", weight:240,  reps:10 },
   "Lever Seated Row":      { muscle:"back", weight:360,  reps:10 },
-  "Assisted Chin-Up":      { muscle:"lats", weight:172,  reps:8  },
+  "Chin-Up, Machine, Assisted":      { muscle:"lats", weight:172,  reps:8  },
   "Hyperextensions 45°":   { muscle:"lower_back", weight:90,   reps:11 },
   "DB Alternating Curl":   { muscle:"biceps", weight:45,   reps:10 },
   "DB Hammer Curl":        { muscle:"biceps", weight:42.5, reps:12 },
   "LF Bicep Curl":         { muscle:"biceps", weight:90,   reps:10 },
   "Dead Hang":             { muscle:"lats", weight:0,    reps:37, bw:true, unit:"sec" },
   "Hip Thrust (Smith)":    { muscle:"hamstrings", weight:275,  reps:10 },
-  "Seated Leg Curl":       { muscle:"hamstrings", weight:285,  reps:8  },
-  "Linear Hack Squat PL":  { muscle:"quads", weight:230,  reps:10 },
+  "Leg Curl, Machine, Seated":       { muscle:"hamstrings", weight:285,  reps:8  },
+  "Linear Hack Squat, Machine, Plate-Loaded":  { muscle:"quads", weight:230,  reps:10 },
   "Leg Extension":         { muscle:"quads", weight:260,  reps:10 },
   "Calf Press":            { muscle:"calves", weight:680,  reps:12 },
   "Calf Press, Linear Leg Press": { muscle:"calves", weight:630, reps:10 },
-  "Seated Calf Raise":     { muscle:"calves", weight:180,  reps:7  },
-  "DB Flys":               { muscle:"chest", weight:40,   reps:12 },
-  "Assisted Dips":         { muscle:"chest", weight:100,  reps:10 },
+  "Calf Raise, Machine, Plate-Loaded, Seated":     { muscle:"calves", weight:180,  reps:7  },
+  "Fly, Dumbbell":               { muscle:"chest", weight:40,   reps:12 },
+  "Dip, Machine, Assisted":         { muscle:"chest", weight:100,  reps:10 },
   "Reverse Pec Deck":      { muscle:"rear_delts", weight:130, reps:12 },
 };
 // ── Equipment type registry ──────────────────────────────────
@@ -368,54 +368,54 @@ const healUserMeta = (u) => {
 };
 
 const META = {
-  "High Row PL":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
+  "High Row, Machine, Plate-Loaded":           { muscle:"back", tier:"P1", prPts:8, compound:true, eq:"plate-loaded", brand:"LF", brandFull:"Life Fitness" },
   "Incline Press":      { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Shoulder Press":     { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Bench Press, Smith Machine": { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"smith" },
-  "Military Press PL Machine":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
-  "Seated PL Dip Machine":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Military Press, Machine, Plate-Loaded":  { muscle:"shoulders", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Dip, Machine, Plate-Loaded, Seated":       { muscle:"chest", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "LF Seated Dip":         { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "HS Decline Press":      { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true },
   "Pec Deck":              { muscle:"chest", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Pushdown, Cable":        { muscle:"triceps", tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Seated Lateral Raise":  { muscle:"shoulders", tier:"ISO",prPts:3, eq:"dumbbell" },
-  "Weighted Crunches":     { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
+  "Lateral Raise, Dumbbell, Seated":  { muscle:"shoulders", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Crunches, Machine, Plate-Loaded":     { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
   "Captain's Chair":       { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
   "RDL, Barbell":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
-  "Lat Pull-Down PL":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Lat Pulldown, Machine, Plate-Loaded":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
-  "Assisted Chin-Up":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Chin-Up, Machine, Assisted":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
   "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bw-load", mandatory:true },
   "DB Alternating Curl":   { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "LF Bicep Curl":         { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "Dead Hang":             { muscle:"lats", tier:"GRIP",prPts:0, eq:"bodyweight", mandatory:true },
   "Hip Thrust (Smith)":    { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"smith", brand:"LF", brandFull:"Life Fitness Smith Machine" },
-  "Seated Leg Curl":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
-  "Linear Hack Squat PL":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
+  "Leg Curl, Machine, Seated":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Linear Hack Squat, Machine, Plate-Loaded":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Leg Extension":         { muscle:"quads", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Calf Press":            { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
-  "Seated Calf Raise":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
-  "DB Flys":               { muscle:"chest", tier:"ISO",prPts:3, eq:"dumbbell" },
-  "Assisted Dips":         { muscle:"chest", tier:"COMP",prPts:5, compound:true, eq:"stack-pin" },
+  "Calf Raise, Machine, Plate-Loaded, Seated":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Fly, Dumbbell":               { muscle:"chest", tier:"ISO",prPts:3, eq:"dumbbell" },
+  "Dip, Machine, Assisted":         { muscle:"chest", tier:"COMP",prPts:5, compound:true, eq:"stack-pin" },
   "Reverse Pec Deck":      { muscle:"rear_delts", tier:"ISO",prPts:3, eq:"stack-pin" },
 };
 // Category membership controls which exercises appear in pickers per session type.
 // Exercises not listed appear under "Other" at the bottom of pickers.
 const CATEGORY = {
   push: ["Incline Press","Shoulder Press","Bench Press, Smith Machine",
-         "Military Press PL Machine","Seated PL Dip Machine","LF Seated Dip",
-         "HS Decline Press","Pec Deck","Pushdown, Cable","Seated Lateral Raise",
-         "Weighted Crunches","DB Flys","Assisted Dips"],
-  pull: ["Lat Pull-Down PL","High Row PL","LF Row","Lever Seated Row","Assisted Chin-Up",
+         "Military Press, Machine, Plate-Loaded","Dip, Machine, Plate-Loaded, Seated","LF Seated Dip",
+         "HS Decline Press","Pec Deck","Pushdown, Cable","Lateral Raise, Dumbbell, Seated",
+         "Crunches, Machine, Plate-Loaded","Fly, Dumbbell","Dip, Machine, Assisted"],
+  pull: ["Lat Pulldown, Machine, Plate-Loaded","High Row, Machine, Plate-Loaded","LF Row","Lever Seated Row","Chin-Up, Machine, Assisted",
          "DB Alternating Curl","DB Hammer Curl","LF Bicep Curl",
          "Hip Thrust (Smith)","Hyperextensions 45°","Dead Hang","Captain's Chair",
          "Reverse Pec Deck"],
-  legs: ["RDL, Barbell","Linear Hack Squat PL","Seated Leg Curl","Leg Extension",
-         "Calf Press","Calf Press, Linear Leg Press","Seated Calf Raise","Hip Thrust (Smith)",
+  legs: ["RDL, Barbell","Linear Hack Squat, Machine, Plate-Loaded","Leg Curl, Machine, Seated","Leg Extension",
+         "Calf Press","Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated","Hip Thrust (Smith)",
          "Hyperextensions 45°","Dead Hang"],
 };
 // Session type → primary muscles, used for the master-DB fallback below.
@@ -515,32 +515,32 @@ const EX_PRIMARY = Object.fromEntries(
 const TMPLS = {
   push:[
     {name:"Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
-    {name:"Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press PL Machine","Seated PL Dip Machine"]},
-    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Pushdown, Cable","Seated PL Dip Machine"]},
-    {name:"Seated Lateral Raise", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
-    {name:"Weighted Crunches",    sets:3,repRange:"8–10", targetReps:10, alts:["Captain's Chair"]},
+    {name:"Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press, Machine, Plate-Loaded","Dip, Machine, Plate-Loaded, Seated"]},
+    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Pushdown, Cable","Dip, Machine, Plate-Loaded, Seated"]},
+    {name:"Lateral Raise, Dumbbell, Seated", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
+    {name:"Crunches, Machine, Plate-Loaded",    sets:3,repRange:"8–10", targetReps:10, alts:["Captain's Chair"]},
   ],
   pull:[
-    {name:"Lat Pull-Down PL",    sets:4,repRange:"8–10", targetReps:10,priority:true, alts:["Assisted Chin-Up","High Row PL"]},
-    {name:"High Row PL",        sets:4,repRange:"10–12",targetReps:12, alts:["LF Row","Lever Seated Row"]},
-    {name:"LF Row",             sets:3,repRange:"8–10", targetReps:10, alts:["Lever Seated Row","High Row PL"]},
+    {name:"Lat Pulldown, Machine, Plate-Loaded",    sets:4,repRange:"8–10", targetReps:10,priority:true, alts:["Chin-Up, Machine, Assisted","High Row, Machine, Plate-Loaded"]},
+    {name:"High Row, Machine, Plate-Loaded",        sets:4,repRange:"10–12",targetReps:12, alts:["LF Row","Lever Seated Row"]},
+    {name:"LF Row",             sets:3,repRange:"8–10", targetReps:10, alts:["Lever Seated Row","High Row, Machine, Plate-Loaded"]},
     {name:"DB Alternating Curl",sets:3,repRange:"10–12",targetReps:12, alts:["DB Hammer Curl","LF Bicep Curl"]},
-    {name:"Captain's Chair",    sets:3,repRange:"10–12",targetReps:12, alts:["Weighted Crunches"]},
+    {name:"Captain's Chair",    sets:3,repRange:"10–12",targetReps:12, alts:["Crunches, Machine, Plate-Loaded"]},
     {name:"Hyperextensions 45°",sets:2,repRange:"10–12",targetReps:12,mandatory:true},
     {name:"Dead Hang",          sets:2,repRange:"max",  targetReps:37,unit:"sec",mandatory:true},
   ],
   legs:[
-    {name:"RDL, Barbell",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true, alts:["Hip Thrust (Smith)","Seated Leg Curl"]},
-    {name:"Linear Hack Squat PL", sets:4,repRange:"8–10", targetReps:10, alts:["Leg Extension"]},
-    {name:"Seated Leg Curl",      sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
-    {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10, alts:["Linear Hack Squat PL"]},
-    {name:"Calf Press",           sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Seated Calf Raise"]},
+    {name:"RDL, Barbell",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true, alts:["Hip Thrust (Smith)","Leg Curl, Machine, Seated"]},
+    {name:"Linear Hack Squat, Machine, Plate-Loaded", sets:4,repRange:"8–10", targetReps:10, alts:["Leg Extension"]},
+    {name:"Leg Curl, Machine, Seated",      sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
+    {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10, alts:["Linear Hack Squat, Machine, Plate-Loaded"]},
+    {name:"Calf Press",           sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated"]},
     {name:"Hyperextensions 45°",  sets:2,repRange:"10–12",targetReps:12,mandatory:true},
   ],
 };
 const PREV={
   push:{muscles:"Chest · Shoulders · Triceps",opens:"Incline Press",note:"Elbow-safe pressing only. No barbell flat or incline bench."},
-  pull:{muscles:"Back · Biceps · Rear Delts",opens:"Lat Pull-Down PL",note:"Dead hang mandatory every session."},
+  pull:{muscles:"Back · Biceps · Rear Delts",opens:"Lat Pulldown, Machine, Plate-Loaded",note:"Dead hang mandatory every session."},
   legs:{muscles:"Quads · Hamstrings · Glutes · Calves",opens:"Barbell RDL → Linear Hack Squat PL",note:"Hip hinge priority. Hyperextensions mandatory every session."},
 };
 
@@ -842,10 +842,10 @@ function Preview({type, extended, opener, onPickOpener, list, customMuscles, onE
 // Starting fresh at LF Lat Pulldown Set 1.
 // ─────────────────────────────────────────────────────────────
 const SESSION_LOG = [
-  {exercise:"Lat Pull-Down PL", setNum:1, weight:0,   reps:0,  result:"matched"},
-  {exercise:"Lat Pull-Down PL", setNum:2, weight:200, reps:10, result:"matched", phr:130},
-  {exercise:"Lat Pull-Down PL", setNum:3, weight:160, reps:10, result:"matched", phr:150},
-  {exercise:"Lat Pull-Down PL", setNum:4, weight:140, reps:10, result:"matched", phr:147},
+  {exercise:"Lat Pulldown, Machine, Plate-Loaded", setNum:1, weight:0,   reps:0,  result:"matched"},
+  {exercise:"Lat Pulldown, Machine, Plate-Loaded", setNum:2, weight:200, reps:10, result:"matched", phr:130},
+  {exercise:"Lat Pulldown, Machine, Plate-Loaded", setNum:3, weight:160, reps:10, result:"matched", phr:150},
+  {exercise:"Lat Pulldown, Machine, Plate-Loaded", setNum:4, weight:140, reps:10, result:"matched", phr:147},
   {exercise:"LF Row", setNum:1, weight:205, reps:10, result:"matched"},
   {exercise:"LF Row", setNum:2, weight:220, reps:10, result:"matched"},
   {exercise:"LF Row", setNum:3, weight:210, reps:10, result:"matched"},
@@ -856,8 +856,8 @@ const SESSION_LOG = [
   {exercise:"Calf Press, Linear Leg Press", setNum:5, weight:630, reps:10, result:"matched"},
 ];
 const SESSION_EXLIST = [
-  {name:"Lat Pull-Down PL",    sets:4, repRange:"8–10",  targetReps:10, priority:true},
-  {name:"High Row PL",        sets:4, repRange:"10–12", targetReps:12},
+  {name:"Lat Pulldown, Machine, Plate-Loaded",    sets:4, repRange:"8–10",  targetReps:10, priority:true},
+  {name:"High Row, Machine, Plate-Loaded",        sets:4, repRange:"10–12", targetReps:12},
   {name:"LF Row",             sets:3, repRange:"8–10",  targetReps:10},
   {name:"Calf Press, Linear Leg Press", sets:5, repRange:"10–15", targetReps:12, bilateral:true},
   {name:"DB Alternating Curl",sets:3, repRange:"10–12", targetReps:12},
@@ -1175,6 +1175,45 @@ export default function IronGame(){
       setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
       setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
       localStorage.setItem('ig_mig_canon1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
+  // MIG-CANON2 — naming sweep phase 2 (2026-07-28): modifier-first, PL-suffix
+  // and runtime display names to 'Exercise, Equipment, Weight-Type[, Position]'
+  // per user ruling (example: 'Crunches, Machine, Plate-Loaded'). Same re-key
+  // mechanics as MIG-CANON1, own flag (ig_mig_canon2). LF/HS/Lever entries
+  // excluded - blocked on gym machine-count confirmation.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_canon2')) return;
+      const R=new Map([['Assisted Chin-Up','Chin-Up, Machine, Assisted'],['Assisted Dip','Dip, Machine, Assisted'],['Assisted Dips','Dip, Machine, Assisted'],['DB Flys','Fly, Dumbbell'],['High Row PL','High Row, Machine, Plate-Loaded'],['Lat Pull-Down PL','Lat Pulldown, Machine, Plate-Loaded'],['Lat Pulldown PL','Lat Pulldown, Machine, Plate-Loaded'],['Linear Hack Squat PL','Linear Hack Squat, Machine, Plate-Loaded'],['Military Press PL Machine','Military Press, Machine, Plate-Loaded'],['Overhead Cable Extension','Overhead Extension, Cable'],['Overhead Dumbbell Extension','Overhead Extension, Dumbbell'],['Seated Barbell Press','Press, Barbell, Seated'],['Seated Cable Row','Row, Cable, Seated'],['Seated Calf Raise','Calf Raise, Machine, Plate-Loaded, Seated'],['Seated Good Morning','Good Morning, Barbell, Seated'],['Seated Lateral Raise','Lateral Raise, Dumbbell, Seated'],['Seated Leg Curl','Leg Curl, Machine, Seated'],['Seated PL Dip Machine','Dip, Machine, Plate-Loaded, Seated'],['Weighted Crunch','Crunches, Machine, Plate-Loaded'],['Weighted Crunches','Crunches, Machine, Plate-Loaded'],['Weighted Dip (Chest)','Dip, Bodyweight, Weighted (Chest)'],['Weighted Dip (Tricep)','Dip, Bodyweight, Weighted (Tricep)']]);
+      const rk=(name)=>R.get(name)||name;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)) day.exercises.forEach(e=>{
+          if(R.has(e.name)){ e.name=rk(e.name); touched=true; }
+        });
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      let ow={}; try{ ow=JSON.parse(localStorage.getItem('ig_openwt')||'{}'); }catch{}
+      let owT=false;
+      R.forEach((NEW,OLD)=>{ if(ow[OLD]!==undefined){ if(ow[NEW]===undefined) ow[NEW]=ow[OLD]; delete ow[OLD]; owT=true; } });
+      if(owT){ const raw=JSON.stringify(ow);
+        try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow); }
+      setPrs(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setUserMeta(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
+      setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
+      localStorage.setItem('ig_mig_canon2','1');
     }catch{}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only

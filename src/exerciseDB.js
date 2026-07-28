@@ -29,12 +29,12 @@ const slug = (s) =>
 // canonical name (exact library match) → scoring metadata
 const RUNTIME_META = {
   "Shoulder Press":          { tier:"P1", prPts:8, compound:true },
-  "Military Press PL Machine":  { tier:"P1", prPts:8, compound:true },
-  "Seated PL Dip Machine":      { tier:"P2", prPts:5, compound:true },
+  "Military Press, Machine, Plate-Loaded":  { tier:"P1", prPts:8, compound:true },
+  "Dip, Machine, Plate-Loaded, Seated":      { tier:"P2", prPts:5, compound:true },
   "LF Seated Dip":              { tier:"P2", prPts:5, compound:true },
   "Pec Deck":                   { tier:"ISO", prPts:3 },
   "Pushdown, Cable":             { tier:"ISO", prPts:3 },
-  "Seated Lateral Raise":       { tier:"ISO", prPts:3 },
+  "Lateral Raise, Dumbbell, Seated":       { tier:"ISO", prPts:3 },
   "Captain's Chair":            { tier:"ISO", prPts:3 },
   "RDL, Barbell":                { tier:"P1", prPts:8, compound:true },
   "LF Row":                     { tier:"P1", prPts:8, compound:true },
@@ -44,12 +44,12 @@ const RUNTIME_META = {
   "LF Bicep Curl":              { tier:"ISO", prPts:3 },
   "Dead Hang":                  { tier:"ISO", prPts:3 },
   "Hip Thrust (Smith)":         { tier:"P2", prPts:5, compound:true },
-  "Seated Leg Curl":            { tier:"P2", prPts:5, compound:true },
-  "Linear Hack Squat PL":       { tier:"P1", prPts:8, compound:true },
+  "Leg Curl, Machine, Seated":            { tier:"P2", prPts:5, compound:true },
+  "Linear Hack Squat, Machine, Plate-Loaded":       { tier:"P1", prPts:8, compound:true },
   "Leg Extension":              { tier:"ISO", prPts:3 },
   "Calf Press":                 { tier:"ISO", prPts:3 },
   "Calf Press, Linear Leg Press": { tier:"ISO", prPts:3 },
-  "Seated Calf Raise":          { tier:"ISO", prPts:3 },
+  "Calf Raise, Machine, Plate-Loaded, Seated":          { tier:"ISO", prPts:3 },
   "Reverse Pec Deck":           { tier:"ISO", prPts:3 },
 };
 
@@ -63,19 +63,19 @@ const RUNTIME_ONLY = [
     primary:"chest", secondary:["front delts","triceps"], equip:"smith", type:"compound", tier:"P1", prPts:8, compound:true },
   { canonical:"HS Decline Press", aliases:["hammer strength decline press","decline plate loaded press"],
     primary:"chest", secondary:["triceps"], equip:"plate-loaded", type:"compound", tier:"P2", prPts:5, compound:true },
-  { canonical:"DB Flys", aliases:["dumbbell fly","flat db fly","dumbbell flyes"],
+  { canonical:"Fly, Dumbbell", aliases:["dumbbell fly","flat db fly","dumbbell flyes","db flys"],
     primary:"chest", secondary:[], equip:"dumbbell", type:"isolation", tier:"ISO", prPts:3 },
-  { canonical:"Assisted Dips", aliases:["assisted dip machine","dip assist"],
+  { canonical:"Dip, Machine, Assisted", aliases:["assisted dip machine","dip assist","assisted dips","assisted dip"],
     primary:"chest", secondary:["triceps","front delts"], equip:"stack-pin", type:"compound", tier:"P2", prPts:5, compound:true },
-  { canonical:"High Row PL", aliases:["plate loaded high row","hammer strength high row"],
+  { canonical:"High Row, Machine, Plate-Loaded", aliases:["plate loaded high row","hammer strength high row","high row pl"],
     primary:"mid back", secondary:["lats","biceps"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
-  { canonical:"Lat Pull-Down PL", aliases:["plate loaded lat pulldown","lat pulldown pl","iso lateral pulldown"],
+  { canonical:"Lat Pulldown, Machine, Plate-Loaded", aliases:["plate loaded lat pulldown","lat pulldown pl","iso lateral pulldown","lat pull-down pl"],
     primary:"lats", secondary:["biceps","mid back"], equip:"plate-loaded", type:"compound", tier:"P1", prPts:8, compound:true },
-  { canonical:"Assisted Chin-Up", aliases:["assisted chin up machine","chin up assist"],
+  { canonical:"Chin-Up, Machine, Assisted", aliases:["assisted chin up machine","chin up assist","assisted chin-up"],
     primary:"lats", secondary:["biceps"], equip:"stack-pin", type:"compound", tier:"P2", prPts:5, compound:true },
   { canonical:"Hyperextensions 45°", aliases:["45 degree back extension","hyperextension","back extension 45"],
     primary:"lower back", secondary:["glutes","hamstrings"], equip:"bw-load", type:"isolation", tier:"ISO", prPts:3 },
-  { canonical:"Weighted Crunches", aliases:["weighted crunch","plate crunch"],
+  { canonical:"Crunches, Machine, Plate-Loaded", aliases:["weighted crunch","plate crunch","weighted crunches"],
     primary:"abs", secondary:[], equip:"plate-loaded", type:"isolation", tier:"ISO", prPts:3 },
 ];
 
@@ -118,12 +118,12 @@ const CONSOLIDATE = {
   "Incline Press":           ["Incline Machine Press"],
   "Bench Press, Smith Machine": ["Bench Press, Smith Machine"],
   "HS Decline Press":           ["Hammer Strength Decline"],
-  "DB Flys":                    ["Fly, Dumbbell"],
-  "Assisted Dips":              ["Assisted Dip"],
-  "High Row PL":                ["LF High Row"],
-  "Lat Pull-Down PL":           ["Lat Pulldown PL"],
+  "Fly, Dumbbell":                    ["Fly, Dumbbell"],
+  "Dip, Machine, Assisted":              ["Dip, Machine, Assisted"],
+  "High Row, Machine, Plate-Loaded":                ["LF High Row"],
+  "Lat Pulldown, Machine, Plate-Loaded":           ["Lat Pulldown, Machine, Plate-Loaded"],
   "Hyperextensions 45°":        ["Hyperextension 45°"],
-  "Weighted Crunches":          ["Weighted Crunch"],
+  "Crunches, Machine, Plate-Loaded":          ["Crunches, Machine, Plate-Loaded"],
 };
 // Aliases on generic entries that collide with a runtime canonical.
 const ALIAS_STRIP = {
@@ -241,7 +241,7 @@ export const PREWARM_PRIMARIES = {
 //   1. "Triceps" -> 0 hits. No canonical or alias contains the literal string
 //      "triceps"; the singular "tricep" appears in several. Plural killed it.
 //   2. "Triceps, Seated Dip Machine" -> 0 hits. Substring matching cannot skip
-//      an interposed word, so it never reached "Seated PL Dip Machine".
+//      an interposed word, so it never reached "Dip, Machine, Plate-Loaded, Seated".
 //   3. Muscle groups were not searchable at all — the DB carries primary /
 //      secondary but nothing ever read them at query time.
 // Replacement: tokenise, stem trailing plurals, match tokens in any order, and
@@ -355,20 +355,20 @@ export const MOVEMENT_CLUSTERS = {
   // silently by .filter(Boolean) — the variant just disappears from the picker.
   "Bench Press":       ["Bench Press, Barbell","Bench Press, Dumbbell","Bench Press, Smith Machine"],
   "Bicep Curl":        ["LF Bicep Curl","Bicep Curl, Machine"],
-  "Calf Raise":        ["Seated Calf Raise","Calf Raise, Smith Machine"],
+  "Calf Raise":        ["Calf Raise, Machine, Plate-Loaded, Seated","Calf Raise, Smith Machine"],
   "Curl (Free)":       ["Curl, Barbell","Curl, Dumbbell","Curl, Cable"],
-  "Dip":               ["LF Seated Dip","Seated PL Dip Machine","Assisted Dips"],
+  "Dip":               ["LF Seated Dip","Dip, Machine, Plate-Loaded, Seated","Dip, Machine, Assisted"],
   "Front Raise":       ["Front Raise","Front Raise, Cable"],
-  "Good Morning":      ["Good Morning","Seated Good Morning"],
-  "Hack Squat":        ["Hack Squat","Linear Hack Squat PL"],
-  "High Row":          ["High Row PL","High Row, Cable"],
-  "Lat Pulldown":      ["Lat Pulldown","Lat Pull-Down PL"],
-  "Lateral Raise":     ["Lateral Raise, Dumbbell","Seated Lateral Raise","Lateral Raise, Cable","Lateral Raise, Machine"],
-  "Overhead Extension":["Overhead Cable Extension","Overhead Dumbbell Extension"],
+  "Good Morning":      ["Good Morning","Good Morning, Barbell, Seated"],
+  "Hack Squat":        ["Hack Squat","Linear Hack Squat, Machine, Plate-Loaded"],
+  "High Row":          ["High Row, Machine, Plate-Loaded","High Row, Cable"],
+  "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown, Machine, Plate-Loaded"],
+  "Lateral Raise":     ["Lateral Raise, Dumbbell","Lateral Raise, Dumbbell, Seated","Lateral Raise, Cable","Lateral Raise, Machine"],
+  "Overhead Extension":["Overhead Extension, Cable","Overhead Extension, Dumbbell"],
   "Pullover":          ["Pullover, Dumbbell","Pullover, Cable","Pullover, Machine"],
   "RDL":               ["RDL, Dumbbell","RDL, Barbell"],
   "Rear Delt Fly":     ["Rear Delt Fly","Rear Delt Fly, Cable"],
-  "Row":               ["Row, Barbell","Row, Dumbbell","Seated Cable Row","LF Row","Lever Seated Row","Row, Smith Machine"],
+  "Row":               ["Row, Barbell","Row, Dumbbell","Row, Cable, Seated","LF Row","Lever Seated Row","Row, Smith Machine"],
   "Shrug":             ["Shrug, Barbell","Shrug, Dumbbell","Shrug, Machine"],
   "Upright Row":       ["Upright Row, Barbell","Upright Row, Dumbbell","Upright Row, Cable"],
 };
