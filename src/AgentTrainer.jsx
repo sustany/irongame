@@ -3551,6 +3551,10 @@ export default function IronGame(){
             justifyContent:"space-between"}}>
             <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:700,
               fontSize:12,color:"rgba(255,255,255,0.55)",letterSpacing:"0.06em"}}>
+              {/* B-ELAPSED1: label the stamp — unlabeled it reads as session
+                  start time and contradicts the header timer */}
+              <span style={{color:"rgba(255,255,255,0.35)",fontSize:10,
+                letterSpacing:"0.14em",marginRight:6}}>BUILD</span>
               {BUILD_VERSION}
             </div>
             <div style={{color:"rgba(255,255,255,0.4)",display:"flex",alignItems:"center"}}>
