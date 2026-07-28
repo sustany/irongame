@@ -896,6 +896,10 @@ export default function IronGame(){
   const [prFlash,   setPrFlash]   = useState(null);
   const [wConf,     setWConf]     = useState(null);
   const [weightAdj, setWeightAdj] = useState(0);
+  // B-PLATEDECOMP1: user's actual plate taps {plate:count}. null = no taps yet
+  // (ghost mode - breakdown below is a SUGGESTION synthesized from the total).
+  // Once non-null, the ledger IS the state and the total is derived from it.
+  const [plateLedger, setPlateLedger] = useState(null);
   const [tick,      setTick]      = useState(0);
   const [sessionStart, setSessionStart] = useState(()=> _saved?.sessionStart ?? null);
   const [sessionEnd,   setSessionEnd]   = useState(null);
@@ -1394,9 +1398,43 @@ export default function IronGame(){
   const atCeiling = gymMax && adjWt >= gymMax;
   const eq     = eqOf(m);
   // F-PLATES1 — absolute breakdown of total load (TOTAL plate counts)
-  const loadout = ex&&!isBw&&eq.showPlates&&adjWt>0
-    ? plateBreakdown(adjWt, eq.barWt||0, eq.bilateral, m.maxPlate||45)
+  // B-PLATEPAIR1 / B-PLATEDECOMP1: with a ledger, plates are state and the
+  // total is the sum (+bar). Without one, breakdown of the prescribed total
+  // renders as a ghosted suggestion (F-GHOSTPLATE1). Adoption on first tap
+  // drops any phantom remainder (it was never physically loadable).
+  const ledgerTotal = plateLedger
+    ? (eq.barWt||0) + Object.entries(plateLedger)
+        .reduce((sum,[pl,ct]) => sum + Number(pl)*ct, 0)
+    : null;
+  if (ledgerTotal !== null) adjWt = Math.max(0, ledgerTotal);
+  const loadout = ex&&!isBw&&eq.showPlates
+    ? (plateLedger
+        ? Object.keys(plateLedger).map(Number).sort((a,b)=>b-a)
+            .map(pl => ({ plate: pl, count: plateLedger[pl] }))
+        : (adjWt>0
+            ? plateBreakdown(adjWt, eq.barWt||0, eq.bilateral, m.maxPlate||45)
+            : []))
     : [];
+  const plateGhost = eq.showPlates && !plateLedger;           // suggestion, not state
+  const adoptLedger = () => {                                  // ghost -> real
+    const L = {};
+    loadout.filter(l=>!l.rem).forEach(({plate,count}) => { L[plate] = count; });
+    return L;
+  };
+  const tapAddPlate = (pl) => setPlateLedger(prev => {
+    const L = prev ? { ...prev } : adoptLedger();
+    L[pl] = (L[pl]||0) + 1;                                    // ONE plate per tap
+    return L;
+  });
+  const tapRemovePlate = (pl) => setPlateLedger(prev => {
+    const L = prev ? { ...prev } : adoptLedger();
+    if (L[pl]) { L[pl] -= 1; if (!L[pl]) delete L[pl]; }       // ONE plate per tap
+    return L;
+  });
+  // B-STACKZERO1 companion: seed provenance - true when the shown weight is an
+  // app estimate (no PR, no logged set, no stored opener for this exercise).
+  const seedEstimate = ex && !isBw && !prs[ex.name] && !lastWt
+    && !(openWt && openWt[ex.name] > 0) && weightAdj === 0 && !plateLedger;
   const score  = calcScore(log,prs,ext);
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
 
@@ -1474,7 +1512,7 @@ export default function IronGame(){
     setLog(newLog);
     setWConf(null);
     setPendingResult(null);
-    setWeightAdj(0);
+    setWeightAdj(0);setPlateLedger(null);
 
     // Roll PR back if the popped set had set a new PR for its exercise
     const exMeta = META[popped.exercise] || userMeta[popped.exercise] || {};
@@ -1550,7 +1588,7 @@ export default function IronGame(){
     setWConf(null);
     setLog(l=>[...l,{exercise:ex.name,setNum:setIdx+1,weight:wt,
       reps:reps,result:res,...(phr?{phr}:{})}]);
-    setWeightAdj(0);
+    setWeightAdj(0);setPlateLedger(null);
     setLastRes(res);setLastWt(wt);
     if(setIdx===0&&!isBw) setOpenWt(o=>({...o,[ex.name]:wt})); // F-LASTW1
     const pr=prs[ex.name];
@@ -1586,7 +1624,7 @@ export default function IronGame(){
     };
     setExList(updated);
     setSetIdx(0);setLastRes(null);setLastWt(null);
-    setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);
+    setWeightAdj(0);setPlateLedger(null);setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);
   };
 
   // F-MVGROUP1 — row renderers for the Change Exercise picker.
@@ -2920,8 +2958,8 @@ export default function IronGame(){
           {/* Back chevron — phase-aware: cancels current logging/phr, undoes last logged set, or returns to setup */}
           <button className="t"
             onClick={()=>{
-              if(phase==="phr"){setPendingResult(null);setPhase("ready");setWeightAdj(0);return;}
-              if(phase==="logging"){setPhase("ready");setWeightAdj(0);return;}
+              if(phase==="phr"){setPendingResult(null);setPhase("ready");setWeightAdj(0);setPlateLedger(null);return;}
+              if(phase==="logging"){setPhase("ready");setWeightAdj(0);setPlateLedger(null);return;}
               if(log.length>0){undoLastSet();return;}
               setScreen("setup");
             }}
@@ -3125,14 +3163,15 @@ export default function IronGame(){
                           Monochrome per spec 2026-07-20. Hidden for stack machines. */}
                       {eq.showPlates&&loadout.length>0&&(
                         <div style={{display:"flex",alignItems:"flex-end",
-                          gap:8,alignSelf:"center",flexShrink:0}}>
+                          gap:8,alignSelf:"center",flexShrink:0,
+                          opacity:plateGhost?0.45:1}}>
                           {loadout.filter(l=>!l.rem).map(({plate,count})=>{
                             const SZ={45:34,25:30,10:26,5:22}[plate]||22;
                             const step=Math.max(4,Math.round(SZ*0.2));
                             const h=SZ+step*(count-1);
                             return (
                               <div key={plate} className="t"
-                                onClick={()=>setWeightAdj(a=>a-plate*(eq.bilateral?2:1))}
+                                onClick={()=>tapRemovePlate(plate)}
                                 style={{display:"flex",flexDirection:"column",
                                   alignItems:"center",gap:3,cursor:"pointer"}}>
                                 <div style={{position:"relative",width:SZ,height:h}}>
@@ -3184,7 +3223,13 @@ export default function IronGame(){
                         <div style={{fontFamily:"'Bebas Neue',sans-serif",
                           fontSize:80,lineHeight:1,
                           color:eq.showPlates?C.red:C.wht,
-                          textShadow:"0 0 30px rgba(255,255,255,0.07)"}}>{adjWt}</div>
+                          textShadow:"0 0 30px rgba(255,255,255,0.07)",
+                          opacity:seedEstimate?0.55:1}}>{adjWt}</div>
+                        {seedEstimate&&(
+                          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
+                            fontSize:8,color:C.md,letterSpacing:"0.16em",
+                            textTransform:"uppercase",marginTop:2}}>Estimate</div>
+                        )}
                       </div>
 
                       {/* RIGHT — F-PLVIZ1: plate equipment gets a 2x2 circle
@@ -3198,7 +3243,7 @@ export default function IronGame(){
                             <div key={ri} style={{display:"flex",gap:8}}>
                               {rowP.filter(p=>p<=(m.maxPlate||45)).map(p=>(
                                 <button key={p} className="t"
-                                  onClick={()=>setWeightAdj(a=>a+p*(eq.bilateral?2:1))}
+                                  onClick={()=>tapAddPlate(p)}
                                   style={{width:34,height:34,borderRadius:"50%",
                                     fontFamily:"'Bebas Neue',sans-serif",
                                     fontSize:13,color:C.md,
@@ -3337,7 +3382,7 @@ export default function IronGame(){
                 setSessionEnd(Date.now());setScreen("complete");return;
               }
               setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);
-              setLastWt(null);setWeightAdj(0);setPhase("ready");
+              setLastWt(null);setWeightAdj(0);setPlateLedger(null);setPhase("ready");
             }}
             style={{width:"100%",height:46,marginTop:8,
               background:"transparent",border:`1px solid ${C.bdr}`,
@@ -3496,7 +3541,7 @@ export default function IronGame(){
                   </button>
                   {/* BACK — returns to pre-set (ready) screen */}
                   <button className="t"
-                    onClick={()=>{setPhase("ready");setWeightAdj(0);}}
+                    onClick={()=>{setPhase("ready");setWeightAdj(0);setPlateLedger(null);}}
                     style={{
                       width:"100%",marginTop:10,height:42,borderRadius:10,
                       background:"transparent",border:`1px solid ${C.bdr}`,
@@ -3755,7 +3800,7 @@ export default function IronGame(){
                           const updated=[...exList];
                           updated[exIdx]={...updated[exIdx],name:newExDuplicate.name};
                           setExList(updated);
-                          setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);
+                          setSetIdx(0);setLastRes(null);setLastWt(null);setWeightAdj(0);setPlateLedger(null);
                           setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                           setNewExDuplicate(null);setNewExName("");
                         }}
@@ -3779,7 +3824,7 @@ export default function IronGame(){
                           updated[exIdx]={...updated[exIdx],name,repRange:"8–12",targetReps:10};
                           setExList(updated);
                           setSetIdx(0);setLastRes(null);setLastWt(null);
-                          setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
+                          setWeightAdj(0);setPlateLedger(null);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                           setNewExDuplicate(null);setNewExName("");
                           setNewExEq("plate-loaded");
                         }}
@@ -3876,7 +3921,7 @@ export default function IronGame(){
                       repRange:"8–12",targetReps:10};
                     setExList(updated);
                     setSetIdx(0);setLastRes(null);setLastWt(null);
-                    setWeightAdj(0);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
+                    setWeightAdj(0);setPlateLedger(null);setShowNewExForm(false);setShowExPicker(false);setExSearch("");setExFilter("");
                     setNewExDuplicate(null);setNewExName("");
                     setNewExEq("plate-loaded");
                   }}
@@ -3925,7 +3970,7 @@ export default function IronGame(){
                         };
                         setExList(updated);
                         setSetIdx(0);setLastRes(null);setLastWt(null);
-                        setWeightAdj(0);setShowExPicker(false);setExSearch("");setExFilter("");
+                        setWeightAdj(0);setPlateLedger(null);setShowExPicker(false);setExSearch("");setExFilter("");
                       }}
                       style={{width:"100%",display:"flex",
                         justifyContent:"space-between",alignItems:"center",
