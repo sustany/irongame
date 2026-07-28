@@ -301,11 +301,11 @@ const INIT_PRS = {
   "LF Seated Dip":         { muscle:"chest", weight:290,  reps:10 },
   "HS Decline Press":      { muscle:"chest", weight:90,   reps:9  },
   "Pec Deck":              { muscle:"chest", weight:230,  reps:12 },
-  "Cable Pushdown":        { muscle:"triceps", weight:80,   reps:14 },
+  "Pushdown, Cable":        { muscle:"triceps", weight:80,   reps:14 },
   "Seated Lateral Raise":  { muscle:"shoulders", weight:37.5, reps:15 },
   "Weighted Crunches":     { muscle:"abs", weight:120,  reps:6  },
   "Captain's Chair":       { muscle:"abs", weight:0,    reps:12, bw:true },
-  "Barbell RDL":           { muscle:"hamstrings", weight:225,  reps:6  },
+  "RDL, Barbell":           { muscle:"hamstrings", weight:225,  reps:6  },
   "Lat Pull-Down PL": { muscle:"lats", weight:240,  reps:10 },
   "LF Row":                { muscle:"back", weight:240,  reps:10 },
   "Lever Seated Row":      { muscle:"back", weight:360,  reps:10 },
@@ -377,12 +377,12 @@ const META = {
   "LF Seated Dip":         { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "HS Decline Press":      { muscle:"chest", tier:"P2", prPts:5, compound:true, eq:"plate-loaded", perSide:true },
   "Pec Deck":              { muscle:"chest", tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Cable Pushdown":        { muscle:"triceps", tier:"ISO",prPts:3, eq:"stack-pin" },
+  "Pushdown, Cable":        { muscle:"triceps", tier:"ISO",prPts:3, eq:"stack-pin" },
   "Seated Lateral Raise":  { muscle:"shoulders", tier:"ISO",prPts:3, eq:"dumbbell" },
   "Weighted Crunches":     { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"plate-loaded" },
   "Captain's Chair":       { muscle:"abs", tier:"CORE",prPts:0, core:true, eq:"bodyweight" },
   // maxPlate=25: 45 lb plates hit the floor during RDL range of motion
-  "Barbell RDL":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
+  "RDL, Barbell":           { muscle:"hamstrings", tier:"P1", prPts:8, compound:true, eq:"barbell", maxPlate:25, priority:true },
   "Lat Pull-Down PL":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
@@ -408,13 +408,13 @@ const META = {
 const CATEGORY = {
   push: ["Incline Press","Shoulder Press","Bench Press, Smith Machine",
          "Military Press PL Machine","Seated PL Dip Machine","LF Seated Dip",
-         "HS Decline Press","Pec Deck","Cable Pushdown","Seated Lateral Raise",
+         "HS Decline Press","Pec Deck","Pushdown, Cable","Seated Lateral Raise",
          "Weighted Crunches","DB Flys","Assisted Dips"],
   pull: ["Lat Pull-Down PL","High Row PL","LF Row","Lever Seated Row","Assisted Chin-Up",
          "DB Alternating Curl","DB Hammer Curl","LF Bicep Curl",
          "Hip Thrust (Smith)","Hyperextensions 45°","Dead Hang","Captain's Chair",
          "Reverse Pec Deck"],
-  legs: ["Barbell RDL","Linear Hack Squat PL","Seated Leg Curl","Leg Extension",
+  legs: ["RDL, Barbell","Linear Hack Squat PL","Seated Leg Curl","Leg Extension",
          "Calf Press","Calf Press, Linear Leg Press","Seated Calf Raise","Hip Thrust (Smith)",
          "Hyperextensions 45°","Dead Hang"],
 };
@@ -516,7 +516,7 @@ const TMPLS = {
   push:[
     {name:"Incline Press",     sets:4,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
     {name:"Shoulder Press",    sets:4,repRange:"6–8",  targetReps:8 , alts:["Military Press PL Machine","Seated PL Dip Machine"]},
-    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Cable Pushdown","Seated PL Dip Machine"]},
+    {name:"LF Seated Dip",        sets:3,repRange:"8–10", targetReps:10, alts:["Pushdown, Cable","Seated PL Dip Machine"]},
     {name:"Seated Lateral Raise", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
     {name:"Weighted Crunches",    sets:3,repRange:"8–10", targetReps:10, alts:["Captain's Chair"]},
   ],
@@ -530,7 +530,7 @@ const TMPLS = {
     {name:"Dead Hang",          sets:2,repRange:"max",  targetReps:37,unit:"sec",mandatory:true},
   ],
   legs:[
-    {name:"Barbell RDL",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true, alts:["Hip Thrust (Smith)","Seated Leg Curl"]},
+    {name:"RDL, Barbell",          sets:4,repRange:"6–8",  targetReps:8, barbellCheck:true,priority:true, alts:["Hip Thrust (Smith)","Seated Leg Curl"]},
     {name:"Linear Hack Squat PL", sets:4,repRange:"8–10", targetReps:10, alts:["Leg Extension"]},
     {name:"Seated Leg Curl",      sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
     {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10, alts:["Linear Hack Squat PL"]},
@@ -1135,6 +1135,46 @@ export default function IronGame(){
       if(owTouched){ const raw=JSON.stringify(ow);
         try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow); }
       localStorage.setItem('ig_mig_lf1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
+  // MIG-CANON1 — canonical naming sweep (2026-07-28): Movement, Equipment.
+  // Re-keys 44 equipment-first names across ig_history, ig_openwt, and live
+  // session state (prs, userMeta, exList, log, lastWt is scalar - untouched).
+  // ig_session re-persists via the PERSIST effect after setters run.
+  // Flag-guarded (ig_mig_canon1). Old names remain as search aliases in the
+  // library. Rollback: revert commit; flag makes re-run a no-op either way.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_canon1')) return;
+      const R=new Map([['Band Pull-Apart','Pull-Apart, Band'],['Barbell Back Squat','Back Squat, Barbell'],['Barbell Bench Press','Bench Press, Barbell'],['Barbell Curl','Curl, Barbell'],['Barbell RDL','RDL, Barbell'],['Barbell Row','Row, Barbell'],['Barbell Shrug','Shrug, Barbell'],['Barbell Upright Row','Upright Row, Barbell'],['Cable Crossover','Crossover, Cable'],['Cable Crunch','Crunch, Cable'],['Cable Curl','Curl, Cable'],['Cable Front Raise','Front Raise, Cable'],['Cable High Row','High Row, Cable'],['Cable Kickback','Kickback, Cable'],['Cable Lateral Raise','Lateral Raise, Cable'],['Cable Pullover','Pullover, Cable'],['Cable Pushdown','Pushdown, Cable'],['Cable Rear Delt Fly','Rear Delt Fly, Cable'],['Cable Upright Row','Upright Row, Cable'],['Dumbbell Bench Press','Bench Press, Dumbbell'],['Dumbbell Curl','Curl, Dumbbell'],['Dumbbell Fly','Fly, Dumbbell'],['Dumbbell Lateral Raise','Lateral Raise, Dumbbell'],['Dumbbell Pullover','Pullover, Dumbbell'],['Dumbbell RDL','RDL, Dumbbell'],['Dumbbell Row','Row, Dumbbell'],['Dumbbell Shoulder Press','Shoulder Press, Dumbbell'],['Dumbbell Shrug','Shrug, Dumbbell'],['Dumbbell Upright Row','Upright Row, Dumbbell'],['EZ Bar Curl','Curl, EZ Bar'],['Landmine Press','Press, Landmine'],['Machine Bicep Curl','Bicep Curl, Machine'],['Machine Chest Press','Chest Press, Machine'],['Machine Lateral Raise','Lateral Raise, Machine'],['Machine Pullover','Pullover, Machine'],['Machine Shoulder Press','Shoulder Press, Machine'],['Machine Shrug','Shrug, Machine'],['Plate Front Raise','Front Raise, Plate'],['Smith Calf Raise','Calf Raise, Smith Machine'],['Smith Machine Bench Press','Bench Press, Smith Machine'],['Smith Machine Row','Row, Smith Machine'],['Smith Machine Squat','Squat, Smith Machine'],['Trap Bar Deadlift','Deadlift, Trap Bar'],['Trap Bar Shrug','Shrug, Trap Bar']]);
+      const rk=(name)=>R.get(name)||name;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)) day.exercises.forEach(e=>{
+          if(R.has(e.name)){ e.name=rk(e.name); touched=true; }
+        });
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      let ow={}; try{ ow=JSON.parse(localStorage.getItem('ig_openwt')||'{}'); }catch{}
+      let owT=false;
+      R.forEach((NEW,OLD)=>{ if(ow[OLD]!==undefined){ if(ow[NEW]===undefined) ow[NEW]=ow[OLD]; delete ow[OLD]; owT=true; } });
+      if(owT){ const raw=JSON.stringify(ow);
+        try{localStorage.setItem('ig_openwt',raw);}catch{} idbSet('ig_openwt',raw); setOpenWt(ow); }
+      setPrs(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setUserMeta(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
+      setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
+      localStorage.setItem('ig_mig_canon1','1');
     }catch{}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only
