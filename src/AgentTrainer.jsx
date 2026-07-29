@@ -1436,13 +1436,6 @@ export default function IronGame(){
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // F-TIMER1: total wall-clock from session start as h:mm:ss, live tick.
-  const elapsedStr = () => {
-    if (!sessionStart) return "0:00:00";
-    const ms   = (sessionEnd || Date.now()) - sessionStart;
-    const sec  = Math.max(0, Math.floor(ms / 1000));
-    const h = Math.floor(sec/3600), mm = Math.floor((sec%3600)/60), ss = sec%60;
-    return `${h}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
-  };
 
   const ex     = exList[exIdx]||null;
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
@@ -3120,10 +3113,6 @@ export default function IronGame(){
                 {sessionDate}
               </div>
             )}
-            {/* F-TIMER1: live h:mm:ss below date; tabular-nums stops jitter */}
-            <div style={{fontVariantNumeric:"tabular-nums",marginTop:1}}>
-              {elapsedStr()}
-            </div>
             {/* F-TIMECAP3 — leave-by countdown, session screen. Same red MM:SS
                 as the setup button so the two read as one number, not two.
                 Only rendered in time-constrained mode. */}
@@ -3132,14 +3121,9 @@ export default function IronGame(){
               const dep=new Date(tcTick);dep.setHours(h,mm,0,0);
               const secs=Math.max(0,Math.floor((dep-tcTick)/1000));
               return (
-                <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",
-                  gap:4,marginTop:3}}>
-                  <span style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:8,
-                    color:C.md,letterSpacing:"0.16em",textTransform:"uppercase"}}>Leave</span>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,lineHeight:1,
-                    color:C.red,fontVariantNumeric:"tabular-nums"}}>
-                    {String(Math.floor(secs/60)).padStart(2,"0")}:{String(secs%60).padStart(2,"0")}
-                  </span>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,lineHeight:1,
+                  color:C.red,fontVariantNumeric:"tabular-nums",marginTop:3}}>
+                  {String(Math.floor(secs/60)).padStart(2,"0")}:{String(secs%60).padStart(2,"0")}
                 </div>
               );
             })()}
