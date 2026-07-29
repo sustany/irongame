@@ -3443,17 +3443,18 @@ export default function IronGame(){
                         marks read light, not chunky. Max tally radius 5.5 leaves a
                         2.25-unit clear ring — the marks never touch the arcs or the
                         arrowheads. Arrowheads are filled triangles per the sketch.
-                        Arc spans cut 155deg -> 140deg (A 240->20, B 60->200): the
-                        arrowhead projects 3.4 units past the arc end, so the gap
-                        must be measured tip-to-opposite-cap, not end-to-start.
-                        Clearance is now 2.04 units. */}
+                        Ring stroke matches the tally stroke (both 1.0) so the
+                        weight reads even. Arrowheads rescaled to that stroke
+                        (hw 1.3, len 2.2) and arc spans re-solved to 149deg
+                        (A 231->20, B 51->200). Gap is measured tip-to-opposite-CAP,
+                        not end-to-start: 2.10 units. */}
                     <svg width={HRREPS_ICON} height={HRREPS_ICON} viewBox="0 0 24 24" fill="none"
-                      stroke={C.lt} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
+                      stroke={C.lt} strokeWidth="1.0" strokeLinecap="round" strokeLinejoin="round"
                       aria-hidden="true" style={{flexShrink:0,display:"block"}}>
-                      <path d="M4.466 16.350A8.7 8.7 0 0 1 14.975 3.825"/>
-                      <path d="M19.534 7.650A8.7 8.7 0 0 1 9.025 20.175"/>
-                      <path fill={C.lt} stroke="none" d="M18.170 4.988L15.762 1.664L14.188 5.986Z"/>
-                      <path fill={C.lt} stroke="none" d="M5.830 19.012L8.238 22.336L9.812 18.364Z"/>
+                      <path d="M5.239 17.475A8.7 8.7 0 0 1 14.976 3.825"/>
+                      <path d="M18.761 6.525A8.7 8.7 0 0 1 9.024 20.175"/>
+                      <path fill={C.lt} stroke="none" d="M17.043 4.577L15.420 2.603L14.531 5.046Z"/>
+                      <path fill={C.lt} stroke="none" d="M6.957 19.423L8.580 21.397L9.469 18.954Z"/>
                       <g strokeWidth="1.0">
                         <line x1="9" y1="8" x2="9" y2="16"/>
                         <line x1="11" y1="8" x2="11" y2="16"/>
