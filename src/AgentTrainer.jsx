@@ -880,6 +880,9 @@ export default function IronGame(){
   const [ext,       setExt]       = useState(false);
   const [tcMode,    setTcMode]    = useState(false);
   const [depTime,   setDepTime]   = useState(()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;});
+  // F-TIMECAP1 — when true the Time Constrained button is replaced IN PLACE by
+  // the time field. No separate section is ever rendered below the row.
+  const [tcEdit,    setTcEdit]    = useState(false);
   const [exList,    setExList]    = useState(()=> _saved?.exList    ?? []);
   const [exIdx,     setExIdx]     = useState(()=> _saved?.exIdx     ?? 0);
   const [setIdx,    setSetIdx]    = useState(()=> _saved?.setIdx    ?? 0);
@@ -2264,9 +2267,9 @@ export default function IronGame(){
 
           {/* FORMAT — time constrained vs flexible (below workout picker) */}
           <div style={{marginBottom:18}}>
-            <div style={{display:"flex",gap:10,marginBottom:tcMode?10:0}}>
+            <div style={{display:"flex",gap:10}}>
               {/* Flexible */}
-              <button className="t" onClick={()=>setTcMode(false)} style={{
+              <button className="t" onClick={()=>{setTcMode(false);setTcEdit(false);}} style={{
                 flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
                 background:!tcMode?STEEL_SEL:STEEL,
                 border:`1px solid ${!tcMode?C.red:C.bdr}`,
@@ -2284,8 +2287,38 @@ export default function IronGame(){
                   Optimize for best stimulus
                 </div>
               </button>
-              {/* Time Constrained */}
-              <button className="t" onClick={()=>setTcMode(true)} style={{
+              {/* Time Constrained — F-TIMECAP1. Tapping morphs this slot in
+                  place into the time field; committing collapses it back to a
+                  "Leave by H:MM" button. No new section is ever opened. */}
+              {tcEdit ? (
+                <div style={{
+                  flex:1,minHeight:74,borderRadius:12,padding:"10px 12px",minWidth:0,
+                  background:STEEL_SEL,
+                  border:`1px solid ${C.red}`,
+                  borderTop:`1px solid #f03010`,
+                  boxShadow:`0 0 0 1px ${C.red},0 4px 20px ${C.redGlow}`,
+                  display:"flex",flexDirection:"column",justifyContent:"center",gap:6}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:9,
+                    color:"rgba(255,255,255,0.75)",letterSpacing:"0.16em",textTransform:"uppercase"}}>
+                    I need to leave by
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                    <input type="time" value={depTime} autoFocus
+                      onChange={e=>setDepTime(e.target.value)}
+                      onKeyDown={e=>{if(e.key==="Enter")setTcEdit(false);}}
+                      style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
+                        borderRadius:8,color:"#fff",fontSize:19,fontWeight:700,
+                        padding:"6px 8px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
+                    <button className="t" onClick={()=>setTcEdit(false)} style={{
+                      flexShrink:0,width:34,height:34,borderRadius:8,cursor:"pointer",
+                      background:C.red,border:`1px solid ${C.red}`,
+                      display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <IChk s={14} style={{color:C.wht}}/>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+              <button className="t" onClick={()=>{setTcMode(true);setTcEdit(true);}} style={{
                 flex:1,minHeight:74,borderRadius:12,padding:"12px 14px",cursor:"pointer",
                 background:tcMode?STEEL_SEL:STEEL,
                 border:`1px solid ${tcMode?C.red:C.bdr}`,
@@ -2294,46 +2327,19 @@ export default function IronGame(){
                 display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"center",gap:5,textAlign:"left"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <IClk s={16} style={{color:tcMode?C.red:C.md}}/>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>Time Constrained</span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:"0.1em",color:C.wht}}>
+                    {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const hh=((h+11)%12)+1;return`Leave by ${hh}:${String(m).padStart(2,'0')}`;})():"Time Constrained"}
+                  </span>
                   {tcMode&&<IChk s={12} style={{color:C.wht,marginLeft:2}}/>}
                 </div>
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
                   textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));return`${a} min available`;})():"Set your leave time"}
+                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const v=a<55?'4 ex · 14 sets':a<65?'5 ex · 17 sets':'6 ex · 20 sets';return`${a} min · ${v}`;})():"Set your leave time"}
                 </div>
               </button>
+              )}
             </div>
-            {/* Departure time picker — only in TC mode */}
-            {tcMode&&(
-              <div style={{background:STEEL,border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-                borderRadius:10,padding:"12px 14px",
-                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                  color:C.md,letterSpacing:"0.18em",textTransform:"uppercase",marginBottom:8}}>
-                  I need to leave by
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <input type="time" value={depTime}
-                    onChange={e=>setDepTime(e.target.value)}
-                    style={{flex:1,background:"#111",border:`1px solid ${C.bdr}`,
-                      borderRadius:8,color:"#fff",fontSize:22,fontWeight:700,
-                      padding:"8px 12px",fontFamily:"'Inter',sans-serif",minWidth:0}}/>
-                  <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                      lineHeight:1,color:C.red}}>
-                      {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);return Math.max(0,Math.round((dep-Date.now())/60000));})()}&nbsp;MIN
-                    </div>
-                    <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                      color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>available</div>
-                  </div>
-                </div>
-                <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
-                  color:C.md,letterSpacing:"0.08em",textTransform:"uppercase",marginTop:8}}>
-                  {(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const t=a;return t<55?'→ 4 exercises · 14 sets':t<65?'→ 5 exercises · 17 sets':'→ 6 exercises · 20 sets';})()}
-                </div>
-              </div>
-            )}
           </div>
 
           <div style={{flex:1}}/>
@@ -2351,7 +2357,7 @@ export default function IronGame(){
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setDraftList(null); setShowSessionEditor(false); setTcMode(true); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setDraftList(null); setShowSessionEditor(false); setTcMode(true); setTcEdit(false); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
