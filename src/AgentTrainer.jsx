@@ -883,6 +883,9 @@ export default function IronGame(){
   // F-TIMECAP1 — when true the Time Constrained button is replaced IN PLACE by
   // the time field. No separate section is ever rendered below the row.
   const [tcEdit,    setTcEdit]    = useState(false);
+  // F-TIMECAP2 — 1 Hz tick that drives the red countdown on the collapsed
+  // Time Constrained button. Scoped to the setup screen in TC mode only.
+  const [tcTick,    setTcTick]    = useState(()=>Date.now());
   const [exList,    setExList]    = useState(()=> _saved?.exList    ?? []);
   const [exIdx,     setExIdx]     = useState(()=> _saved?.exIdx     ?? 0);
   const [setIdx,    setSetIdx]    = useState(()=> _saved?.setIdx    ?? 0);
@@ -1011,6 +1014,14 @@ export default function IronGame(){
     const avail=Math.max(0,Math.round((dep-Date.now())/60000));
     setExt(avail>=65);
   },[tcMode,depTime]);
+
+  // F-TIMECAP2 — drive the countdown. No interval unless it is on screen.
+  useEffect(()=>{
+    if(screen!=="setup"||!tcMode) return;
+    setTcTick(Date.now());
+    const id=setInterval(()=>setTcTick(Date.now()),1000);
+    return ()=>clearInterval(id);
+  },[screen,tcMode,depTime]);
 
   // Reset rep stepper to default (adaptedTarget) whenever we land on the ready phase
   // or move to a different set/exercise. Avoids stale stepper values between sets.
@@ -2335,7 +2346,15 @@ export default function IronGame(){
                 <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:11,
                   color:tcMode?"rgba(255,255,255,0.75)":C.lt,paddingLeft:24,
                   textTransform:"uppercase",letterSpacing:"0.06em"}}>
-                  {tcMode?(()=>{const[h,m]=depTime.split(':').map(Number);const dep=new Date();dep.setHours(h,m,0,0);const a=Math.max(0,Math.round((dep-Date.now())/60000));const v=a<55?'4 ex · 14 sets':a<65?'5 ex · 17 sets':'6 ex · 20 sets';return`${a} min · ${v}`;})():"Set your leave time"}
+                  {tcMode?(()=>{
+                    const[h,m]=depTime.split(':').map(Number);
+                    const dep=new Date(tcTick);dep.setHours(h,m,0,0);
+                    const secs=Math.max(0,Math.floor((dep-tcTick)/1000));
+                    const mins=Math.floor(secs/60);
+                    const cd=`${String(mins).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+                    const v=mins<55?'4 ex · 14 sets':mins<65?'5 ex · 17 sets':'6 ex · 20 sets';
+                    return <><span style={{color:C.red,fontVariantNumeric:"tabular-nums"}}>{cd}</span>{` left · ${v}`}</>;
+                  })():"Set your leave time"}
                 </div>
               </button>
               )}
