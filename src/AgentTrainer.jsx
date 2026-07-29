@@ -1015,9 +1015,11 @@ export default function IronGame(){
     setExt(avail>=65);
   },[tcMode,depTime]);
 
-  // F-TIMECAP2 — drive the countdown. No interval unless it is on screen.
+  // F-TIMECAP2 / F-TIMECAP3 — drive the countdown. No interval unless it is
+  // on screen: setup shows it on the collapsed button, session in the score
+  // bar. The complete screen never shows it, so no timer runs there.
   useEffect(()=>{
-    if(screen!=="setup"||!tcMode) return;
+    if(!tcMode||(screen!=="setup"&&screen!=="session")) return;
     setTcTick(Date.now());
     const id=setInterval(()=>setTcTick(Date.now()),1000);
     return ()=>clearInterval(id);
@@ -3122,6 +3124,25 @@ export default function IronGame(){
             <div style={{fontVariantNumeric:"tabular-nums",marginTop:1}}>
               {elapsedStr()}
             </div>
+            {/* F-TIMECAP3 — leave-by countdown, session screen. Same red MM:SS
+                as the setup button so the two read as one number, not two.
+                Only rendered in time-constrained mode. */}
+            {tcMode&&(()=>{
+              const[h,mm]=depTime.split(":").map(Number);
+              const dep=new Date(tcTick);dep.setHours(h,mm,0,0);
+              const secs=Math.max(0,Math.floor((dep-tcTick)/1000));
+              return (
+                <div style={{display:"flex",alignItems:"baseline",justifyContent:"flex-end",
+                  gap:4,marginTop:3}}>
+                  <span style={{fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:8,
+                    color:C.md,letterSpacing:"0.16em",textTransform:"uppercase"}}>Leave</span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,lineHeight:1,
+                    color:C.red,fontVariantNumeric:"tabular-nums"}}>
+                    {String(Math.floor(secs/60)).padStart(2,"0")}:{String(secs%60).padStart(2,"0")}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
