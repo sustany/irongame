@@ -3442,12 +3442,16 @@ export default function IronGame(){
                         stroke thinned 1.7 -> 1.0 and bars lengthened to 8.0 so the
                         marks read light, not chunky. Max tally radius 5.5 leaves a
                         2.25-unit clear ring — the marks never touch the arcs or the
-                        arrowheads. Arrowheads are filled triangles per the sketch. */}
+                        arrowheads. Arrowheads are filled triangles per the sketch.
+                        Arc spans cut 155deg -> 140deg (A 240->20, B 60->200): the
+                        arrowhead projects 3.4 units past the arc end, so the gap
+                        must be measured tip-to-opposite-cap, not end-to-start.
+                        Clearance is now 2.04 units. */}
                     <svg width={HRREPS_ICON} height={HRREPS_ICON} viewBox="0 0 24 24" fill="none"
                       stroke={C.lt} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"
                       aria-hidden="true" style={{flexShrink:0,display:"block"}}>
-                      <path d="M5.848 18.152A8.7 8.7 0 0 1 14.975 3.825"/>
-                      <path d="M18.152 5.848A8.7 8.7 0 0 1 9.025 20.175"/>
+                      <path d="M4.466 16.350A8.7 8.7 0 0 1 14.975 3.825"/>
+                      <path d="M19.534 7.650A8.7 8.7 0 0 1 9.025 20.175"/>
                       <path fill={C.lt} stroke="none" d="M18.170 4.988L15.762 1.664L14.188 5.986Z"/>
                       <path fill={C.lt} stroke="none" d="M5.830 19.012L8.238 22.336L9.812 18.364Z"/>
                       <g strokeWidth="1.0">
