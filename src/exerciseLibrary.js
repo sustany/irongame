@@ -163,6 +163,7 @@ export const EXERCISE_LIBRARY = [
 
   // ── GLUTES ──────────────────────────────────────────────────
   { canonical: "Hip Thrust",                  aliases: ["barbell hip thrust", "bb hip thrust"], primary: "glutes", secondary: ["hamstrings"], equip: "barbell", type: "compound" },
+  { canonical: "Hip Thrust, Machine, Plate-Loaded", aliases: ["booty builder", "booty builder hip thrust", "hip thrust machine", "dedicated hip thrust"], primary: "glutes", secondary: ["hamstrings"], equip: "plate-loaded", type: "compound", brand: "Booty Builder" },
   { canonical: "Hip Thrust (Smith)",          aliases: ["smith hip thrust", "smith machine hip thrust"], primary: "glutes", secondary: ["hamstrings"], equip: "smith", type: "compound" },
   { canonical: "Glute Bridge",                aliases: ["barbell glute bridge"], primary: "glutes", secondary: ["hamstrings"], equip: "barbell", type: "compound" },
   { canonical: "Kickback, Cable",              aliases: ["glute kickback", "cable kickback"], primary: "glutes", secondary: [], equip: "cable", type: "isolation" },

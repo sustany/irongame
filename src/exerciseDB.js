@@ -360,6 +360,7 @@ export const MOVEMENT_CLUSTERS = {
   "Dip":               ["LF Seated Dip","Dip, Machine, Plate-Loaded, Seated","Dip, Machine, Assisted"],
   "Front Raise":       ["Front Raise","Front Raise, Cable"],
   "Good Morning":      ["Good Morning","Good Morning, Barbell, Seated"],
+  "Hip Thrust":        ["Hip Thrust","Hip Thrust (Smith)","Hip Thrust, Machine, Plate-Loaded"],
   "Hack Squat":        ["Hack Squat","Linear Hack Squat, Machine, Plate-Loaded"],
   "High Row":          ["High Row, Machine, Plate-Loaded","High Row, Cable"],
   "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown, Machine, Plate-Loaded"],
