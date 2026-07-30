@@ -1427,7 +1427,8 @@ export default function IronGame(){
     setSesType(type);
     setExt(useExt);
     setExList(exs);
-    setSessionDate(new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}));
+    // F-DATESTRIP1: no weekday past the setup screen.
+    setSessionDate(new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}));
 
     if(hash==='complete'){
       // Populate a realistic completed session log for result screen testing
@@ -1606,9 +1607,10 @@ export default function IronGame(){
     const t=typeOverride??sesType;
     if(typeOverride){setSesType(typeOverride);setCustomOpener(null);setDraftList(null);}
     const now=new Date();
-    const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    setSessionDate(`${DAYS[now.getDay()]} ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
+    // F-DATESTRIP1: weekday stays on the setup screen (its own dayName,
+    // built independently at ~L1853) and is dropped everywhere after it.
+    setSessionDate(`${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
     setExList((!typeOverride&&draftList)?[...draftList]:build(t,true));setExIdx(0);setSetIdx(0);setLog([]);
     setLastRes(null);setLastWt(null);setPhase("ready");
     setSessionStart(Date.now());
