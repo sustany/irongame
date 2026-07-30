@@ -440,6 +440,14 @@ const MUSCLE_GROUPS = [
   {id:"glutes",     label:"Glutes",     prims:["glutes"]},
   {id:"calves",     label:"Calves",     prims:["calves"]},
 ];
+// F-CHIPORDER1 — setup-screen chip layout, PPL-aligned rows (2026-07-30).
+// Display order only; MUSCLE_GROUPS stays the canonical data array.
+const CHIP_ROWS = [
+  ["chest","shoulders","triceps"],   // push
+  ["back","biceps","abs"],           // pull
+  ["quads","hamstrings","glutes","calves"], // legs
+];
+const GROUP_BY_ID = Object.fromEntries(MUSCLE_GROUPS.map(g=>[g.id,g]));
 const groupPrimSet = (ids)=>new Set(
   MUSCLE_GROUPS.filter(g=>ids.includes(g.id)).flatMap(g=>g.prims));
 // B-ORDER1 — muscle-group size ranking (signed off 2026-07-13).
@@ -1992,8 +2000,10 @@ export default function IronGame(){
                 opacity:chipsDim?0.38:1,
                 transition:"opacity 140ms ease",
                 boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                  {MUSCLE_GROUPS.map(g=>{
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {CHIP_ROWS.map((row,ri)=>(
+                  <div key={ri} style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {row.map(gid=>GROUP_BY_ID[gid]).filter(Boolean).map(g=>{
                     const on=customGroups.includes(g.id);
                     return(
                       <button key={g.id} className="t"
@@ -2015,6 +2025,8 @@ export default function IronGame(){
                       </button>
                     );
                   })}
+                  </div>
+                  ))}
                 </div>
               </div>
               );
