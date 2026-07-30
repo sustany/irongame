@@ -547,6 +547,31 @@ const PREV={
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
 // ─────────────────────────────────────────────────────────────
+// F-LBLSTRIP1 — session-screen display label. The canonical name
+// (Movement, Equipment[, Modifier]) stays the single source of truth
+// for the DB, picker, search and every PR key. During a live set the
+// loading tokens are redundant: the glyph row already shows plates vs
+// stack. So they are dropped and any surviving modifier is moved to
+// the front, yielding a comma-free 2-3 word label.
+//   Military Press, Machine, Plate-Loaded      -> Military Press
+//   Calf Raise, Machine, Plate-Loaded, Seated  -> Seated Calf Raise
+//   Fly, Dumbbell                              -> Dumbbell Fly
+// Pure display transform — no stored field, no migration. Collisions
+// are possible (Lat Pulldown stack vs plate-loaded) and are accepted:
+// the glyph row disambiguates, and the picker keeps full canonicals.
+const LOAD_TOKENS = new Set([
+  "machine","plate-loaded","plate loaded","selectorized","stack",
+  "stack-pin","pin-loaded","plate",
+]);
+function displayName(canonical) {
+  if (!canonical) return "";
+  const parts = canonical.split(",").map(t => t.trim()).filter(Boolean);
+  if (parts.length < 2) return canonical;
+  const head = parts[0];
+  const mods = parts.slice(1).filter(t => !LOAD_TOKENS.has(t.toLowerCase()));
+  return [...mods, head].join(" ");
+}
+
 // F-PLATES1 — absolute plate breakdown of the TOTAL load currently on the
 // implement. Counts are TOTAL across both sides. Computed per-side greedy
 // then doubled so every suggestion is physically loadable in pairs.
@@ -3159,10 +3184,12 @@ export default function IronGame(){
             <div onClick={()=>{if(phase==="ready")setShowExPicker(true);}}
               style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
               lineHeight:1.05,color:C.wht,
-              fontSize:ex.name.length>20?34:44,marginBottom:6,
+              fontSize:displayName(ex.name).length>20?34:44,marginBottom:6,
               display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",
               cursor:phase==="ready"?"pointer":"default"}}>
-              {ex.name}
+              {/* F-LBLSTRIP1: display label only. ex.name stays canonical
+                  everywhere else (PR keys, picker, logging). */}
+              {displayName(ex.name)}
               {phase==="ready"&&(
                 /* F-CHANGEEX1: swap icon (lucide ArrowLeftRight path, inlined —
                    no lucide-react dependency). Entire title row opens picker. */
@@ -3313,9 +3340,9 @@ export default function IronGame(){
                                 border:`1px dashed ${C.bdr}`,borderRadius:5,
                                 padding:"3px 6px"}}>
                                 +{loadout.find(l=>l.rem).plate}</div>
-                              <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
-                                color:C.md,letterSpacing:"0.06em",
-                                textTransform:"uppercase",lineHeight:1}}>extra</div>
+                              {/* F-PLATECAP1: "EXTRA" caption removed. The
+                                  dashed border + "+" already read as
+                                  not-a-plate; the word was noise. */}
                             </div>
                           )}
                           {m.maxPlate&&m.maxPlate<45&&(
