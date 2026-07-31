@@ -386,7 +386,7 @@ const META = {
   "Lat Pulldown, Machine, Plate-Loaded":      { muscle:"lats", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "LF Row":                { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
   "Lever Seated Row":      { muscle:"back", tier:"P2", prPts:5, compound:true, eq:"plate-loaded" },
-  "Chin-Up, Machine, Assisted":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
+  "Chin-Up, Machine, Assisted":      { muscle:"lats", tier:"P2", prPts:5, compound:true, eq:"stack-pin", assisted:true },
   "Hyperextensions 45°":   { muscle:"lower_back", tier:"FND",prPts:0, eq:"bw-load", mandatory:true },
   "DB Alternating Curl":   { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
   "DB Hammer Curl":        { muscle:"biceps", tier:"ISO",prPts:3, eq:"dumbbell" },
@@ -400,7 +400,7 @@ const META = {
   "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Raise, Machine, Plate-Loaded, Seated":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Fly, Dumbbell":               { muscle:"chest", tier:"ISO",prPts:3, eq:"dumbbell" },
-  "Dip, Machine, Assisted":         { muscle:"chest", tier:"COMP",prPts:5, compound:true, eq:"stack-pin" },
+  "Dip, Machine, Assisted":         { muscle:"chest", tier:"COMP",prPts:5, compound:true, eq:"stack-pin", assisted:true },
   "Reverse Pec Deck":      { muscle:"rear_delts", tier:"ISO",prPts:3, eq:"stack-pin" },
 };
 // Category membership controls which exercises appear in pickers per session type.
@@ -620,12 +620,36 @@ function calcPlates(target, from, bilateral, maxPlate=45) {
 // loaded gear opens at 0 and is remembered thereafter via ig_openwt.
 const BARBELL_OPEN_PLATES = 25; // lb per side
 
-function suggestW(name,si,lw,lr,prs,ow,meta){
+function suggestW(name,si,lw,lr,prs,ow,meta,bwUser){
   const M  = meta || META[name] || {};
   const pr = prs[name];
   if(pr&&pr.bw) return 0;               // bodyweight PR → no external load
   const eqM = eqOf(M);
   const bar = eqM.barWt||0;             // 44 barbell, 20 Smith, 0 machines
+  // B-ASSIST1 — assisted machines. Stored weights (PRs, history, openers)
+  // remain STACK (assist) lbs, but ALL progression math runs in EFFECTIVE
+  // space: effective = bodyweight − stack. Deltas therefore invert — progress
+  // means LESS assist, warm-up means MORE assist. Non-destructive: nothing in
+  // ig_history / ig_openwt is rewritten; reinterpretation happens here and at
+  // render against the live profile bodyweight.
+  if(M.assisted && bwUser>0){
+    const snapA = M.snap || eqM.snap || 5;
+    const S = (eff)=>Math.max(0, Math.round((bwUser-eff)/snapA)*snapA); // eff → stack
+    const E = (stk)=>bwUser-stk;                                        // stack → eff
+    if(si===0){
+      if(lw&&lw>0) return lw;                                  // adjusted this session
+      if(ow && ow[name]!==undefined && ow[name]>0) return ow[name];
+      if(!pr) return S(bwUser*0.5);          // no history → assist ≈ half bodyweight
+      return S(E(pr.weight)*0.5);            // warm-up = 50% of effective PR
+    }
+    if(!lw) return pr ? pr.weight : S(bwUser*0.5);
+    const effPR  = pr ? E(pr.weight) : null;
+    const ceilE  = effPR!==null ? effPR*1.08 : E(lw)+5;
+    const floorE = effPR!==null ? effPR*0.75 : E(lw)-10;
+    if(lr==="exceeded")   return S(Math.min(E(lw)+5,  ceilE));
+    if(lr==="fell_short") return S(Math.max(E(lw)-10, floorE));
+    return lw;
+  }
   // Opener default when this exercise has no PR history on THIS device.
   // A loaded lift must never open at 0. Barbell = bar + 25/side; any other bar
   // lift floors at the bar; non-bar loaded gear stays 0 (no universal floor).
@@ -1496,7 +1520,7 @@ export default function IronGame(){
   const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
 
   const isBw = m.eq === "bodyweight";
-  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt,m):0;
+  const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt,m,profile.bw):0;
 
   // ── Double progression rep adaptation ──────────────────────
   // Parse rep range ("8–12" → [8,12]). Use em-dash or hyphen.
@@ -1578,6 +1602,9 @@ export default function IronGame(){
   // app estimate (no PR, no logged set, no stored opener for this exercise).
   const seedEstimate = ex && !isBw && !prs[ex.name] && !lastWt
     && !(openWt && openWt[ex.name] > 0) && weightAdj === 0 && !plateLedger;
+  // B-ASSIST1 — render-side effective load. adjWt stays STACK lbs throughout
+  // (history/PRs/openers untouched); the UI leads with what the body lifts.
+  const effAssist = m.assisted ? Math.max(0, (profile.bw||0) - adjWt) : null;
   const score  = calcScore(log,prs,ext);
   const totS   = exList.reduce((s,e)=>s+e.sets,0);
 
@@ -3335,7 +3362,7 @@ export default function IronGame(){
                   </div>
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
                     color:C.lt,letterSpacing:"0.04em"}}>
-                    {prs[ex.name].weight}
+                    {m.assisted?Math.max(0,(profile.bw||0)-prs[ex.name].weight):prs[ex.name].weight}
                     <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                       fontSize:11,color:C.md,letterSpacing:"0.1em",margin:"0 4px"}}>×</span>
                     {prs[ex.name].reps}
@@ -3355,7 +3382,8 @@ export default function IronGame(){
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                   <SL color={C.md}>
-                    {m.eq==="bodyweight" ? "Load"
+                    {m.assisted ? `Effective Load · BW ${profile.bw||"?"}`
+                      : m.eq==="bodyweight" ? "Load"
                       : m.eq==="bw-load"    ? "Added Load"
                       : m.eq==="stack-pin"  ? "Stack Weight"
                       : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
@@ -3456,7 +3484,14 @@ export default function IronGame(){
                           fontSize:80,lineHeight:1,
                           color:eq.showPlates?C.red:C.wht,
                           textShadow:"0 0 30px rgba(255,255,255,0.07)",
-                          opacity:seedEstimate?0.55:1}}>{adjWt}</div>
+                          opacity:seedEstimate?0.55:1}}>{m.assisted?effAssist:adjWt}</div>
+                        {m.assisted&&(
+                          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,
+                            fontSize:10,color:C.md,letterSpacing:"0.14em",
+                            textTransform:"uppercase",marginTop:2}}>
+                            Set Stack to {adjWt}
+                          </div>
+                        )}
                         {seedEstimate&&(
                           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
                             fontSize:8,color:C.md,letterSpacing:"0.16em",
@@ -3497,7 +3532,7 @@ export default function IronGame(){
                         <div style={{display:"flex",gap:4}}>
                           {(m.steps||eq.steps).map(p=>(
                             <button key={`p${p}`} className="t"
-                              onClick={()=>setWeightAdj(a=>a+p)}
+                              onClick={()=>setWeightAdj(a=>a+(m.assisted?-p:p))}
                               style={{flex:1,fontFamily:"'Bebas Neue',sans-serif",
                                 fontSize:13,color:C.grn,
                                 background:"rgba(34,221,102,0.1)",
@@ -3512,7 +3547,7 @@ export default function IronGame(){
                         <div style={{display:"flex",gap:4}}>
                           {(m.steps||eq.steps).map(p=>(
                             <button key={`m${p}`} className="t"
-                              onClick={()=>setWeightAdj(a=>a-p)}
+                              onClick={()=>setWeightAdj(a=>a-(m.assisted?-p:p))}
                               style={{flex:1,fontFamily:"'Bebas Neue',sans-serif",
                                 fontSize:13,color:C.red,
                                 background:"rgba(232,38,10,0.14)",
@@ -3606,7 +3641,7 @@ export default function IronGame(){
             <div style={{flex:1,display:"flex",flexDirection:"column",
               justifyContent:"center",alignItems:"center",gap:10}}>
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,color:C.wht}}>
-                {isBw?"Bodyweight":`${adjWt} lbs`}
+                {isBw?"Bodyweight":`${m.assisted?effAssist:adjWt} lbs`}
               </div>
               <div style={{height:2,width:60,background:C.red}}/>
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:18,color:C.lt}}>
