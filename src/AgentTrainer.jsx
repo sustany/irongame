@@ -935,6 +935,27 @@ export default function IronGame(){
   const [prFlash,   setPrFlash]   = useState(null);
   const [wConf,     setWConf]     = useState(null);
   const [weightAdj, setWeightAdj] = useState(0);
+  // F-PROFILE1 — user profile (ig_profile). Dual-write localStorage + IDB.
+  // bw drives assisted-machine effective-load math (B-ASSIST1).
+  const [profile, setProfileState] = useState(()=>{
+    try{ const v=localStorage.getItem('ig_profile'); if(v) return JSON.parse(v); }catch{}
+    return { bw:222, heightIn:76, dob:"1970-03-14", sex:"M", bwUpdatedAt:null };
+  });
+  const [showProfile, setShowProfile] = useState(false);
+  const setProfile = (patch)=>setProfileState(p=>{
+    const np={...p,...patch};
+    if(patch.bw!==undefined) np.bwUpdatedAt=new Date().toISOString();
+    try{ localStorage.setItem('ig_profile', JSON.stringify(np)); }catch{}
+    idbSet('ig_profile', JSON.stringify(np));
+    return np;
+  });
+  useEffect(()=>{ (async()=>{   // F-PROFILE1: IDB → localStorage restore path
+    try{
+      if(localStorage.getItem('ig_profile')) return;
+      const raw=await idbGet('ig_profile');
+      if(raw){ setProfileState(JSON.parse(raw)); localStorage.setItem('ig_profile',raw); }
+    }catch{}
+  })(); },[]);
   // B-PLATEDECOMP1: user's actual plate taps {plate:count}. null = no taps yet
   // (ghost mode - breakdown below is a SUGGESTION synthesized from the total).
   // Once non-null, the ledger IS the state and the total is derived from it.
@@ -1888,6 +1909,66 @@ export default function IronGame(){
 
     return(
       <div style={shell}>
+        {/* F-PROFILE1 — Profile panel (opened from hamburger) */}
+        {showProfile&&(
+          <div style={{position:"fixed",inset:0,zIndex:998,background:"rgba(0,0,0,0.82)",
+            display:"flex",alignItems:"center",justifyContent:"center",padding:24}}
+            onClick={()=>setShowProfile(false)}>
+            <div style={{background:"#111",border:`1px solid #3a3a3a`,borderRadius:16,
+              padding:24,maxWidth:340,width:"100%"}} onClick={e=>e.stopPropagation()}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                color:"#fff",letterSpacing:"0.08em",marginBottom:16}}>
+                Profile
+              </div>
+              {[
+                {k:"bw",   l:"Body Weight (lbs)", t:"number"},
+                {k:"heightIn", l:"Height (in)",   t:"number"},
+                {k:"dob",  l:"Date of Birth",     t:"date"},
+              ].map(f=>(
+                <div key={f.k} style={{marginBottom:14}}>
+                  <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                    color:"#888",letterSpacing:"0.14em",textTransform:"uppercase",marginBottom:5}}>
+                    {f.l}
+                  </div>
+                  <input type={f.t} inputMode={f.t==="number"?"decimal":undefined}
+                    value={profile[f.k]??""}
+                    onChange={e=>setProfile({[f.k]: f.t==="number"
+                      ? (e.target.value===""?"":Number(e.target.value))
+                      : e.target.value})}
+                    style={{width:"100%",boxSizing:"border-box",background:"#1c1c1e",
+                      border:"1px solid #3a3a3a",borderRadius:8,padding:"10px 12px",
+                      color:"#fff",fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
+                      letterSpacing:"0.04em",outline:"none"}}/>
+                </div>
+              ))}
+              <div style={{display:"flex",gap:8,marginBottom:18}}>
+                {["M","F"].map(x=>(
+                  <button key={x} className="t" onClick={()=>setProfile({sex:x})}
+                    style={{flex:1,height:40,borderRadius:8,cursor:"pointer",
+                      background:profile.sex===x?"rgba(232,38,10,0.18)":"transparent",
+                      border:`1px solid ${profile.sex===x?"#e8260a":"#3a3a3a"}`,
+                      color:profile.sex===x?"#fff":"#888",
+                      fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:"0.1em"}}>
+                    {x}
+                  </button>
+                ))}
+              </div>
+              {profile.bwUpdatedAt&&(
+                <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:"#666",
+                  marginBottom:14}}>
+                  Weight updated {new Date(profile.bwUpdatedAt).toLocaleDateString()}
+                </div>
+              )}
+              <button className="t" onClick={()=>setShowProfile(false)}
+                style={{width:"100%",height:48,borderRadius:10,cursor:"pointer",
+                  background:"linear-gradient(180deg,#e8260a,#aa1a00)",border:"none",
+                  color:"#fff",fontFamily:"'Bebas Neue',sans-serif",fontSize:19,
+                  letterSpacing:"0.1em"}}>
+                Done
+              </button>
+            </div>
+          </div>
+        )}
         {/* PERSIST1 — Resume session modal */}
         {showResume&&(
           <div style={{position:"fixed",inset:0,zIndex:999,background:"rgba(0,0,0,0.82)",
@@ -1938,8 +2019,9 @@ export default function IronGame(){
                 <span style={{color:C.red}}>IRON</span>
                 <span style={{color:C.wht}}>Q</span>
               </div>
-              {/* Hamburger menu — placeholder, no action wired yet */}
-              <div style={{paddingTop:12,paddingLeft:12,cursor:"pointer"}} role="button" aria-label="Menu">
+              {/* F-PROFILE1 — hamburger opens the user profile panel */}
+              <div className="t" onClick={()=>setShowProfile(true)}
+                style={{paddingTop:12,paddingLeft:12,cursor:"pointer"}} role="button" aria-label="Menu">
                 <svg width="28" height="20" viewBox="0 0 28 20" fill="none" aria-hidden="true">
                   <rect y="0" width="28" height="3" rx="1.5" fill={C.wht}/>
                   <rect y="8.5" width="28" height="3" rx="1.5" fill={C.wht}/>
