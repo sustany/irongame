@@ -143,3 +143,32 @@ create policy "own rows" on public.open_weights
 6. Never deploy during an active workout.
 7. Auth = email magic-link only. No Sign in with Apple.
 8. Anon key may live in client env; service-role key never in bundle.
+
+## Name-keyed stores — every MIG-xxx must re-key ALL of these (added 2026-08-04)
+
+`F-PLMEM1` introduced `ig_plateledger`, a **name-keyed** store holding the plate
+loadout physically left on each machine. It orphans on rename exactly the way
+`ig_prs` does, and silently: the exercise simply reopens in ghost mode and the
+loss is invisible until the loadout is wrong on the bar.
+
+Any rename that touches a PR-bearing entry ships a `MIG-xxx` in the same commit
+re-keying the complete set:
+
+| Store | Shape | Re-key |
+|---|---|---|
+| `ig_prs` | `{name: {weight, reps, ...}}` | top-level key |
+| `ig_openwt` | `{name: weight}` | top-level key |
+| `ig_plateledger` | `{name: {plate: count}}` | top-level key — **added 2026-08-04** |
+| `ig_usermeta` | `{name: {eq, prPts, ...}}` | top-level key |
+| `ig_history` | `{dateKey: {exercises:[{name, sets}]}}` | nested `exercises[].name` |
+| `ig_session` | live snapshot | in-memory `exList[].name` + `log[].exercise` |
+
+`MIG-LEGCURL1` (commit for `Leg Curl, Machine, Laying`) is the reference
+implementation; `rekeyFlat(key, setter)` in that effect handles all four
+top-level stores uniformly. Copy it rather than re-deriving.
+
+Supabase consequence: when the pass-2 canonical rename sweep runs (~93 entries
+still pending), the corresponding server-side re-key has to cover the plate
+ledger table too. Model it as `plate_ledgers(user_id, exercise_name, loadout
+jsonb)` with the same `ON UPDATE CASCADE` treatment planned for `prs` and
+`open_weights`, or the sweep will orphan it server-side as well.

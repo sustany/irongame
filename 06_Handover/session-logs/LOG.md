@@ -5,6 +5,37 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-08-04 — Mobile Chat — PLATE LEDGER + EQUIPMENT RESOLUTION — RESOLVED
+
+Six commits pushed from iPad, each build + `node smoke.mjs` gated before commit.
+
+- **B-GHOSTSNAP1** ghost estimates floor to a loadable total (235 -> 230); the
+  phantom "+N" remainder chip is now unreachable. B-SNAP1 untouched.
+- **B-PLEDGER1** plate ledger is machine state, not set state. Five bad resets
+  removed (doLog, undoLastSet, both phase cancels, logging Back). Ledger joins
+  the PERSIST1 snapshot.
+- **F-PLMEM1** new name-keyed store `ig_plateledger`; a machine reopens at the
+  loadout last left on it (option B — app no longer drives the total on plate
+  gear; progression is added by tapping).
+- **F-LOADSYM1** one load paradigm. Left glyph column deleted; green add row /
+  red remove row right of the total on both families; circle = plate,
+  rect = pin. "Plate Loaded" / "Stack Weight" captions dropped.
+- **B-EQFALL1** `eqOf()` defaulted to plate-loaded for any exercise without a
+  META row — **123 of 156 master-DB canonicals**. Now resolves via
+  `eqKeyForName()` from the DB's own `equip` tag.
+- **MIG-LEGCURL1** `Lying Leg Curl` -> `Leg Curl, Machine, Laying` (user ruling:
+  "Laying"). First migration to re-key `ig_plateledger`.
+
+**OPEN — B-EQBWLOAD1.** Four master-DB entries tagged `bodyweight` carry
+external load and belong on `bw-load`: `Dip, Bodyweight, Weighted (Chest)`,
+`Dip, Bodyweight, Weighted (Tricep)`, `Front Raise, Plate`, `Donkey Calf Raise`.
+B-EQFALL1 surfaces the mis-tagging rather than causing it.
+
+**OPEN — pass-2 canonical sweep** must now re-key `ig_plateledger` alongside
+`ig_prs`. See SUPABASE-MIGRATION.md, "Name-keyed stores".
+
+---
+
 ## 2026-07-19 — Mobile Chat — SUPABASE MIGRATION Day 3 — RESOLVED
 
 **Supabase project live.** Ref drgffhoigdocwbusincp. DDL run by Christian
