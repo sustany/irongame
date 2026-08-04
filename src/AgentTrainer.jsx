@@ -984,6 +984,28 @@ export default function IronGame(){
   // (ghost mode - breakdown below is a SUGGESTION synthesized from the total).
   // Once non-null, the ledger IS the state and the total is derived from it.
   const [plateLedger, setPlateLedger] = useState(()=> _saved?.plateLedger ?? null);
+  // F-PLMEM1 — cross-session machine memory: {exerciseName:{plate:count}}.
+  // Records the plates physically left on each machine at its last logged set,
+  // so the next session opens at that exact loadout as REAL state (option B),
+  // not a synthesized suggestion. Dual-written localStorage + IDB per PERSIST1.
+  const [plateMem, setPlateMem] = useState(()=>{
+    try{ const v=localStorage.getItem('ig_plateledger'); if(v) return JSON.parse(v); }catch{}
+    return {};
+  });
+  const rememberPlates = (name, L) => setPlateMem(p=>{
+    if(!name || !L || !Object.keys(L).length) return p;
+    const np={...p,[name]:L};
+    try{ localStorage.setItem('ig_plateledger', JSON.stringify(np)); }catch{}
+    idbSet('ig_plateledger', JSON.stringify(np));
+    return np;
+  });
+  useEffect(()=>{ (async()=>{     // F-PLMEM1: IDB -> localStorage restore path
+    try{
+      if(localStorage.getItem('ig_plateledger')) return;
+      const raw=await idbGet('ig_plateledger');
+      if(raw){ setPlateMem(JSON.parse(raw)); localStorage.setItem('ig_plateledger',raw); }
+    }catch{}
+  })(); },[]);
   const [tick,      setTick]      = useState(0);
   const [sessionStart, setSessionStart] = useState(()=> _saved?.sessionStart ?? null);
   const [sessionEnd,   setSessionEnd]   = useState(null);
@@ -1611,6 +1633,14 @@ export default function IronGame(){
     if (L[pl]) { L[pl] -= 1; if (!L[pl]) delete L[pl]; }       // ONE plate per tap
     return L;
   });
+  // F-PLMEM1 — seed the ledger from cross-session machine memory. Fires only
+  // when the ledger is empty (i.e. immediately after an exercise change), so
+  // it can never clobber live taps or a session resumed via PERSIST1.
+  useEffect(()=>{
+    if(!ex || plateLedger || !eq.showPlates) return;
+    const mem = plateMem[ex.name];
+    if(mem && Object.keys(mem).length) setPlateLedger(mem);
+  },[ex?.name, plateLedger, plateMem, eq.showPlates]);
   // B-STACKZERO1 companion: seed provenance - true when the shown weight is an
   // app estimate (no PR, no logged set, no stored opener for this exercise).
   const seedEstimate = ex && !isBw && !prs[ex.name] && !lastWt
@@ -1778,6 +1808,7 @@ export default function IronGame(){
     // largest-plate-first loadout that did not match the bar (6x25 -> 2x45+2x25+2x5).
     // The ledger now survives set->set and resets only on exercise change.
     setWeightAdj(0);
+    if(eq.showPlates) rememberPlates(ex.name, plateLedger ?? adoptLedger()); // F-PLMEM1
     setLastRes(res);setLastWt(wt);
     if(setIdx===0&&!isBw) setOpenWt(o=>({...o,[ex.name]:wt})); // F-LASTW1
     const pr=prs[ex.name];
