@@ -1564,6 +1564,18 @@ export default function IronGame(){
   if(gymMax && adjWt > gymMax) adjWt = snapWt(gymMax, m);
   const atCeiling = gymMax && adjWt >= gymMax;
   const eq     = eqOf(m);
+  // B-GHOSTSNAP1 — a ghost estimate must be physically loadable. PLATES is
+  // [45,25,10,5], so every multiple of 5/side is composable and the whole rule
+  // reduces to: floor the loadable portion to 10 (bilateral) or 5 (unilateral).
+  // Kills the phantom "+N" remainder chip at its source instead of relabelling
+  // it. B-SNAP1 untouched: plate gear has no +/- stepper (the circle picker
+  // replaces it), and once a ledger exists the ledger is the total, so this
+  // branch is unreachable the moment the user taps a plate.
+  if (eq.showPlates && !plateLedger && !m.assisted) {
+    const _step = eq.bilateral ? 10 : 5;
+    const _bar  = eq.barWt || 0;
+    adjWt = _bar + Math.floor(Math.max(0, adjWt - _bar) / _step) * _step;
+  }
   // F-PLATES1 — absolute breakdown of total load (TOTAL plate counts)
   // B-PLATEPAIR1 / B-PLATEDECOMP1: with a ledger, plates are state and the
   // total is the sum (+bar). Without one, breakdown of the prescribed total
