@@ -1540,7 +1540,19 @@ export default function IronGame(){
   // F-TIMER1: total wall-clock from session start as h:mm:ss, live tick.
 
   const ex     = exList[exIdx]||null;
-  const m      = ex?({...(META[ex.name]||{}),...(userMeta[ex.name]||{})}):{};
+  // B-EQFALL1 — eqOf() falls back to plate-loaded whenever `eq` is absent,
+  // which silently mis-typed 123 of 156 master-DB exercises that have no META
+  // row: barbell lifts with no 44 lb bar in the math, Smith work missing its
+  // 20 lb bar, dumbbells snapping in 5s instead of 2.5s, and Plank rendering a
+  // plate picker. B-EQHEAL1 healed userMeta rows already on disk but never
+  // fixed the resolution path, so anything reaching the session without a
+  // userMeta `eq` still fell through. The master DB knows — consult it first.
+  const m = (()=>{
+    if(!ex) return {};
+    const _m = {...(META[ex.name]||{}), ...(userMeta[ex.name]||{})};
+    if(!_m.eq){ const k = eqKeyForName(ex.name); if(k) _m.eq = k; }
+    return _m;
+  })();
 
   const isBw = m.eq === "bodyweight";
   const tgt    = ex&&!isBw?suggestW(ex.name,setIdx,lastWt,lastRes,prs,openWt,m,profile.bw):0;
