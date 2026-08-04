@@ -1334,6 +1334,50 @@ export default function IronGame(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only
 
+  // MIG-LEGCURL1 — 'Lying Leg Curl' -> 'Leg Curl, Machine, Laying' (user
+  // ruling 2026-08-04: 'Laying', and the entry was a pass-2 canonical
+  // casualty). Same re-key mechanics as MIG-CANON1/2, own flag. Adds
+  // ig_plateledger to the store list: F-PLMEM1 made plate loadouts
+  // name-keyed, so every future MIG-xxx must re-key it too or the loadout
+  // memory orphans exactly the way PR history would.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_legcurl1')) return;
+      const R=new Map([['Lying Leg Curl','Leg Curl, Machine, Laying']]);
+      const rk=(name)=>R.get(name)||name;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)) day.exercises.forEach(e=>{
+          if(R.has(e.name)){ e.name=rk(e.name); touched=true; }
+        });
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      const rekeyFlat=(key,setter)=>{
+        let o={}; try{ o=JSON.parse(localStorage.getItem(key)||'{}'); }catch{}
+        let t=false;
+        R.forEach((NEW,OLD)=>{ if(o[OLD]!==undefined){ if(o[NEW]===undefined) o[NEW]=o[OLD]; delete o[OLD]; t=true; } });
+        if(t){ const raw=JSON.stringify(o);
+          try{localStorage.setItem(key,raw);}catch{} idbSet(key,raw); if(setter) setter(o); }
+      };
+      rekeyFlat('ig_openwt', setOpenWt);
+      rekeyFlat('ig_plateledger', setPlateMem);   // F-PLMEM1 store
+      setPrs(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setUserMeta(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
+      setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
+      localStorage.setItem('ig_mig_legcurl1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
   // F-HIST1 — auto-archive the completed session into history (runs once per completion).
   useEffect(()=>{
     if(screen!=="complete"||log.length===0) return;

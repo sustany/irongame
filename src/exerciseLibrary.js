@@ -157,7 +157,7 @@ export const EXERCISE_LIBRARY = [
   // ── HAMSTRINGS ──────────────────────────────────────────────
   { canonical: "RDL, Barbell",                 aliases: ["romanian deadlift", "stiff leg deadlift", "rdl", "bb rdl", "barbell rdl"], primary: "hamstrings", secondary: ["glutes","lower back"], equip: "barbell", type: "compound" },
   { canonical: "Leg Curl, Machine, Seated",             aliases: ["machine seated leg curl", "seated hamstring curl","seated leg curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
-  { canonical: "Lying Leg Curl",              aliases: ["leg curls laying", "prone leg curl", "machine lying leg curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
+  { canonical: "Leg Curl, Machine, Laying",   aliases: ["leg curls laying", "laying leg curl", "lying leg curl", "prone leg curl", "machine lying leg curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
   { canonical: "Standing Leg Curl",           aliases: ["one leg standing curl"], primary: "hamstrings", secondary: [], equip: "machine", type: "isolation" },
   { canonical: "Nordic Curl",                 aliases: ["nordic hamstring curl"], primary: "hamstrings", secondary: [], equip: "bodyweight", type: "isolation" },
 
