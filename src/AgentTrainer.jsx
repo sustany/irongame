@@ -1618,6 +1618,18 @@ export default function IronGame(){
             : []))
     : [];
   const plateGhost = eq.showPlates && !plateLedger;           // suggestion, not state
+  // F-LOADSYM1: how many of denomination `pl` sit on the machine right now.
+  // Reads `loadout`, so it is correct in ledger mode AND ghost mode.
+  const plateCount = (pl) => loadout.find(l=>!l.rem && l.plate===pl)?.count || 0;
+  // F-LOADSYM1 — load-card caption. null for plate-loaded and stack-pin.
+  const loadLabel =
+      m.assisted          ? `Effective Load · BW ${profile.bw||"?"}`
+    : m.eq==="bodyweight" ? "Load"
+    : m.eq==="bw-load"    ? "Added Load"
+    : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
+    : m.eq==="barbell"    ? "Olympic Bar · 44 lbs"
+    : m.eq==="smith"      ? "Smith Machine · 20 lbs"
+    : null;
   const adoptLedger = () => {                                  // ghost -> real
     const L = {};
     loadout.filter(l=>!l.rem).forEach(({plate,count}) => { L[plate] = count; });
@@ -3430,17 +3442,15 @@ export default function IronGame(){
                 borderTop:`1px solid ${C.bdrTop}`,
                 padding:"10px 14px",marginBottom:10,
                 boxShadow:"0 4px 18px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+                {/* F-LOADSYM1 — "Plate Loaded" and "Stack Weight" dropped: the
+                    control shape now says which it is (circle = plate,
+                    rectangle = pin), so the caption was pure repetition. Labels
+                    carrying real numbers (bar weights, per-arm, assisted BW)
+                    stay — they are load math, not decoration. The whole row is
+                    suppressed when nothing is left to say. */}
+                {(loadLabel||atCeiling)&&(
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <SL color={C.md}>
-                    {m.assisted ? `Effective Load · BW ${profile.bw||"?"}`
-                      : m.eq==="bodyweight" ? "Load"
-                      : m.eq==="bw-load"    ? "Added Load"
-                      : m.eq==="stack-pin"  ? "Stack Weight"
-                      : m.eq==="dumbbell"   ? `${adjWt} lbs${m.perArm?" / arm":""}`
-                      : m.eq==="barbell"    ? `Olympic Bar · 44 lbs`
-                      : m.eq==="smith"      ? "Smith Machine · 20 lbs"
-                      : "Plate Loaded"}
-                  </SL>
+                  <SL color={C.md}>{loadLabel}</SL>
                   {atCeiling&&(
                     <div style={{background:"rgba(255,180,0,0.15)",
                       border:"1px solid rgba(255,180,0,0.5)",
@@ -3450,6 +3460,7 @@ export default function IronGame(){
                       textTransform:"uppercase"}}>Gym Max</div>
                   )}
                 </div>
+                )}
                 {isBw?(
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:46,
@@ -3459,72 +3470,12 @@ export default function IronGame(){
                   </div>
                 ):(
                   <>
-                    {/* 3-column load row: [plates] [weight] [±buttons].
-                        F-PLVIZ2: center column is flex:1 so the total is
-                        centered in the space between the fixed side columns,
-                        independent of how many plate stacks are on the left. */}
+                    {/* F-LOADSYM1 — 2-column load row: [weight] [controls].
+                        The left glyph column is gone, so the total holds its
+                        full 80px at every loadout; what is on the machine is
+                        reported by the green count above each add control. */}
                     <div style={{display:"flex",alignItems:"center",
                       gap:8,marginBottom:8}}>
-
-                      {/* F-PLVIZ1 — LEFT: plate loadout as per-denomination circle
-                          stacks. Only identical weights overlap (each disc covers
-                          80% of the one below). Count digit below each stack.
-                          Tap a stack to remove one plate (a pair on bilateral).
-                          Monochrome per spec 2026-07-20. Hidden for stack machines. */}
-                      {eq.showPlates&&loadout.length>0&&(
-                        <div style={{display:"flex",alignItems:"flex-end",
-                          gap:8,alignSelf:"center",flexShrink:0,
-                          opacity:plateGhost?0.45:1}}>
-                          {loadout.filter(l=>!l.rem).map(({plate,count})=>{
-                            const SZ={45:34,25:30,10:26,5:22}[plate]||22;
-                            const step=Math.max(4,Math.round(SZ*0.2));
-                            const h=SZ+step*(count-1);
-                            return (
-                              <div key={plate} className="t"
-                                onClick={()=>tapRemovePlate(plate)}
-                                style={{display:"flex",flexDirection:"column",
-                                  alignItems:"center",gap:3,cursor:"pointer"}}>
-                                <div style={{position:"relative",width:SZ,height:h}}>
-                                  {Array.from({length:count}).map((_,i)=>(
-                                    <div key={i} style={{position:"absolute",left:0,
-                                      bottom:i*step,width:SZ,height:SZ,
-                                      borderRadius:"50%",background:"#2c2c2e",
-                                      border:"1.5px solid #48484a",
-                                      display:"flex",alignItems:"center",
-                                      justifyContent:"center",
-                                      fontFamily:"'Bebas Neue',sans-serif",
-                                      fontSize:Math.round(SZ*0.4),color:C.lt}}>
-                                      {plate}</div>
-                                  ))}
-                                </div>
-                                <div style={{fontFamily:"'Bebas Neue',sans-serif",
-                                  fontSize:13,color:C.md,lineHeight:1}}>{count}</div>
-                              </div>
-                            );
-                          })}
-                          {/* F-PLVIZ2: phantom-weight remainder (B-SNAP1 Option A)
-                              rendered as a distinct dim chip with a "+" and an
-                              "add" label — NOT a plate circle — so it can't be
-                              mistaken for a physical plate (e.g. 2.5/side on 115). */}
-                          {loadout.some(l=>l.rem)&&(
-                            <div style={{display:"flex",flexDirection:"column",
-                              alignItems:"center",gap:3,alignSelf:"flex-end"}}>
-                              <div style={{fontFamily:"'Bebas Neue',sans-serif",
-                                fontSize:13,color:C.md,lineHeight:1,
-                                border:`1px dashed ${C.bdr}`,borderRadius:5,
-                                padding:"3px 6px"}}>
-                                +{loadout.find(l=>l.rem).plate}</div>
-                              {/* F-PLATECAP1: "EXTRA" caption removed. The
-                                  dashed border + "+" already read as
-                                  not-a-plate; the word was noise. */}
-                            </div>
-                          )}
-                          {m.maxPlate&&m.maxPlate<45&&(
-                            <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
-                              color:C.md,alignSelf:"center"}}>max {m.maxPlate}lb</div>
-                          )}
-                        </div>
-                      )}
 
                       {/* CENTER: weight number. F-PLVIZ1 red when plate viz
                           active. F-PLVIZ2: flex:1 + centered so it sits in the
@@ -3554,26 +3505,58 @@ export default function IronGame(){
                           bilateral). Removal = tap the loaded stack on the left.
                           Non-plate equipment keeps legacy ± step buttons. */}
                       {eq.showPlates ? (
-                        <div style={{display:"flex",flexDirection:"column",
-                          gap:8,flexShrink:0,alignSelf:"center"}}>
-                          {[[45,25],[10,5]].map((rowP,ri)=>(
-                            <div key={ri} style={{display:"flex",gap:8}}>
-                              {rowP.filter(p=>p<=(m.maxPlate||45)).map(p=>(
-                                <button key={p} className="t"
-                                  onClick={()=>tapAddPlate(p)}
-                                  style={{width:34,height:34,borderRadius:"50%",
-                                    fontFamily:"'Bebas Neue',sans-serif",
-                                    fontSize:13,color:C.md,
-                                    background:"transparent",
-                                    border:"1.5px solid #48484a",
+                        /* F-LOADSYM1 — plate gear now uses the SAME geometry as
+                           stack gear: green add row on top, red remove row
+                           below, both right of the total. Only the shape
+                           differs. The green digit above each add control is
+                           how many of that denomination are on the machine —
+                           this replaces the deleted left glyph column.
+                           Ghost mode dims the whole control to 45%: those
+                           counts are the app's suggestion, not your machine. */
+                        <div style={{display:"flex",flexDirection:"column",gap:5,
+                          flexShrink:0,alignSelf:"center",opacity:plateGhost?0.45:1}}>
+                          <div style={{display:"flex",gap:6}}>
+                            {PLATES.filter(p=>p<=(m.maxPlate||45)).map(p=>{
+                              const n=plateCount(p);
+                              return (
+                                <div key={`a${p}`} style={{display:"flex",
+                                  flexDirection:"column",alignItems:"center",gap:3}}>
+                                  <div style={{fontFamily:"'Bebas Neue',sans-serif",
+                                    fontSize:15,lineHeight:1,height:15,
+                                    letterSpacing:"0.02em",
+                                    color:n?C.grn:"transparent"}}>{n||0}</div>
+                                  <button className="t" onClick={()=>tapAddPlate(p)}
+                                    style={{width:36,height:36,borderRadius:"50%",
+                                      fontFamily:"'Bebas Neue',sans-serif",fontSize:14,
+                                      color:C.grn,background:"rgba(34,221,102,0.10)",
+                                      border:"1px solid rgba(34,221,102,0.4)",
+                                      display:"flex",alignItems:"center",
+                                      justifyContent:"center",cursor:"pointer",
+                                      padding:0,letterSpacing:"0.02em"}}>{p}</button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            {PLATES.filter(p=>p<=(m.maxPlate||45)).map(p=>{
+                              const n=plateCount(p);
+                              return (
+                                <button key={`r${p}`} className="t" disabled={!n}
+                                  onClick={()=>tapRemovePlate(p)}
+                                  style={{width:36,height:36,borderRadius:"50%",
+                                    fontFamily:"'Bebas Neue',sans-serif",fontSize:14,
+                                    color:C.red,background:"rgba(232,38,10,0.14)",
+                                    border:"1px solid rgba(232,38,10,0.5)",
                                     display:"flex",alignItems:"center",
-                                    justifyContent:"center",cursor:"pointer",
-                                    padding:0,letterSpacing:"0.02em"}}>
-                                  {p}
-                                </button>
-                              ))}
-                            </div>
-                          ))}
+                                    justifyContent:"center",padding:0,
+                                    cursor:n?"pointer":"default",opacity:n?1:0.22}}>−</button>
+                              );
+                            })}
+                          </div>
+                          {m.maxPlate&&m.maxPlate<45&&(
+                            <div style={{fontFamily:"'Inter',sans-serif",fontSize:8,
+                              color:C.md,textAlign:"center"}}>max {m.maxPlate}lb</div>
+                          )}
                         </div>
                       ) : (
                       <div style={{flex:1,display:"flex",
