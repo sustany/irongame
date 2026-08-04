@@ -983,7 +983,7 @@ export default function IronGame(){
   // B-PLATEDECOMP1: user's actual plate taps {plate:count}. null = no taps yet
   // (ghost mode - breakdown below is a SUGGESTION synthesized from the total).
   // Once non-null, the ledger IS the state and the total is derived from it.
-  const [plateLedger, setPlateLedger] = useState(null);
+  const [plateLedger, setPlateLedger] = useState(()=> _saved?.plateLedger ?? null);
   const [tick,      setTick]      = useState(0);
   const [sessionStart, setSessionStart] = useState(()=> _saved?.sessionStart ?? null);
   const [sessionEnd,   setSessionEnd]   = useState(null);
@@ -1457,10 +1457,11 @@ export default function IronGame(){
     const snapshot=JSON.stringify({
       sesType, exList, exIdx, setIdx, prs, log,
       lastRes, lastWt, sessionStart, sessionDate, userMeta, customGroups,
+      plateLedger,   // B-PLEDGER1: a mid-exercise reload must not lose the bar
     });
     try{ localStorage.setItem('ig_session', snapshot); }catch{}
     idbSet('ig_session', snapshot);       // durable mirror (async, best-effort)
-  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate, userMeta, customGroups]);
+  },[screen, sesType, exList, exIdx, setIdx, prs, log, lastRes, lastWt, sessionStart, sessionDate, userMeta, customGroups, plateLedger]);
 
   // ── URL hash routing + demo preload ───────────────────────────
   // Hash routes: #session, #logging, #complete, #phr
@@ -1695,7 +1696,7 @@ export default function IronGame(){
     setLog(newLog);
     setWConf(null);
     setPendingResult(null);
-    setWeightAdj(0);setPlateLedger(null);
+    setWeightAdj(0);   // B-PLEDGER1: an undo does not unload the machine
 
     // Roll PR back if the popped set had set a new PR for its exercise
     const exMeta = META[popped.exercise] || userMeta[popped.exercise] || {};
@@ -1771,7 +1772,12 @@ export default function IronGame(){
     setWConf(null);
     setLog(l=>[...l,{exercise:ex.name,setNum:setIdx+1,weight:wt,
       reps:reps,result:res,...(phr?{phr}:{})}]);
-    setWeightAdj(0);setPlateLedger(null);
+    // B-PLEDGER1: the ledger models what is PHYSICALLY on the machine, and
+    // finishing a set does not unload it. Nulling here dropped the screen back
+    // to ghost mode, where plateBreakdown() re-synthesized a greedy
+    // largest-plate-first loadout that did not match the bar (6x25 -> 2x45+2x25+2x5).
+    // The ledger now survives set->set and resets only on exercise change.
+    setWeightAdj(0);
     setLastRes(res);setLastWt(wt);
     if(setIdx===0&&!isBw) setOpenWt(o=>({...o,[ex.name]:wt})); // F-LASTW1
     const pr=prs[ex.name];
@@ -3217,8 +3223,9 @@ export default function IronGame(){
           {/* Back chevron — phase-aware: cancels current logging/phr, undoes last logged set, or returns to setup */}
           <button className="t"
             onClick={()=>{
-              if(phase==="phr"){setPendingResult(null);setPhase("ready");setWeightAdj(0);setPlateLedger(null);return;}
-              if(phase==="logging"){setPhase("ready");setWeightAdj(0);setPlateLedger(null);return;}
+              // B-PLEDGER1: cancelling out of logging/PHR unloads nothing.
+              if(phase==="phr"){setPendingResult(null);setPhase("ready");setWeightAdj(0);return;}
+              if(phase==="logging"){setPhase("ready");setWeightAdj(0);return;}
               if(log.length>0){undoLastSet();return;}
               setScreen("setup");
             }}
@@ -3841,7 +3848,7 @@ export default function IronGame(){
                   </button>
                   {/* BACK — returns to pre-set (ready) screen */}
                   <button className="t"
-                    onClick={()=>{setPhase("ready");setWeightAdj(0);setPlateLedger(null);}}
+                    onClick={()=>{setPhase("ready");setWeightAdj(0);}}  /* B-PLEDGER1 */
                     style={{
                       width:"100%",marginTop:10,height:42,borderRadius:10,
                       background:"transparent",border:`1px solid ${C.bdr}`,
