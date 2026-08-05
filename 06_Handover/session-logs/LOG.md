@@ -5,6 +5,32 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-08-05 — Mobile Chat — SUPABASE MIGRATION Day 6 — RESOLVED
+
+**Magic-link auth behind ?authtest=1.** New `src/AuthTest.jsx`: email input →
+signInWithOtp with emailRedirectTo back to /?authtest=1; authenticated state
+shows user UUID + email + sign out; explicit NOT-CONFIGURED panel when the
+Vite env vars are absent. Gated in `main.jsx` at the entry point, so
+**AgentTrainer.jsx was not touched** — no session-screen edit, no §5 walk.
+
+**Bundle regression caught and fixed.** Static import of AuthTest dragged
+supabase-js into the main chunk: 309.04 → 531.58 kB (gzip 83.8 → 142.4).
+Unacceptable for LTE on the gym floor. Switched to React.lazy + Suspense:
+main chunk 310.26 kB (+1.2 kB plumbing), AuthTest 222.06 kB in a separate
+chunk fetched only when the flag is present.
+
+**smoke.mjs patched.** Code splitting makes the entry chunk end in
+`export{...}`, which is a SyntaxError under `window.eval` (script context).
+Harness now strips it before eval. App is unaffected — real browsers load the
+chunk as `type="module"`. All 3 checks PASS.
+
+OPEN: Netlify env vars still unset — ?authtest=1 will render NOT CONFIGURED
+until VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are added AND a redeploy is
+triggered (Vite inlines at build time).
+Next: Day 7 — auth round-trip + carried-forward seeded-row RLS proof.
+
+---
+
 ## 2026-08-05 — Mobile Chat — SUPABASE MIGRATION Day 5 — RESOLVED
 
 **supabase-js installed + client module added.** @supabase/supabase-js

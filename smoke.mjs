@@ -14,7 +14,12 @@ const html = readFileSync(join(root, "dist", "index.html"), "utf8");
 // Inline the built JS so jsdom doesn't need a server.
 const assetMatch = html.match(/src="\/(assets\/index-[^"]+\.js)"/);
 if (!assetMatch) { console.error("SMOKE FAIL: built asset not found in dist/index.html"); process.exit(1); }
-const js = readFileSync(join(root, "dist", assetMatch[1]), "utf8");
+let js = readFileSync(join(root, "dist", assetMatch[1]), "utf8");
+// Code-split builds emit a trailing `export{...}` on the entry chunk so lazy
+// chunks can share React. window.eval() runs in script context, where `export`
+// is a SyntaxError. Stripping it is safe: app code executes at module top level
+// and the export only exists to serve chunks jsdom never loads.
+js = js.replace(/export\s*\{[^}]*\}\s*;?\s*$/, "");
 const page = html.replace(/<script type="module"[^>]*><\/script>/, "");
 
 const dom = new JSDOM(page, {
