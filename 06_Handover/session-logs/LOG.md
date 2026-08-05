@@ -5,6 +5,23 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-08-05 — Mobile Chat — SUPABASE MIGRATION Day 5 — RESOLVED
+
+**supabase-js installed + client module added.** @supabase/supabase-js
+^2.112.1. New file `src/supabase.js`: exports `supabase` (null when env
+missing — never throws at module load) and `sbReady()`. Console probe
+`window.igSbStatus()`. Auth configured persistSession + autoRefreshToken +
+detectSessionInUrl, storageKey `ig_sb_auth`.
+
+Nothing imports the module by design — bundle unchanged at 309.04 kB,
+tree-shaken out. Build green, `node smoke.mjs` 3/3 PASS.
+
+OPEN: Netlify env vars VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY not yet
+set (Christian, Netlify dashboard). Day 6 magic-link work is inert without
+them. Next: Day 6 — auth flow behind `?authtest=1`.
+
+---
+
 ## 2026-08-05 — Mobile Chat — SUPABASE MIGRATION Day 4 — PARTIAL / OPEN
 
 **P0 conditionally closed.** Project `drgffhoigdocwbusincp`, region us-east-1,
