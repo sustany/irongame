@@ -5,6 +5,24 @@ These are separate memory spaces that do NOT sync. This file is the only thing b
 
 ---
 
+## 2026-08-05 — Mobile Chat — SUPABASE MIGRATION Day 4 — PARTIAL / OPEN
+
+**P0 conditionally closed.** Project `drgffhoigdocwbusincp`, region us-east-1,
+t3.nano. Five tables + RLS + own-rows policies confirmed live via DDL success.
+Anon REST read of `prs` with the publishable key returned `[]` — no leak.
+
+OPEN: seeded-row RLS proof **deferred to Day 7**. Dashboard role-impersonation
+proved unworkable on iPhone Safari, and the FK to `auth.users` rejects
+fabricated-UUID inserts before RLS is evaluated — so the proof needs a real
+authed user, which the Day 7 magic-link round-trip produces anyway.
+**HARD BLOCKER on Day 12:** no dual-write until this passes.
+
+Publishable key `sb_publishable_RUjL6HMc-...` is the value for Netlify
+`VITE_SUPABASE_ANON_KEY` on Day 5. Safe in a client bundle by design.
+Next: Day 5 — `npm i @supabase/supabase-js` + `src/supabase.js`, no wiring.
+
+---
+
 ## 2026-08-04 — Mobile Chat — PLATE LEDGER + EQUIPMENT RESOLUTION — RESOLVED
 
 Six commits pushed from iPad, each build + `node smoke.mjs` gated before commit.
