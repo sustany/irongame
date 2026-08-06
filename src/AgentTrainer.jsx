@@ -559,11 +559,19 @@ const PREV={
 // (Movement, Equipment[, Modifier]) stays the single source of truth
 // for the DB, picker, search and every PR key. During a live set the
 // loading tokens are redundant: the glyph row already shows plates vs
-// stack. So they are dropped and any surviving modifier is moved to
-// the front, yielding a comma-free 2-3 word label.
+// stack, so they are dropped.
+//
+// B-LBLORD1 (2026-08-06) — the transform used to ALSO invert word order,
+// emitting "Smith Machine Calf Raise" for the canonical "Calf Raise, Smith
+// Machine". That produced a second, contradictory name for every exercise:
+// the picker said one thing, the session title said another, and the
+// mismatch was repeatedly logged as a canonical-naming defect when the
+// canonical was in fact already correct. Order is now preserved; only the
+// load tokens are stripped.
 //   Military Press, Machine, Plate-Loaded      -> Military Press
-//   Calf Raise, Machine, Plate-Loaded, Seated  -> Seated Calf Raise
-//   Fly, Dumbbell                              -> Dumbbell Fly
+//   Calf Raise, Machine, Plate-Loaded, Seated  -> Calf Raise, Seated
+//   Calf Raise, Smith Machine                  -> Calf Raise, Smith Machine
+//   Fly, Dumbbell                              -> Fly, Dumbbell
 // Pure display transform — no stored field, no migration. Collisions
 // are possible (Lat Pulldown stack vs plate-loaded) and are accepted:
 // the glyph row disambiguates, and the picker keeps full canonicals.
@@ -577,7 +585,7 @@ function displayName(canonical) {
   if (parts.length < 2) return canonical;
   const head = parts[0];
   const mods = parts.slice(1).filter(t => !LOAD_TOKENS.has(t.toLowerCase()));
-  return [...mods, head].join(" ");
+  return mods.length ? [head, ...mods].join(", ") : head;
 }
 
 // F-PLATES1 — absolute plate breakdown of the TOTAL load currently on the
