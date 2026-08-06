@@ -1959,18 +1959,30 @@ export default function IronGame(){
     setWeightAdj(0);setPlateLedger(null);setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);
   };
 
+  // B-CPSRCH1 (2026-08-06) — an exercise occupying ANOTHER slot in this
+  // session must stay unselectable (PR history and set counts are name-keyed,
+  // so two slots sharing a name corrupts both). Previously the row was deleted
+  // outright in three separate places, which made the picker report
+  // "No matches" and offer a Create button that would spawn a colliding
+  // custom entry. The rule is unchanged; the rows now render disabled with an
+  // IN SESSION tag so the list can never lie about what exists.
+  const elsewhereInList = (name) =>
+    exList[exIdx]?.name!==name && exList.some((e,i)=>e.name===name&&i!==exIdx);
+
   // F-MVGROUP1 — row renderers for the Change Exercise picker.
   // ExerciseRow: a single direct pick. MovementRow: a clustered movement
   // that expands to its equipment variants (each variant = its own PR track).
   const ExerciseRow = ({entry, tag=null}) => {
-    const cur = exList[exIdx]?.name===entry.canonical;
-    if(!cur && exList.some((e,i)=>e.name===entry.canonical&&i!==exIdx)) return null;
+    const cur   = exList[exIdx]?.name===entry.canonical;
+    const inSes = elsewhereInList(entry.canonical);
     return(
-      <button className="t" onClick={()=>applyExerciseChoice(entry.canonical, entry)}
+      <button className="t" disabled={inSes}
+        onClick={()=>{ if(!inSes) applyExerciseChoice(entry.canonical, entry); }}
         style={{width:"100%",display:"flex",justifyContent:"space-between",
           alignItems:"center",background:cur?"rgba(232,38,10,0.12)":"transparent",
           border:`1px solid ${cur?C.red:C.bdr}`,borderRadius:10,
-          padding:"12px 14px",marginBottom:6,cursor:"pointer",textAlign:"left"}}>
+          padding:"12px 14px",marginBottom:6,opacity:inSes?0.45:1,
+          cursor:inSes?"default":"pointer",textAlign:"left"}}>
         <div>
           <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,
             color:cur?C.red:C.wht,letterSpacing:"0.06em",lineHeight:1,marginBottom:2}}>
@@ -1979,20 +1991,19 @@ export default function IronGame(){
             {tag&&<span style={{marginRight:4}}>{tag} · </span>}
             {entry.primary} · {entry.equip}</div>
         </div>
-        {cur&&(
+        {(cur||inSes)&&(
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-            color:C.red,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
-            Current</div>
+            color:cur?C.red:C.md,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
+            {cur?"Current":"In Session"}</div>
         )}
       </button>
     );
   };
   const MovementRow = ({row}) => {
     const open = expandedMv===row.movement;
-    // members not already elsewhere in the list (allow current)
-    const members = row.members.filter(mem =>
-      exList[exIdx]?.name===mem.canonical ||
-      !exList.some((e,i)=>e.name===mem.canonical&&i!==exIdx));
+    // B-CPSRCH1: every variant stays visible. Ones held by another slot render
+    // disabled instead of vanishing, so a cluster can never expand to nothing.
+    const members = row.members;
     if(members.length===0) return null;
     const curInHere = members.some(mem=>exList[exIdx]?.name===mem.canonical);
     return(
@@ -2018,14 +2029,16 @@ export default function IronGame(){
           <div style={{paddingLeft:12,marginTop:4}}>
             {members.map(mem=>{
               const cur=exList[exIdx]?.name===mem.canonical;
+              const memIn=elsewhereInList(mem.canonical);
               return(
-                <button key={mem.canonical} className="t"
-                  onClick={()=>applyExerciseChoice(mem.canonical, mem)}
+                <button key={mem.canonical} className="t" disabled={memIn}
+                  onClick={()=>{ if(!memIn) applyExerciseChoice(mem.canonical, mem); }}
                   style={{width:"100%",display:"flex",justifyContent:"space-between",
                     alignItems:"center",
                     background:cur?"rgba(232,38,10,0.12)":"rgba(255,255,255,0.03)",
                     border:`1px solid ${cur?C.red:C.bdr}`,borderRadius:9,
-                    padding:"10px 12px",marginBottom:5,cursor:"pointer",textAlign:"left"}}>
+                    padding:"10px 12px",marginBottom:5,opacity:memIn?0.45:1,
+                    cursor:memIn?"default":"pointer",textAlign:"left"}}>
                   <div>
                     <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,
                       color:cur?C.red:C.wht,letterSpacing:"0.05em",lineHeight:1,marginBottom:2}}>
@@ -2033,10 +2046,10 @@ export default function IronGame(){
                     <div style={{fontFamily:"'Inter',sans-serif",fontSize:10,color:C.md,fontWeight:600}}>
                       {mem.equip}</div>
                   </div>
-                  {cur&&(
+                  {(cur||memIn)&&(
                     <div style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:9,
-                      color:C.red,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
-                      Current</div>
+                      color:cur?C.red:C.md,letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
+                      {cur?"Current":"In Session"}</div>
                   )}
                 </button>
               );
@@ -4128,12 +4141,12 @@ export default function IronGame(){
                 exercises stay direct picks. ── */}
             {!showNewExForm&&exSearch.length>=2&&(()=>{
               const primOf = PICKER_GROUPS[exFilter]||null;
-              const rows = searchMovements(exSearch, {limit:80}).filter(r=>{
-                if(primOf){ if(!primOf.includes(r.primary)) return false; }
-                if(r.kind==="exercise")
-                  return !exList.some((e,i)=>e.name===r.canonical&&i!==exIdx);
-                return true; // movement rows always shown; members filtered at expand
-              });
+              // B-CPSRCH1: only the muscle-group pill removes rows now. Hits held
+              // by another slot stay in the list, rendered disabled by ExerciseRow /
+              // MovementRow, so "No matches" means genuinely no match and the
+              // Create button can no longer be offered for something that exists.
+              const rows = searchMovements(exSearch, {limit:80})
+                .filter(r=> primOf ? primOf.includes(r.primary) : true);
               return(
                 <div style={{overflowY:"auto",padding:"0 12px 32px",flex:1}}>
                   {rows.length===0&&(
