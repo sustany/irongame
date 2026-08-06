@@ -4,6 +4,11 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Supabase client config (Plan Day 5/6). Publishable key is safe to commit:
+  # it is designed for client bundles and ships embedded in the built app anyway.
+  # The service-role key must NEVER appear in this repo.
+  VITE_SUPABASE_URL      = "https://drgffhoigdocwbusincp.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "sb_publishable_RUjL6HMc-fN4mwAk8QKjLQ_F5NlZTA8"
 
 # SPA fallback — all routes serve index.html
 [[redirects]]
