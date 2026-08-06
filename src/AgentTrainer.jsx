@@ -319,7 +319,7 @@ const INIT_PRS = {
   "Leg Curl, Machine, Seated":       { muscle:"hamstrings", weight:285,  reps:8  },
   "Linear Hack Squat, Machine, Plate-Loaded":  { muscle:"quads", weight:230,  reps:10 },
   "Leg Extension":         { muscle:"quads", weight:260,  reps:10 },
-  "Calf Press":            { muscle:"calves", weight:680,  reps:12 },
+  "Calf Press, Leg Press": { muscle:"calves", weight:680,  reps:12 },
   "Calf Press, Linear Leg Press": { muscle:"calves", weight:630, reps:10 },
   "Calf Raise, Machine, Plate-Loaded, Seated":     { muscle:"calves", weight:180,  reps:7  },
   "Fly, Dumbbell":               { muscle:"chest", weight:40,   reps:12 },
@@ -396,7 +396,7 @@ const META = {
   "Leg Curl, Machine, Seated":       { muscle:"hamstrings", tier:"P2", prPts:5, compound:true, eq:"stack-pin" },
   "Linear Hack Squat, Machine, Plate-Loaded":  { muscle:"quads", tier:"P1", prPts:8, compound:true, eq:"plate-loaded" },
   "Leg Extension":         { muscle:"quads", tier:"ISO",prPts:3, eq:"stack-pin" },
-  "Calf Press":            { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
+  "Calf Press, Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Press, Linear Leg Press": { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Calf Raise, Machine, Plate-Loaded, Seated":     { muscle:"calves", tier:"ISO",prPts:3, eq:"plate-loaded" },
   "Fly, Dumbbell":               { muscle:"chest", tier:"ISO",prPts:3, eq:"dumbbell" },
@@ -415,7 +415,7 @@ const CATEGORY = {
          "Hip Thrust (Smith)","Hyperextensions 45°","Dead Hang","Captain's Chair",
          "Reverse Pec Deck"],
   legs: ["RDL, Barbell","Linear Hack Squat, Machine, Plate-Loaded","Leg Curl, Machine, Seated","Leg Extension",
-         "Calf Press","Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated","Hip Thrust (Smith)",
+         "Calf Press, Leg Press","Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated","Hip Thrust (Smith)",
          "Hyperextensions 45°","Dead Hang"],
 };
 // Session type → primary muscles, used for the master-DB fallback below.
@@ -542,7 +542,7 @@ const TMPLS = {
     {name:"Linear Hack Squat, Machine, Plate-Loaded", sets:4,repRange:"8–10", targetReps:10, alts:["Leg Extension"]},
     {name:"Leg Curl, Machine, Seated",      sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
     {name:"Leg Extension",        sets:3,repRange:"8–10", targetReps:10, alts:["Linear Hack Squat, Machine, Plate-Loaded"]},
-    {name:"Calf Press",           sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated"]},
+    {name:"Calf Press, Leg Press",sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Calf Raise, Hack Squat","Calf Raise, Machine, Plate-Loaded, Seated"]},
     {name:"Hyperextensions 45°",  sets:2,repRange:"10–12",targetReps:12,mandatory:true},
   ],
 };
@@ -1374,6 +1374,50 @@ export default function IronGame(){
       setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
       setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
       localStorage.setItem('ig_mig_legcurl1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
+  // MIG-CPRESS1 — 'Calf Press' -> 'Calf Press, Leg Press' (user ruling
+  // 2026-08-06: the bare entry is the 45-degree leg press sled; the 680x12
+  // PR belongs to it). The rename is a PRECONDITION for the "Calf Press"
+  // movement cluster: MOVEMENT_CLUSTERS keys must not collide with canonical
+  // names, and "Calf Press" was both. Same re-key mechanics as MIG-LEGCURL1,
+  // own flag, and ig_plateledger included per F-PLMEM1.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_cpress1')) return;
+      const R=new Map([['Calf Press','Calf Press, Leg Press']]);
+      const rk=(name)=>R.get(name)||name;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)) day.exercises.forEach(e=>{
+          if(R.has(e.name)){ e.name=rk(e.name); touched=true; }
+        });
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      const rekeyFlat=(key,setter)=>{
+        let o={}; try{ o=JSON.parse(localStorage.getItem(key)||'{}'); }catch{}
+        let t=false;
+        R.forEach((NEW,OLD)=>{ if(o[OLD]!==undefined){ if(o[NEW]===undefined) o[NEW]=o[OLD]; delete o[OLD]; t=true; } });
+        if(t){ const raw=JSON.stringify(o);
+          try{localStorage.setItem(key,raw);}catch{} idbSet(key,raw); if(setter) setter(o); }
+      };
+      rekeyFlat('ig_openwt', setOpenWt);
+      rekeyFlat('ig_plateledger', setPlateMem);
+      setPrs(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setUserMeta(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
+      setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
+      localStorage.setItem('ig_mig_cpress1','1');
     }catch{}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only

@@ -172,8 +172,9 @@ export const EXERCISE_LIBRARY = [
   // ── CALVES ──────────────────────────────────────────────────
   { canonical: "Standing Calf Raise",         aliases: ["machine calf raise", "standing calves"], primary: "calves", secondary: [], equip: "machine", type: "isolation" },
   { canonical: "Calf Raise, Machine, Plate-Loaded, Seated",           aliases: ["seated calves", "machine seated calf","seated calf raise"], primary: "calves", secondary: [], equip: "machine", type: "isolation" },
-  { canonical: "Calf Press",                  aliases: ["leg press calf raise", "calf press machine"], primary: "calves", secondary: [], equip: "plate-loaded", type: "isolation" },
+  { canonical: "Calf Press, Leg Press",       aliases: ["leg press calf raise", "calf press machine", "calf press leg press", "45 degree leg press calf"], primary: "calves", secondary: [], equip: "plate-loaded", type: "isolation" },
   { canonical: "Calf Press, Linear Leg Press",aliases: ["linear leg press calf", "lf calf press"], primary: "calves", secondary: [], equip: "plate-loaded", type: "isolation" },
+  { canonical: "Calf Raise, Hack Squat",      aliases: ["hack squat calf raise", "calf press hack squat", "hack squat calf press", "linear hack squat calf raise", "hack sled calf raise"], primary: "calves", secondary: [], equip: "plate-loaded", type: "isolation" },
   { canonical: "Donkey Calf Raise",           aliases: ["donkey calves"], primary: "calves", secondary: [], equip: "bodyweight", type: "isolation" },
   { canonical: "Calf Raise, Smith Machine",            aliases: ["smith machine calves", "smith calf raise"], primary: "calves", secondary: [], equip: "smith", type: "isolation" },
 
