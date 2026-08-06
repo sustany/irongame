@@ -24,11 +24,17 @@ const input = {
 const btn = {
   width: '100%', padding: '14px', fontSize: 16, fontWeight: 600, marginTop: 12,
   borderRadius: 8, border: 'none', background: '#c8442a', color: '#fff',
+  // Long-press on iOS selects button text and pops the Copy/Look Up menu
+  // instead of firing the tap. Kill selection and the tap-highlight.
+  WebkitUserSelect: 'none', userSelect: 'none',
+  WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
 };
+// A disabled button must LOOK disabled — a silent no-op reads as a broken app.
+const btnOff = { ...btn, background: '#3a2420', color: '#8a6a62' };
 const btnAlt = { ...btn, background: '#2a2a2e' };
 
 export default function AuthTest() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('chris@kameir.com');
   const [session, setSession] = useState(null);
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
@@ -95,9 +101,18 @@ export default function AuthTest() {
             autoCorrect="off" placeholder="chris@kameir.com"
             value={email} onChange={(e) => setEmail(e.target.value)}
           />
-          <button style={btn} disabled={busy || !email.trim()} onClick={sendLink}>
+          <button
+            style={busy || !email.trim() ? btnOff : btn}
+            disabled={busy || !email.trim()}
+            onClick={sendLink}
+          >
             {busy ? 'Sending…' : 'Send magic link'}
           </button>
+          {!email.trim() && (
+            <div style={{ fontSize: 13, color: '#8a8a92', marginTop: 8 }}>
+              Enter an email address to enable the button.
+            </div>
+          )}
         </>
       )}
 
