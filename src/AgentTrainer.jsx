@@ -2697,8 +2697,9 @@ export default function IronGame(){
 
             {/* F-WKTCARD1 — same shell as the muscle-group card so the two
                 selection paths read as siblings. Header strip is the lid, its
-                own collapse triangle, collapsed strip carries the picked
-                workout. F-FULLBODY1 adds a fourth option; four across on a
+                own collapse triangle. Collapsed shows the triangle ONLY — no
+                summary label, no check badge; the card's red fill is the sole
+                selection cue. F-FULLBODY1 adds a fourth option; four across on a
                 phone squeezes each card to ~82px and wraps "Full Body", so the
                 cards move to a 2x2 grid. */}
             <div style={{marginTop:16}}/>
@@ -2726,15 +2727,8 @@ export default function IronGame(){
                     <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
                       letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
                       whiteSpace:"nowrap"}}>Pick A Workout</span>
-                    {!wktOpen && picked && (
-                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                        letterSpacing:"0.12em",textTransform:"uppercase",
-                        color:"rgba(255,255,255,0.72)",whiteSpace:"nowrap"}}>
-                        {picked.label}
-                      </span>
-                    )}
                   </div>
-                  {on&&(
+                  {on&&wktOpen&&(
                     <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
                       width:22,height:22,display:"flex",alignItems:"center",
                       justifyContent:"center",flexShrink:0}}>
