@@ -1044,6 +1044,13 @@ export default function IronGame(){
   const [histEditGroups, setHistEditGroups] = useState([]);
   const [histEditExs,    setHistEditExs]    = useState([]); // [{name, sets:[{w,r}]}]
   const [histShowExAdd,  setHistShowExAdd]  = useState(false);
+  // B-HISTADD1 — day the "add a past workout" picker is aimed at. Defaults to
+  // yesterday; the < > arrows walk it back so any day is reachable, not just
+  // the five that already carry history.
+  const [histAddKey, setHistAddKey] = useState(()=>{
+    const d=new Date(); d.setDate(d.getDate()-1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  });
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
@@ -2335,6 +2342,14 @@ export default function IronGame(){
               ? (MUSCLE_GROUPS.filter(g=>(hist[loggedKeys[0]].groups||[]).includes(g.id))
                   .map(g=>g.label).join(", ")||"Logged")
               : null;
+            // B-HISTADD1 — the editor only ever rendered from a loggedKeys row,
+            // so the empty state (and any day outside the last five) had no
+            // route to the back-fill editor that already existed. Splice the
+            // day under edit into the row list so the same editor renders.
+            const rowKeys=[...new Set([
+              ...(histEdit?[histEdit]:[]),
+              ...loggedKeys.slice(0,5),
+            ])].sort().reverse();
             return(
           <div style={{marginTop:12}}>
             <button className="t" onClick={()=>setHistOpen(o=>!o)} style={{
@@ -2353,13 +2368,13 @@ export default function IronGame(){
                 ({histOpen?"show less":"show more"})
               </span>
             </button>
-            {histOpen && loggedKeys.length===0 && (
+            {histOpen && loggedKeys.length===0 && !histEdit && (
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
                 color:C.md,padding:"4px 0 2px"}}>
                 No workouts logged yet.
               </div>
             )}
-            {histOpen && loggedKeys.slice(0,5).map((dk)=>{
+            {histOpen && rowKeys.map((dk)=>{
               const [_y,_m,_dd]=dk.split('-').map(Number);
               const d=new Date(_y,_m-1,_dd);
               const e=hist[dk];
@@ -2574,6 +2589,47 @@ export default function IronGame(){
                 </div>
               );
             })}
+            {/* B-HISTADD1 — explicit route into the back-fill editor. Arrows walk
+                the target day; ADD opens the same editor the logged rows use. */}
+            {histOpen && !histEdit && (()=>{
+              const [ay,am,ad]=histAddKey.split('-').map(Number);
+              const aDate=new Date(ay,am-1,ad);
+              const stepDay=(n)=>{
+                const d=new Date(ay,am-1,ad); d.setDate(d.getDate()+n);
+                if(d>new Date()) return;
+                setHistAddKey(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+              };
+              const arrow={width:34,height:34,borderRadius:8,background:"transparent",
+                border:`1px solid ${C.bdr}`,color:C.md,cursor:"pointer",
+                fontFamily:"'Bebas Neue',sans-serif",fontSize:16,flexShrink:0};
+              return(
+                <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8}}>
+                  <button className="t" onClick={()=>stepDay(-1)} style={arrow}>&lt;</button>
+                  <div style={{flex:1,textAlign:"center",fontFamily:"'Inter',sans-serif",
+                    fontWeight:800,fontSize:11,color:C.lt,letterSpacing:"0.1em",
+                    textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden"}}>
+                    {DAYS[aDate.getDay()]} · {MONTHS[aDate.getMonth()]} {aDate.getDate()}
+                  </div>
+                  <button className="t" onClick={()=>stepDay(1)} style={arrow}>&gt;</button>
+                  <button className="t" onClick={()=>{
+                      const e=hist[histAddKey];
+                      setHistEdit(histAddKey); setHistExpanded(null);
+                      setHistEditGroups(e?.groups?[...e.groups]:[]);
+                      setHistEditExs(e?.exercises
+                        ? e.exercises.map(x=>({name:x.name,
+                            sets:(x.sets||[]).map(t=>`${t.w}x${t.r}`).join(", ")}))
+                        : []);
+                      setHistShowExAdd(!!(e?.exercises&&e.exercises.length));
+                    }}
+                    style={{height:34,padding:"0 14px",borderRadius:8,cursor:"pointer",
+                      background:"transparent",border:`1px solid ${C.red}`,color:C.red,
+                      fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+                      letterSpacing:"0.1em",textTransform:"uppercase",flexShrink:0}}>
+                    + Add
+                  </button>
+                </div>
+              );
+            })()}
           </div>
             );
           })()}
