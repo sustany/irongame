@@ -1079,9 +1079,10 @@ export default function IronGame(){
   // is deliberately NOT persisted: a collapsed card on cold start would hide
   // the only route into a custom session.
   const [groupsOpen, setGroupsOpen] = useState(true);
-  // F-WKTCARD1 — workout-picker card open/closed. Same rule as groupsOpen:
-  // defaults open, never persisted.
-  const [wktOpen, setWktOpen] = useState(true);
+  // F-WKTCARD1 — workout-picker card open/closed. Defaults CLOSED: the
+  // muscle-group card above it is the primary path and stays open, so cold
+  // start still shows a route into a session. Never persisted.
+  const [wktOpen, setWktOpen] = useState(false);
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
   const [draftList, setDraftList] = useState(null);
