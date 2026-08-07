@@ -1052,6 +1052,10 @@ export default function IronGame(){
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   });
   const [showOpenerPicker, setShowOpenerPicker] = useState(false);
+  // F-GRPCARD1 — muscle-group card open/closed. Defaults open every launch and
+  // is deliberately NOT persisted: a collapsed card on cold start would hide
+  // the only route into a custom session.
+  const [groupsOpen, setGroupsOpen] = useState(true);
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
   const [draftList, setDraftList] = useState(null);
@@ -2259,72 +2263,103 @@ export default function IronGame(){
 
           {/* CHOOSE YOUR WORKOUT — first choice */}
           <div style={{marginBottom:18}}>
-            {/* F-CUSTOM1 — Custom session: full-width card + multi-select chips */}
-            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}} style={{
-              width:"100%",borderRadius:12,padding:"16px 14px",cursor:"pointer",
-              background:sesType==="custom"?STEEL_SEL:STEEL,
-              border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
-              borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
-              boxShadow:sesType==="custom"
-                ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
-                :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`,
-              display:"flex",alignItems:"center",gap:14,textAlign:"left",position:"relative"}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                  letterSpacing:"0.12em",lineHeight:1,color:C.wht}}>Pick Muscle Groups</div>
-              </div>
-              {sesType==="custom"&&(
-                <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
-                  width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <IChk s={12}/>
-                </div>
-              )}
-            </button>
-
-            {/* Muscle group multi-select — always expanded on the setup screen so
-                the groups are visible the moment the app opens. Tapping any chip
-                selects the Custom session type implicitly. */}
+            {/* F-GRPCARD1 — header strip and chip grid are ONE card, not a button
+                floating above a box. Border, shadow and red glow live on the
+                wrapper; the strip is its lid. Two distinct tap regions: the
+                title selects Custom, the triangle opens/closes. Dim is scoped
+                to the chip body so the section keeps its label when
+                Push/Pull/Legs is the live choice. */}
             {(()=>{
-              // Dim-and-preserve: when Push/Pull/Legs is active the chip
-              // selection is kept but greyed, so two session types are never
-              // shown as simultaneously live. Chips stay tappable — a tap
-              // re-selects Custom and un-dims.
-              const chipsDim = !!sesType && sesType!=="custom";
+              const on = sesType==="custom";
+              const chipsDim = !!sesType && !on;
+              const selLabels = MUSCLE_GROUPS
+                .filter(g=>customGroups.includes(g.id)).map(g=>g.label);
               return(
-              <div style={{marginTop:10,background:STEEL,borderRadius:12,
-                border:`1px solid ${C.bdr}`,borderTop:`1px solid ${C.bdrTop}`,
-                padding:"12px 12px 10px",
-                opacity:chipsDim?0.38:1,
-                transition:"opacity 140ms ease",
-                boxShadow:"0 3px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04)"}}>
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {CHIP_ROWS.map((row,ri)=>(
-                  <div key={ri} style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                  {row.map(gid=>GROUP_BY_ID[gid]).filter(Boolean).map(g=>{
-                    const on=customGroups.includes(g.id);
-                    return(
-                      <button key={g.id} className="t"
-                        onClick={()=>{
-                          setSesType("custom");
-                          setCustomOpener(null);
-                          setDraftList(null);
-                          setCustomGroups(gs=>on?gs.filter(x=>x!==g.id):[...gs,g.id]);
-                        }}
-                        style={{
-                          padding:"9px 14px",borderRadius:20,cursor:"pointer",
-                          background:on?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
-                          border:`1px solid ${on?"#f03010":C.bdr}`,
-                          fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
-                          color:on?"#fff":C.lt,letterSpacing:"0.08em",
-                          textTransform:"uppercase",
-                          boxShadow:on?`0 2px 12px ${C.redGlow}`:"none"}}>
-                        {g.label}
-                      </button>
-                    );
-                  })}
-                  </div>
-                  ))}
+              <div style={{borderRadius:12,overflow:"hidden",
+                background:on?STEEL_SEL:STEEL,
+                border:`1px solid ${on?C.red:C.bdr}`,
+                borderTop:`1px solid ${on?"#f03010":C.bdrTop}`,
+                boxShadow:on
+                  ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
+                  :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
+
+                {/* Lid */}
+                <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 6px 0 14px"}}>
+                  <button className="t"
+                    onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}}
+                    style={{flex:1,minWidth:0,background:"none",border:"none",padding:"14px 0",
+                      textAlign:"left",cursor:"pointer",display:"flex",alignItems:"baseline",
+                      gap:10,flexWrap:"wrap"}}>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                      letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
+                      whiteSpace:"nowrap"}}>Pick Muscle Groups</span>
+                    {/* Collapsed with a selection, the chips are hidden — surface
+                        what's picked or the closed card is unreadable. */}
+                    {!groupsOpen && selLabels.length>0 && (
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                        letterSpacing:"0.12em",textTransform:"uppercase",
+                        color:on?"rgba(255,255,255,0.72)":C.md,
+                        whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",
+                        maxWidth:150}}>
+                        {selLabels.join(", ")}
+                      </span>
+                    )}
+                  </button>
+                  {on&&(
+                    <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
+                      width:22,height:22,display:"flex",alignItems:"center",
+                      justifyContent:"center",flexShrink:0}}>
+                      <IChk s={12}/>
+                    </div>
+                  )}
+                  <button className="t" onClick={()=>setGroupsOpen(o=>!o)}
+                    aria-label={groupsOpen?"Collapse muscle groups":"Expand muscle groups"}
+                    aria-expanded={groupsOpen}
+                    style={{width:40,height:44,flexShrink:0,background:"none",border:"none",
+                      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+                      color:on?"#fff":C.md,fontSize:13}}>
+                    <span style={{display:"inline-block",
+                      transform:groupsOpen?"none":"rotate(-90deg)",
+                      transition:"transform 160ms ease"}}>&#9660;</span>
+                  </button>
                 </div>
+
+                {/* Chip body */}
+                {groupsOpen&&(
+                <div style={{background:STEEL,padding:"12px 12px 12px",
+                  borderTop:"1px solid rgba(0,0,0,0.55)",
+                  boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)",
+                  opacity:chipsDim?0.38:1,transition:"opacity 140ms ease"}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {CHIP_ROWS.map((row,ri)=>(
+                    <div key={ri} style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                    {row.map(gid=>GROUP_BY_ID[gid]).filter(Boolean).map(g=>{
+                      const sel=customGroups.includes(g.id);
+                      return(
+                        <button key={g.id} className="t"
+                          onClick={()=>{
+                            setSesType("custom");
+                            setCustomOpener(null);
+                            setDraftList(null);
+                            setCustomGroups(gs=>sel?gs.filter(x=>x!==g.id):[...gs,g.id]);
+                          }}
+                          style={{
+                            padding:"9px 14px",borderRadius:20,cursor:"pointer",
+                            background:sel?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
+                            border:`1px solid ${sel?"#f03010":C.bdr}`,
+                            fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+                            color:sel?"#fff":C.lt,letterSpacing:"0.08em",
+                            textTransform:"uppercase",
+                            boxShadow:sel?`0 2px 12px ${C.redGlow}`:"none"}}>
+                          {g.label}
+                        </button>
+                      );
+                    })}
+                    </div>
+                    ))}
+                  </div>
+                </div>
+                )}
               </div>
               );
             })()}
