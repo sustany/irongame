@@ -3911,12 +3911,6 @@ export default function IronGame(){
               const bdrOf   = (r) => r > rangeHi ? "rgba(34,200,100,0.45)"
                                   : r < rangeLo ? "rgba(232,38,10,0.5)"
                                   : "rgba(255,255,255,0.22)";
-              // Quick chips at adaptedTarget ± 2, deduped, sorted, floored at 1
-              const chipSet = [...new Set([
-                Math.max(1, adaptedTarget - 2),
-                adaptedTarget,
-                adaptedTarget + 2,
-              ])].sort((a,b)=>a-b);
               const stepBtn = {
                 width:64,height:64,borderRadius:14,
                 background:"rgba(255,255,255,0.06)",
@@ -3952,22 +3946,6 @@ export default function IronGame(){
                     <button className="t"
                       onClick={()=>setRepInput(Math.min(99, currentReps + 1))}
                       style={stepBtn}>+</button>
-                  </div>
-
-                  {/* Quick chips — one-tap log at adaptedTarget ± 2 */}
-                  <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:14}}>
-                    {chipSet.map(r => (
-                      <button key={r} className="t"
-                        onClick={()=>attemptReps(r)}
-                        style={{
-                          flex:1,maxWidth:90,height:48,borderRadius:10,
-                          background:bgOf(r),border:`1px solid ${bdrOf(r)}`,
-                          color:colorOf(r),cursor:"pointer",
-                          fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
-                          letterSpacing:"0.04em"}}>
-                        {r}
-                      </button>
-                    ))}
                   </div>
 
                   {/* Primary Log button — commits the stepper value */}
