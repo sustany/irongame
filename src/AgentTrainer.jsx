@@ -1633,7 +1633,6 @@ export default function IronGame(){
     window.history.replaceState(null,'','/');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // F-TIMER1: total wall-clock from session start as h:mm:ss, live tick.
 
   const ex     = exList[exIdx]||null;
   // B-EQFALL1 — eqOf() falls back to plate-loaded whenever `eq` is absent,
@@ -3438,12 +3437,19 @@ export default function IronGame(){
           </div>
           <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:10,
             color:C.md,letterSpacing:"0.06em",marginTop:1}}>
-            {sessionDate&&(
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:9,
-                color:"rgba(255,255,255,0.3)",letterSpacing:"0.06em",marginTop:1}}>
-                {sessionDate}
-              </div>
-            )}
+            {/* F-SESTIME1 — live session run time, MM:SS, in the slot the date
+                held. Minutes are not capped at 59: a 72-minute session reads
+                72:14, not 12:14. Driven by the existing 1 Hz `tick`. */}
+            {sessionStart&&(()=>{
+              const secs = Math.max(0, Math.floor((Date.now()-sessionStart)/1000));
+              return (
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:17,lineHeight:1,
+                  color:"rgba(255,255,255,0.45)",fontVariantNumeric:"tabular-nums",
+                  letterSpacing:"0.04em",marginTop:3}}>
+                  {String(Math.floor(secs/60)).padStart(2,"0")}:{String(secs%60).padStart(2,"0")}
+                </div>
+              );
+            })()}
             {/* F-TIMECAP3 — leave-by countdown, session screen. Same red MM:SS
                 as the setup button so the two read as one number, not two.
                 Only rendered in time-constrained mode. */}
