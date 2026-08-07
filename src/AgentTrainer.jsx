@@ -417,12 +417,22 @@ const CATEGORY = {
   legs: ["RDL, Barbell","Linear Hack Squat, Machine, Plate-Loaded","Leg Curl, Machine, Seated","Leg Extension",
          "Calf Press, Leg Press","Calf Press, Linear Leg Press","Calf Raise, Machine, Plate-Loaded, Seated","Hip Thrust (Smith)",
          "Hyperextensions 45°","Dead Hang"],
+  // F-FULLBODY1 — one slot per movement pattern, so the picker spans all three
+  // splits rather than favouring one.
+  fullbody: ["Linear Hack Squat, Machine, Plate-Loaded","Leg Extension","Leg Curl, Machine, Seated","Hip Thrust (Smith)",
+             "Incline Press","Bench Press, Smith Machine","HS Decline Press","Pec Deck","Fly, Dumbbell",
+             "Lat Pulldown, Machine, Plate-Loaded","High Row, Machine, Plate-Loaded","LF Row","Chin-Up, Machine, Assisted",
+             "Lateral Raise, Dumbbell, Seated","Shoulder Press","Military Press, Machine, Plate-Loaded",
+             "Calf Press, Leg Press","Crunches, Machine, Plate-Loaded","Captain's Chair","Hyperextensions 45°","Dead Hang"],
 };
 // Session type → primary muscles, used for the master-DB fallback below.
 const SESSION_PRIMARIES = {
   push: new Set(["chest","front delts","side delts","rear delts","triceps"]),
   pull: new Set(["lats","mid back","lower back","traps","biceps","brachialis","forearms","grip","abs","obliques","core"]),
   legs: new Set(["quads","hamstrings","glutes","calves","hip flexors"]),
+  fullbody: new Set(["chest","front delts","side delts","rear delts","triceps",
+                     "lats","mid back","lower back","traps","biceps","brachialis","forearms","grip",
+                     "abs","obliques","core","quads","hamstrings","glutes","calves","hip flexors"]),
 };
 // F-CUSTOM1 — Custom session: user multi-selects muscle groups; the session
 // composes from the curated META list (elbow-safe by construction).
@@ -545,11 +555,24 @@ const TMPLS = {
     {name:"Calf Press, Leg Press",sets:3,repRange:"10–12",targetReps:12, alts:["Calf Press, Linear Leg Press","Calf Raise, Hack Squat","Calf Raise, Machine, Plate-Loaded, Seated"]},
     {name:"Hyperextensions 45°",  sets:2,repRange:"10–12",targetReps:12,mandatory:true},
   ],
+  // F-FULLBODY1 — five slots at three sets = 15 working sets, inside the
+  // 65-minute weekday ceiling (5 exercises / ~16 sets). One squat pattern, one
+  // press, one vertical pull, one hinge/knee-flexion, one delt. Deliberately no
+  // direct arm or core slot: adding either breaks the weekday set cap, and arms
+  // take indirect work from the press and the pulldown.
+  fullbody:[
+    {name:"Linear Hack Squat, Machine, Plate-Loaded", sets:3,repRange:"8–10", targetReps:10,priority:true, alts:["Leg Extension"]},
+    {name:"Incline Press",        sets:3,repRange:"8–10", targetReps:10, alts:["Bench Press, Smith Machine","HS Decline Press"]},
+    {name:"Lat Pulldown, Machine, Plate-Loaded",     sets:3,repRange:"8–10", targetReps:10, alts:["Chin-Up, Machine, Assisted","High Row, Machine, Plate-Loaded"]},
+    {name:"Leg Curl, Machine, Seated",  sets:3,repRange:"6–8",  targetReps:8 , alts:["Hip Thrust (Smith)"]},
+    {name:"Lateral Raise, Dumbbell, Seated", sets:3,repRange:"12–15",targetReps:15, alts:["Pec Deck"]},
+  ],
 };
 const PREV={
   push:{muscles:"Chest · Shoulders · Triceps",opens:"Incline Press",note:"Elbow-safe pressing only. No barbell flat or incline bench."},
   pull:{muscles:"Back · Biceps · Rear Delts",opens:"Lat Pulldown, Machine, Plate-Loaded",note:"Dead hang mandatory every session."},
   legs:{muscles:"Quads · Hamstrings · Glutes · Calves",opens:"Barbell RDL → Linear Hack Squat PL",note:"Hip hinge priority. Hyperextensions mandatory every session."},
+  fullbody:{muscles:"Legs · Chest · Back · Delts",opens:"Linear Hack Squat PL",note:"5 × 3 = 15 sets. Less volume per muscle than a split day — use for travel, short weeks, or a rebuild week, not as a peer of Push/Pull/Legs."},
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -1056,6 +1079,9 @@ export default function IronGame(){
   // is deliberately NOT persisted: a collapsed card on cold start would hide
   // the only route into a custom session.
   const [groupsOpen, setGroupsOpen] = useState(true);
+  // F-WKTCARD1 — workout-picker card open/closed. Same rule as groupsOpen:
+  // defaults open, never persisted.
+  const [wktOpen, setWktOpen] = useState(true);
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
   const [draftList, setDraftList] = useState(null);
@@ -2669,21 +2695,80 @@ export default function IronGame(){
             );
           })()}
 
-            <div style={{marginTop:16,marginBottom:8}}>
-              <SL>Or Pick A Workout</SL>
-            </div>
+            {/* F-WKTCARD1 — same shell as the muscle-group card so the two
+                selection paths read as siblings. Header strip is the lid, its
+                own collapse triangle, collapsed strip carries the picked
+                workout. F-FULLBODY1 adds a fourth option; four across on a
+                phone squeezes each card to ~82px and wraps "Full Body", so the
+                cards move to a 2x2 grid. */}
+            <div style={{marginTop:16}}/>
+            {(()=>{
+              const WKTS=[
+                {type:"push", label:"Push", muscles:"Chest\nShoulders · Triceps"},
+                {type:"pull", label:"Pull", muscles:"Back\nBiceps · Rear Delts"},
+                {type:"legs", label:"Legs", muscles:"Quads · Hams\nGlutes · Calves"},
+                {type:"fullbody", label:"Full Body", muscles:"Legs · Chest\nBack · Delts"},
+              ];
+              const picked=WKTS.find(w=>w.type===sesType);
+              const on=!!picked;
+              return(
+              <div style={{borderRadius:12,overflow:"hidden",
+                background:on?STEEL_SEL:STEEL,
+                border:`1px solid ${on?C.red:C.bdr}`,
+                borderTop:`1px solid ${on?"#f03010":C.bdrTop}`,
+                boxShadow:on
+                  ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
+                  :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
 
-            <div style={{display:"flex",gap:10}}>
-              <TypeCard type="push" label="Push" compact={sesType==="custom"}
-                muscles={"Chest\nShoulders · Triceps"}
-                Icon={IconPush} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="pull" label="Pull" compact={sesType==="custom"}
-                muscles={"Back\nBiceps · Rear Delts"}
-                Icon={IconPull} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-              <TypeCard type="legs" label="Legs" compact={sesType==="custom"}
-                muscles={"Quads · Hams\nGlutes · Calves"}
-                Icon={IconLegs} selected={sesType} onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-            </div>
+                <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 6px 0 14px"}}>
+                  <div style={{flex:1,minWidth:0,padding:"14px 0",display:"flex",
+                    alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
+                      letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
+                      whiteSpace:"nowrap"}}>Pick A Workout</span>
+                    {!wktOpen && picked && (
+                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                        letterSpacing:"0.12em",textTransform:"uppercase",
+                        color:"rgba(255,255,255,0.72)",whiteSpace:"nowrap"}}>
+                        {picked.label}
+                      </span>
+                    )}
+                  </div>
+                  {on&&(
+                    <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
+                      width:22,height:22,display:"flex",alignItems:"center",
+                      justifyContent:"center",flexShrink:0}}>
+                      <IChk s={12}/>
+                    </div>
+                  )}
+                  <button className="t" onClick={()=>setWktOpen(o=>!o)}
+                    aria-label={wktOpen?"Collapse workouts":"Expand workouts"}
+                    aria-expanded={wktOpen}
+                    style={{width:40,height:44,flexShrink:0,background:"none",border:"none",
+                      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+                      color:on?"#fff":C.md,fontSize:13}}>
+                    <span style={{display:"inline-block",
+                      transform:wktOpen?"none":"rotate(-90deg)",
+                      transition:"transform 160ms ease"}}>&#9660;</span>
+                  </button>
+                </div>
+
+                {wktOpen&&(
+                <div style={{background:STEEL,padding:12,
+                  borderTop:"1px solid rgba(0,0,0,0.55)",
+                  boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)",
+                  display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  {WKTS.map(w=>(
+                    <TypeCard key={w.type} type={w.type} label={w.label}
+                      compact={sesType==="custom"} muscles={w.muscles}
+                      selected={sesType}
+                      onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
+                  ))}
+                </div>
+                )}
+              </div>
+              );
+            })()}
 
             {!!sesType && sesType!=="custom" && previewEl}
 
@@ -4188,6 +4273,7 @@ export default function IronGame(){
               const sesOrder = sesType==="push"  ? ["CHEST","SHOULDERS","ARMS","BACK","LEGS","CORE"]
                              : sesType==="pull"  ? ["BACK","ARMS","SHOULDERS","CHEST","LEGS","CORE"]
                              : sesType==="legs"  ? ["LEGS","CORE","BACK","CHEST","SHOULDERS","ARMS"]
+                             : sesType==="fullbody" ? ["LEGS","CHEST","BACK","SHOULDERS","ARMS","CORE"]
                              : PILL_MAP.map(p=>p.label);
               const ordered = sesOrder.map(l=>PILL_MAP.find(p=>p.label===l)).filter(Boolean);
               return(
