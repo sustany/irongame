@@ -4058,6 +4058,34 @@ export default function IronGame(){
             <RedBtn onClick={()=>confirmPhr(phrInput)} h={64}>
               Log Set — {phrInput} BPM
             </RedBtn>
+            {/* F-PHRSKIP1 (2026-08-08) — Skip logs the pending set with NO
+                heart-rate value (doLog phr=null path). Re-introduces a skip
+                control previously removed under Obs #7 / C0; explicit
+                override by Christian 2026-08-08 (see SMOKE_TEST.md §2). */}
+            <button className="t"
+              onClick={()=>{
+                if(!pendingResult) return;
+                doLog(pendingResult.res, pendingResult.wt, pendingResult.reps);
+                setPendingResult(null);
+              }}
+              style={{width:"100%",marginTop:10,height:46,borderRadius:10,
+                background:"transparent",border:`1px solid ${C.bdr}`,
+                color:C.lt,cursor:"pointer",
+                fontFamily:"'Bebas Neue',sans-serif",fontSize:16,
+                letterSpacing:"0.12em"}}>
+              Skip — Log Without BPM
+            </button>
+            {/* F-PHRBACK1 (2026-08-08) — Back per Obs #3b: discards the
+                pending result and returns to the rep stepper; nothing logs. */}
+            <button className="t"
+              onClick={()=>{setPendingResult(null);setPhase("logging");}}
+              style={{width:"100%",marginTop:8,height:40,borderRadius:10,
+                background:"transparent",border:"none",
+                color:C.md,cursor:"pointer",
+                fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
+                letterSpacing:"0.1em",textTransform:"uppercase"}}>
+              ← Back
+            </button>
 
           </div>
         ):(

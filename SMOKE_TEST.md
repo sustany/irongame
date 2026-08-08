@@ -108,11 +108,12 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 - [ ] HR adjust buttons: -5, -1, +1, +5
 - [ ] **LOG SET — N BPM button** (primary CTA) ← required
 - [ ] END SESSION link
-- [ ] **Back button** ← required per Obs #3b (pending implementation, becomes required once shipped)
+- [ ] **Back button** ← required per Obs #3b — SHIPPED 2026-08-08 (F-PHRBACK1); now required
+- [ ] **Skip — Log Without BPM button** ← required per F-PHRSKIP1 (2026-08-08); logs set with no HR value
 
 **Items to be REMOVED on next session-screen commit (do not re-introduce):**
 
-- [ ] "NO HR DATA — SKIP" line below LOG SET button (per Obs #7 / C0)
+- [x] ~~"NO HR DATA — SKIP" line below LOG SET button (per Obs #7 / C0)~~ — C0 removal OVERRIDDEN by explicit decision 2026-08-08: skip control re-introduced as secondary button (F-PHRSKIP1). This line no longer blocks re-introduction.
 - [ ] "PEAK HEART RATE · SET N" label above BPM (per Obs #6 / C2)
 - [ ] "MUS / CAL / CRD / FND" score-breakdown row at top of screen (per Obs #5 / C1)
 
