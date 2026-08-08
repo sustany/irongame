@@ -989,6 +989,10 @@ export default function IronGame(){
   const [lastWt,    setLastWt]    = useState(()=> _saved?.lastWt    ?? null);
   const [prFlash,   setPrFlash]   = useState(null);
   const [wConf,     setWConf]     = useState(null);
+  // B-FINCONF1 (2026-08-08): in-app finish confirmation. window.confirm can be
+  // silently suppressed in iOS standalone PWAs, making the session impossible
+  // to finalize. null | 'end' — mirrors the wConf modal pattern.
+  const [endConf,   setEndConf]   = useState(null);
   const [weightAdj, setWeightAdj] = useState(0);
   // F-PROFILE1 — user profile (ig_profile). Dual-write localStorage + IDB.
   // bw drives assisted-machine effective-load math (B-ASSIST1).
@@ -3548,6 +3552,30 @@ export default function IronGame(){
         </div>
       )}
 
+      {/* B-FINCONF1 — finish-session confirmation, in-app (no window.confirm) */}
+      {endConf&&(
+        <div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(0,0,0,0.92)",
+          display:"flex",flexDirection:"column",alignItems:"center",
+          justifyContent:"center",padding:24,gap:16}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:40,color:C.gld}}>
+            Finish Session?
+          </div>
+          <div style={{height:2,width:80,background:C.red}}/>
+          <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:16,
+            color:C.wht,textAlign:"center",lineHeight:1.65}}>
+            {log.length} {log.length===1?"set":"sets"} logged.<br/>This finalizes your workout.
+          </div>
+          <RedBtn onClick={()=>{setEndConf(null);setSessionEnd(Date.now());setScreen("complete");}}>
+            Finish Session
+          </RedBtn>
+          <button className="t" onClick={()=>setEndConf(null)} style={{
+            width:"100%",height:52,border:`1px solid ${C.bdr}`,borderRadius:10,
+            background:"transparent",color:C.lt,cursor:"pointer",
+            fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:15,
+          }}>Keep Training</button>
+        </div>
+      )}
+
       {/* ── SCORE BAR — needs to be readable glance distance ── */}
       <div style={{background:STEEL,borderBottom:`2px solid ${C.bdr}`,
         padding:"10px 18px",paddingTop:"calc(10px + env(safe-area-inset-top))",
@@ -3992,8 +4020,7 @@ export default function IronGame(){
               auto-advance. On the last exercise this finishes the session. */}
           <button className="t" onClick={()=>{
               if(exIdx+1>=exList.length){
-                if(!window.confirm('Last exercise — finish session?')) return;
-                setSessionEnd(Date.now());setScreen("complete");return;
+                setEndConf('end');return; // B-FINCONF1: in-app modal replaces window.confirm
               }
               setExIdx(i=>i+1);setSetIdx(0);setLastRes(null);
               setLastWt(null);setWeightAdj(0);setPlateLedger(null);setPhase("ready");
@@ -4176,10 +4203,7 @@ export default function IronGame(){
           </>
         )}
         {phase==="ready"&&(
-          <button className="t" onClick={()=>{
-            if(!window.confirm('End session? This will finalize your workout.')) return;
-            setSessionEnd(Date.now());setScreen("complete");
-          }}
+          <button className="t" onClick={()=>setEndConf('end')} /* B-FINCONF1 */
             style={{width:"100%",height:38,background:"transparent",
               border:"none",
               fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
