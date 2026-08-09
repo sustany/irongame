@@ -651,6 +651,14 @@ function calcPlates(target, from, bilateral, maxPlate=45) {
 // loaded gear opens at 0 and is remembered thereafter via ig_openwt.
 const BARBELL_OPEN_PLATES = 25; // lb per side
 
+// B-LPEST1: per-exercise cold-start openers. The generic EQ_FLOOR (45 for
+// plate-loaded) is absurd for big lower-body sleds — Leg Press opened at a
+// ghost-snapped 40 lb. Checked FIRST in seedNoHistory so it beats both the
+// movement-cluster fallback and the equipment floor. Fires only when the
+// exercise has no PR and no stored opener on this device; after the first
+// logged set, ig_openwt takes over as before.
+const SEED_OPENERS = { "Leg Press": 270 }; // 6×45 total
+
 function suggestW(name,si,lw,lr,prs,ow,meta,bwUser){
   const M  = meta || META[name] || {};
   const pr = prs[name];
@@ -695,6 +703,7 @@ function suggestW(name,si,lw,lr,prs,ow,meta,bwUser){
   // bodyweight is legitimately zero); smith floors at its bar via `bar`.
   const EQ_FLOOR = { "dumbbell":15, "stack-pin":30, "plate-loaded":45 };
   const seedNoHistory = () => {
+    if (SEED_OPENERS[name]) return SEED_OPENERS[name]; // B-LPEST1
     const snap = M.snap || eqM.snap || 5;
     const mv = CANON_TO_MOVEMENT[name];
     if (mv) {
