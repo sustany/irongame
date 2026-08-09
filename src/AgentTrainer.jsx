@@ -761,8 +761,13 @@ function calcScore(log,prs,ext){
   });
   const n  = wlog.length;
   const ts = ext ? 20 : 17;
+  // B-SCOREPACE1 — ratio components must be paced by session completion or
+  // they pay out in full after 1–2 sets (score read 32/100 at 2/19 sets).
+  // paceFrac hits 1.0 at the full set count, so END-of-session totals are
+  // byte-identical to the pre-fix model; only mid-session pacing changes.
+  const paceFrac = Math.min(1, n / ts);
   const stimPts = Math.min(27, Math.round(stim));
-  const qualPts = n > 0 ? Math.min(13, Math.round((ov/n)*13)) : 0;
+  const qualPts = n > 0 ? Math.min(13, Math.round((ov/n)*13*paceFrac)) : 0;
   const corePts = core ? 5 : 0;
   const mp = Math.min(45, stimPts + qualPts + corePts);
 
@@ -784,7 +789,10 @@ function calcScore(log,prs,ext){
       if(hr>=z2lo) return 7;        // Fat Burn
       return 3;                      // Recovery
     });
-    cv=Math.min(15,Math.round(zoneScores.reduce((a,b)=>a+b,0)/zoneScores.length));
+    // B-SCOREPACE1: zone quality is an average, so it too must be paced by
+    // completion (n/ts, NOT phrs.length/ts — HR-logging coverage must not
+    // change the end-of-session score vs the pre-fix model).
+    cv=Math.min(15,Math.round(zoneScores.reduce((a,b)=>a+b,0)/zoneScores.length*paceFrac));
   } else {
     cv=Math.min(10,Math.round((n/ts)*10)); // fallback if no HR logged
   }
