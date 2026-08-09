@@ -657,7 +657,7 @@ const BARBELL_OPEN_PLATES = 25; // lb per side
 // movement-cluster fallback and the equipment floor. Fires only when the
 // exercise has no PR and no stored opener on this device; after the first
 // logged set, ig_openwt takes over as before.
-const SEED_OPENERS = { "Leg Press": 270 }; // 6×45 total
+const SEED_OPENERS = { "Leg Press": 270, "Leg Extension": 220 };
 
 function suggestW(name,si,lw,lr,prs,ow,meta,bwUser){
   const M  = meta || META[name] || {};
