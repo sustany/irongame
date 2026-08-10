@@ -4159,18 +4159,9 @@ export default function IronGame(){
           </div>
         ):(
           <>
-            {repFeedback&&(
-              <div style={{textAlign:"center",marginBottom:8,
-                fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:12,
-                letterSpacing:"0.1em",textTransform:"uppercase",
-                color: repFeedback==="exceeded"||repFeedback==="ceiling" ? C.grn
-                     : repFeedback==="below" ? "#ff6644" : C.md}}>
-                {repFeedback==="exceeded" && `${lastReps} reps — above range · increase weight next session`}
-                {repFeedback==="ceiling"  && `${lastReps} reps — at ceiling · consider adding weight`}
-                {repFeedback==="within"   && `Last set: ${lastReps} reps`}
-                {repFeedback==="below"    && `${lastReps} reps — below range · check load`}
-              </div>
-            )}
+            {/* B-REPFB1 (2026-08-10): rep-feedback advice line removed per
+                Christian (circled screenshot sign-off). repFeedback logic
+                retained upstream; stepper range coloring unaffected. */}
             {(() => {
               // B-REPDEF1 (2026-08-10): stepper defaults to a flat 10 on
               // every set (Christian's spec), no longer inheriting the last
