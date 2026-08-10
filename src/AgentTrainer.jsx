@@ -1116,7 +1116,7 @@ export default function IronGame(){
   const [expandedMv,       setExpandedMv]       = useState(null);
 
   // ── Music player state ────────────────────────────────────
-  // repInput: the stepper value on the logging screen. null = use adaptedTarget as default.
+  // repInput: the stepper value on the logging screen. null = default of 10 (B-REPDEF1).
   const [repInput, setRepInput] = useState(null);
   // userMeta: META overrides for user-added exercises. Keyed by exercise name.
   // Each entry can supply { eq, compound, ... } to drive equipment behavior.
@@ -1193,7 +1193,7 @@ export default function IronGame(){
     return ()=>clearInterval(id);
   },[screen,tcMode,depTime]);
 
-  // Reset rep stepper to default (adaptedTarget) whenever we land on the ready phase
+  // Reset rep stepper to default (10, per B-REPDEF1) whenever we land on the ready phase
   // or move to a different set/exercise. Avoids stale stepper values between sets.
   useEffect(() => {
     if (phase === "ready") setRepInput(null);
@@ -4172,7 +4172,11 @@ export default function IronGame(){
               </div>
             )}
             {(() => {
-              const currentReps = repInput ?? adaptedTarget;
+              // B-REPDEF1 (2026-08-10): stepper defaults to a flat 10 on
+              // every set (Christian's spec), no longer inheriting the last
+              // logged rep count. adaptedTarget still drives rep-feedback
+              // messaging and range coloring; only the stepper default changed.
+              const currentReps = repInput ?? 10;
               const colorOf = (r) => r > rangeHi ? C.grn : r < rangeLo ? "#ff6644" : C.wht;
               const bgOf    = (r) => r > rangeHi ? "rgba(34,200,100,0.10)"
                                   : r < rangeLo ? "rgba(232,38,10,0.12)"
