@@ -368,6 +368,7 @@ export const MOVEMENT_CLUSTERS = {
   "Lat Pulldown":      ["Lat Pulldown","Lat Pulldown, Machine, Plate-Loaded"],
   "Lateral Raise":     ["Lateral Raise, Dumbbell","Lateral Raise, Dumbbell, Seated","Lateral Raise, Cable","Lateral Raise, Machine"],
   "Overhead Extension":["Overhead Extension, Cable","Overhead Extension, Dumbbell"],
+  "Preacher Curl":     ["Preacher Curl, Machine, Plate-Loaded","Preacher Curl, Machine","Preacher Curl, EZ Bar","Preacher Curl, Barbell","Preacher Curl, Dumbbell"],
   "Pullover":          ["Pullover, Dumbbell","Pullover, Cable","Pullover, Machine"],
   "RDL":               ["RDL, Dumbbell","RDL, Barbell"],
   "Rear Delt Fly":     ["Rear Delt Fly","Rear Delt Fly, Cable"],

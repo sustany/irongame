@@ -1490,6 +1490,50 @@ export default function IronGame(){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]); // mount only
 
+  // MIG-PREACH1 (2026-08-10, B-PREACHVAR1) — 'Preacher Curl' ->
+  // 'Preacher Curl, Machine, Plate-Loaded' (Christian's confirmed
+  // equipment for all logged preacher sets). Precondition for the "Preacher Curl"
+  // movement cluster (keys must not collide with canonical names, per
+  // MIG-CPRESS1). Same re-key mechanics; ig_plateledger included per
+  // F-PLMEM1 / MIG-LEGCURL1 precedent.
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem('ig_mig_preach1')) return;
+      const R=new Map([['Preacher Curl','Preacher Curl, Machine, Plate-Loaded']]);
+      const rk=(name)=>R.get(name)||name;
+      let h={}; try{ h=JSON.parse(localStorage.getItem('ig_history')||'{}'); }catch{}
+      let touched=false;
+      Object.values(h).forEach(day=>{
+        if(day&&Array.isArray(day.exercises)) day.exercises.forEach(e=>{
+          if(R.has(e.name)){ e.name=rk(e.name); touched=true; }
+        });
+      });
+      if(touched){ const raw=JSON.stringify(h);
+        try{localStorage.setItem('ig_history',raw);}catch{} idbSet('ig_history',raw); setHist(h); }
+      const rekeyFlat=(key,setter)=>{
+        let o={}; try{ o=JSON.parse(localStorage.getItem(key)||'{}'); }catch{}
+        let t=false;
+        R.forEach((NEW,OLD)=>{ if(o[OLD]!==undefined){ if(o[NEW]===undefined) o[NEW]=o[OLD]; delete o[OLD]; t=true; } });
+        if(t){ const raw=JSON.stringify(o);
+          try{localStorage.setItem(key,raw);}catch{} idbSet(key,raw); if(setter) setter(o); }
+      };
+      rekeyFlat('ig_openwt', setOpenWt);
+      rekeyFlat('ig_plateledger', setPlateMem);
+      setPrs(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setUserMeta(prev=>{ const out={}; let hit=false;
+        Object.entries(prev).forEach(([k,v])=>{ const nk=rk(k); if(nk!==k) hit=true;
+          if(out[nk]===undefined) out[nk]=v; });
+        return hit?out:prev; });
+      setExList(prev=>prev.some(e=>R.has(e.name))?prev.map(e=>R.has(e.name)?{...e,name:rk(e.name)}:e):prev);
+      setLog(prev=>prev.some(s=>R.has(s.exercise))?prev.map(s=>R.has(s.exercise)?{...s,exercise:rk(s.exercise)}:s):prev);
+      localStorage.setItem('ig_mig_preach1','1');
+    }catch{}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]); // mount only
+
   // F-HIST1 — auto-archive the completed session into history (runs once per completion).
   useEffect(()=>{
     if(screen!=="complete"||log.length===0) return;
