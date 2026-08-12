@@ -2334,20 +2334,24 @@ export default function IronGame(){
           <div style={{marginBottom:18}}>
             {/* F-HOMEWIZ1 — Custom entry card: tap advances to Step 2 */}
             <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);setWizStep(2);}}
-              style={{width:"100%",textAlign:"left",borderRadius:12,padding:"20px 16px",
-                cursor:"pointer",position:"relative",marginBottom:10,
+              style={{width:"100%",borderRadius:12,padding:"20px 16px",
+                cursor:"pointer",marginBottom:10,
+                display:"flex",alignItems:"center",justifyContent:"center",gap:11,
                 background:sesType==="custom"?STEEL_SEL:STEEL,
                 border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
                 borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
                 boxShadow:sesType==="custom"
                   ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
                   :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
-              {/* F-CUSTCARD1 (08/12): card carries only "Pick your muscle groups" —
-                  "Custom" title and "Build your own ·" prefix removed; arrow 2.5x (20→50) */}
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
-                lineHeight:1,color:sesType==="custom"?C.wht:C.red,paddingRight:44}}>Pick Your Muscle Groups</div>
-              <div style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",
-                fontSize:50,lineHeight:1,color:sesType==="custom"?"#fff":C.md}}>›</div>
+              {/* F-CUSTCARD1 (08/12): single centered row "Pick Your Muscle Groups" + chevron.
+                  Chevron is a drawn SVG spanning the exact cap height of the letters (20px)
+                  so glyph and text read as one unit — approved via preview v4. */}
+              <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
+                lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Pick Your Muscle Groups</span>
+              <svg width="13" height="20" viewBox="0 0 13 20" fill="none" style={{display:"block",flexShrink:0}}>
+                <path d="M2.5 2 L10.5 10 L2.5 18" stroke={sesType==="custom"?C.wht:C.red}
+                  strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
             {/* F-WKTCARD1 — same shell as the muscle-group card so the two
                 selection paths read as siblings. Header strip is the lid, its
