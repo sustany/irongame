@@ -2776,8 +2776,9 @@ export default function IronGame(){
             alignSelf:"flex-start",background:"none",border:"none",padding:"0 0 12px",
             cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
             color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>‹ Back</button>
-          {previewEl}
-          <div style={{height:14}}/>
+          {/* F-PREVIEW5 (08/12): "Preview & Edit Exercises" removed from Step 3.
+              Component + previewEl construction kept intact above — relocation TBD.
+              To restore: put previewEl back on this line. */}
           {/* FORMAT — time constrained vs flexible (below workout picker) */}
           <div style={{marginBottom:18}}>
             <div style={{display:"flex",gap:10}}>
