@@ -2310,17 +2310,39 @@ export default function IronGame(){
             </div>
           </div>
 
-          {/* F-HOMEWIZ1 — step rail */}
+          {/* F-HOMEWIZ1 — step rail
+              F-BACKNAV2 (08/12): rail IS the navigation. On steps 2/3 a round
+              home node (same size/border/fill as the step circles) leads the
+              rail — one tap to Step 1. Completed (red) steps are tappable to
+              jump back; current/future steps are not. House glyph is drawn
+              inside a 24x24 viewBox with equal margins top/left/right so it
+              sits dead-center in the circle. Replaces the separate ‹ Back rows. */}
           {(()=>{const STEPS=[[1,"TYPE"],[2,"GROUPS"],[3,"GO"]];return(
             <div style={{display:"flex",alignItems:"center",marginBottom:16}}>
+              {wizStep>1&&(
+                <button className="t" aria-label="Home"
+                  onClick={()=>setWizStep(1)}
+                  style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
+                    boxSizing:"border-box",padding:0,marginRight:8,cursor:"pointer",
+                    border:`2px solid ${C.bdr}`,background:C.inner,
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke={C.md} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"
+                    style={{display:"block"}}>
+                    <path d="M3 11 12 3l9 8"/><path d="M5 10v11h5.5v-6h3v6H19V10"/>
+                  </svg>
+                </button>
+              )}
               {STEPS.map(([n,l],i)=>{const done=n<wizStep,act=n===wizStep;return(
                 <div key={n} style={{display:"flex",alignItems:"center",flex:i<2?1:"0 0 auto"}}>
-                  <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
+                  <div onClick={()=>{if(done&&(n!==2||sesType==="custom"))setWizStep(n);}}
+                    style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
                     border:`2px solid ${done||act?C.red:C.bdr}`,
                     background:done?C.red:C.inner,
                     color:done?"#fff":act?C.wht:C.md,
                     display:"flex",alignItems:"center",justifyContent:"center",
                     fontFamily:"'JetBrains Mono',monospace",fontSize:11,
+                    cursor:done&&(n!==2||sesType==="custom")?"pointer":"default",
                     boxShadow:act?`0 0 10px ${C.redGlow}`:"none"}}>{done?"✓":n}</div>
                   <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:9,
                     marginLeft:6,letterSpacing:"0.12em",textTransform:"uppercase",
@@ -2731,13 +2753,8 @@ export default function IronGame(){
           {/* F-HOMEWIZ1 — STEP 2: muscle group chips (Custom path only) */}
           {wizStep===2 && (
           <div style={{marginBottom:18}}>
-            {/* F-BACKNAV1 (08/12): top-left ‹ Back added for consistency with Step 3 —
-                every screen offers a back path where the eye lands first.
-                Bottom Back button retained. */}
-            <button className="t" onClick={()=>setWizStep(1)} style={{
-              background:"none",border:"none",padding:"0 0 12px",
-              cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
-              color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>‹ Back</button>
+            {/* F-BACKNAV2 (08/12): ‹ Back row removed — home node + tappable
+                TYPE step in the rail (F-BACKNAV2) are the back path. */}
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:"0.08em",
               marginBottom:3,color:C.wht}}>Muscle Groups</div>
             <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:11,
@@ -2762,10 +2779,7 @@ export default function IronGame(){
                 </div>))}
             </div>
             <div style={{display:"flex",gap:10,marginTop:18}}>
-              <button className="t" onClick={()=>setWizStep(1)} style={{
-                background:C.inner,border:`1px solid ${C.bdr}`,borderRadius:11,color:C.lt,
-                fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,letterSpacing:"0.1em",
-                textTransform:"uppercase",padding:"16px 20px",cursor:"pointer"}}>Back</button>
+              {/* F-BACKNAV2: bottom Back button removed — rail is the navigation. */}
               <div style={{flex:1}}>
                 <GoBtn h={52} disabled={customGroups.length===0} onClick={()=>setWizStep(3)}>
                   {customGroups.length?"Next":"Pick At Least One"}
@@ -2780,10 +2794,8 @@ export default function IronGame(){
 
           {/* F-HOMEWIZ1 — STEP 3: preview + format + launch */}
           {wizStep===3 && (<>
-          <button className="t" onClick={()=>setWizStep(sesType==="custom"?2:1)} style={{
-            alignSelf:"flex-start",background:"none",border:"none",padding:"0 0 12px",
-            cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
-            color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>‹ Back</button>
+          {/* F-BACKNAV2 (08/12): ‹ Back row removed — rail (home node + tappable
+              completed steps) is the navigation. */}
           {/* F-PREVIEW5 (08/12): "Preview & Edit Exercises" removed from Step 3.
               Component + previewEl construction kept intact above — relocation TBD.
               To restore: put previewEl back on this line. */}
