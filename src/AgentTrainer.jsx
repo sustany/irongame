@@ -1076,6 +1076,7 @@ export default function IronGame(){
   const [customOpener,  setCustomOpener]  = useState(null);
   // F-CUSTOM1 — selected muscle groups for the Custom session type
   const [customGroups,  setCustomGroups]  = useState(()=> _saved?.customGroups ?? []);
+  const [wizStep, setWizStep] = useState(1); // F-HOMEWIZ1 — setup wizard step (1 TYPE / 2 GROUPS / 3 GO)
   // F-HIST1 — per-calendar-day session history (survives session lifecycle).
   // Shape: { "YYYY-MM-DD": {status:'logged'|'recovery', groups:[gid], sesType?,
   //          exercises?:[{name, sets:[{w,r}]}], source:'auto'|'backfill'} }
@@ -1103,7 +1104,7 @@ export default function IronGame(){
   // F-WKTCARD1 — workout-picker card open/closed. Defaults CLOSED: the
   // muscle-group card above it is the primary path and stays open, so cold
   // start still shows a route into a session. Never persisted.
-  const [wktOpen, setWktOpen] = useState(false);
+  const [wktOpen, setWktOpen] = useState(true); // F-HOMEWIZ1 — cards visible on Step 1 by default
   // F-PREVIEW1 — session editor: draftList overrides the auto-built session.
   // null = auto (build() at launch). Invalidated on type/group/opener change.
   const [draftList, setDraftList] = useState(null);
@@ -2309,19 +2310,65 @@ export default function IronGame(){
             </div>
           </div>
 
-          {/* CHOOSE YOUR WORKOUT — first choice */}
+          {/* F-HOMEWIZ1 — step rail */}
+          {(()=>{const STEPS=[[1,"TYPE"],[2,"GROUPS"],[3,"GO"]];return(
+            <div style={{display:"flex",alignItems:"center",marginBottom:16}}>
+              {STEPS.map(([n,l],i)=>{const done=n<wizStep,act=n===wizStep;return(
+                <div key={n} style={{display:"flex",alignItems:"center",flex:i<2?1:"0 0 auto"}}>
+                  <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,
+                    border:`2px solid ${done||act?C.red:C.bdr}`,
+                    background:done?C.red:C.inner,
+                    color:done?"#fff":act?C.wht:C.md,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    fontFamily:"'JetBrains Mono',monospace",fontSize:11,
+                    boxShadow:act?`0 0 10px ${C.redGlow}`:"none"}}>{done?"✓":n}</div>
+                  <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:9,
+                    marginLeft:6,letterSpacing:"0.12em",textTransform:"uppercase",
+                    color:act?C.wht:C.md}}>{l}</span>
+                  {i<2&&<div style={{flex:1,height:2,background:done?C.red:C.bdr,margin:"0 6px"}}/>}
+                </div>);})}
+            </div>);})()}
+
+          {/* F-HOMEWIZ1 — STEP 1: session type + recents */}
+          {wizStep===1 && (<>
           <div style={{marginBottom:18}}>
-            {/* F-GRPCARD1 — header strip and chip grid are ONE card, not a button
-                floating above a box. Border, shadow and red glow live on the
-                wrapper; the strip is its lid. Two distinct tap regions: the
-                title selects Custom, the triangle opens/closes. Dim is scoped
-                to the chip body so the section keeps its label when
-                Push/Pull/Legs is the live choice. */}
+            {/* F-HOMEWIZ1 — Custom entry card: tap advances to Step 2 */}
+            <button className="t" onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);setWizStep(2);}}
+              style={{width:"100%",textAlign:"left",borderRadius:12,padding:"20px 16px",
+                cursor:"pointer",position:"relative",marginBottom:10,
+                background:sesType==="custom"?STEEL_SEL:STEEL,
+                border:`1px solid ${sesType==="custom"?C.red:C.bdr}`,
+                borderTop:`1px solid ${sesType==="custom"?"#f03010":C.bdrTop}`,
+                boxShadow:sesType==="custom"
+                  ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
+                  :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
+                lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Custom</div>
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:9,
+                letterSpacing:"0.14em",textTransform:"uppercase",
+                color:sesType==="custom"?"rgba(255,255,255,0.75)":C.md,marginTop:5}}>
+                Build your own · pick muscle groups
+              </div>
+              <div style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",
+                fontSize:20,color:sesType==="custom"?"#fff":C.md}}>›</div>
+            </button>
+            {/* F-WKTCARD1 — same shell as the muscle-group card so the two
+                selection paths read as siblings. Header strip is the lid, its
+                own collapse triangle. Collapsed shows the triangle ONLY — no
+                summary label, no check badge; the card's red fill is the sole
+                selection cue. F-FULLBODY1 adds a fourth option; four across on a
+                phone squeezes each card to ~82px and wraps "Full Body", so the
+                cards move to a 2x2 grid. */}
+            <div style={{marginTop:16}}/>
             {(()=>{
-              const on = sesType==="custom";
-              const chipsDim = !!sesType && !on;
-              const selLabels = MUSCLE_GROUPS
-                .filter(g=>customGroups.includes(g.id)).map(g=>g.label);
+              const WKTS=[
+                {type:"push", label:"Push", muscles:"Chest\nShoulders · Triceps"},
+                {type:"pull", label:"Pull", muscles:"Back\nBiceps · Rear Delts"},
+                {type:"legs", label:"Legs", muscles:"Quads · Hams\nGlutes · Calves"},
+                {type:"fullbody", label:"Full Body", muscles:"Legs · Chest\nBack · Delts"},
+              ];
+              const picked=WKTS.find(w=>w.type===sesType);
+              const on=!!picked;
               return(
               <div style={{borderRadius:12,overflow:"hidden",
                 background:on?STEEL_SEL:STEEL,
@@ -2331,89 +2378,50 @@ export default function IronGame(){
                   ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
                   :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
 
-                {/* Lid */}
                 <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 6px 0 14px"}}>
-                  <button className="t"
-                    onClick={()=>{setSesType("custom");setCustomOpener(null);setDraftList(null);}}
-                    style={{flex:1,minWidth:0,background:"none",border:"none",padding:"14px 0",
-                      textAlign:"left",cursor:"pointer",display:"flex",alignItems:"baseline",
-                      gap:10,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:0,padding:"14px 0",display:"flex",
+                    alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
                     <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
                       letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
-                      whiteSpace:"nowrap"}}>Pick Muscle Groups</span>
-                    {/* Collapsed with a selection, the chips are hidden — surface
-                        what's picked or the closed card is unreadable. */}
-                    {!groupsOpen && selLabels.length>0 && (
-                      <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                        letterSpacing:"0.12em",textTransform:"uppercase",
-                        color:on?"rgba(255,255,255,0.72)":C.md,
-                        whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",
-                        maxWidth:150}}>
-                        {selLabels.join(", ")}
-                      </span>
-                    )}
-                  </button>
-                  {on&&(
+                      whiteSpace:"nowrap"}}>Pick A Workout</span>
+                  </div>
+                  {on&&wktOpen&&(
                     <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
                       width:22,height:22,display:"flex",alignItems:"center",
                       justifyContent:"center",flexShrink:0}}>
                       <IChk s={12}/>
                     </div>
                   )}
-                  <button className="t" onClick={()=>setGroupsOpen(o=>!o)}
-                    aria-label={groupsOpen?"Collapse muscle groups":"Expand muscle groups"}
-                    aria-expanded={groupsOpen}
+                  <button className="t" onClick={()=>setWktOpen(o=>!o)}
+                    aria-label={wktOpen?"Collapse workouts":"Expand workouts"}
+                    aria-expanded={wktOpen}
                     style={{width:40,height:44,flexShrink:0,background:"none",border:"none",
                       cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
                       color:on?"#fff":C.md,fontSize:13}}>
                     <span style={{display:"inline-block",
-                      transform:groupsOpen?"none":"rotate(-90deg)",
+                      transform:wktOpen?"none":"rotate(-90deg)",
                       transition:"transform 160ms ease"}}>&#9660;</span>
                   </button>
                 </div>
 
-                {/* Chip body */}
-                {groupsOpen&&(
-                <div style={{background:STEEL,padding:"12px 12px 12px",
+                {wktOpen&&(
+                <div style={{background:STEEL,padding:12,
                   borderTop:"1px solid rgba(0,0,0,0.55)",
                   boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)",
-                  opacity:chipsDim?0.38:1,transition:"opacity 140ms ease"}}>
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {CHIP_ROWS.map((row,ri)=>(
-                    <div key={ri} style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                    {row.map(gid=>GROUP_BY_ID[gid]).filter(Boolean).map(g=>{
-                      const sel=customGroups.includes(g.id);
-                      return(
-                        <button key={g.id} className="t"
-                          onClick={()=>{
-                            setSesType("custom");
-                            setCustomOpener(null);
-                            setDraftList(null);
-                            setCustomGroups(gs=>sel?gs.filter(x=>x!==g.id):[...gs,g.id]);
-                          }}
-                          style={{
-                            padding:"9px 14px",borderRadius:20,cursor:"pointer",
-                            background:sel?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
-                            border:`1px solid ${sel?"#f03010":C.bdr}`,
-                            fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
-                            color:sel?"#fff":C.lt,letterSpacing:"0.08em",
-                            textTransform:"uppercase",
-                            boxShadow:sel?`0 2px 12px ${C.redGlow}`:"none"}}>
-                          {g.label}
-                        </button>
-                      );
-                    })}
-                    </div>
-                    ))}
-                  </div>
+                  display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  {WKTS.map(w=>(
+                    <TypeCard key={w.type} type={w.type} label={w.label}
+                      compact={sesType==="custom"} muscles={w.muscles}
+                      selected={sesType}
+                      onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setWizStep(3);}}/>
+                  ))}
                 </div>
                 )}
               </div>
               );
             })()}
 
-            {sesType==="custom" && customGroups.length>0 && previewEl}
-
+          </div>
           {/* F-HIST2 — LAST WORKOUT: collapsed one-liner under the muscle picker.
               "(show more)" expands to the last five LOGGED workouts (recovery/off
               days excluded). Replaces the old last-4-calendar-days list. */}
@@ -2717,81 +2725,59 @@ export default function IronGame(){
             );
           })()}
 
-            {/* F-WKTCARD1 — same shell as the muscle-group card so the two
-                selection paths read as siblings. Header strip is the lid, its
-                own collapse triangle. Collapsed shows the triangle ONLY — no
-                summary label, no check badge; the card's red fill is the sole
-                selection cue. F-FULLBODY1 adds a fourth option; four across on a
-                phone squeezes each card to ~82px and wraps "Full Body", so the
-                cards move to a 2x2 grid. */}
-            <div style={{marginTop:16}}/>
-            {(()=>{
-              const WKTS=[
-                {type:"push", label:"Push", muscles:"Chest\nShoulders · Triceps"},
-                {type:"pull", label:"Pull", muscles:"Back\nBiceps · Rear Delts"},
-                {type:"legs", label:"Legs", muscles:"Quads · Hams\nGlutes · Calves"},
-                {type:"fullbody", label:"Full Body", muscles:"Legs · Chest\nBack · Delts"},
-              ];
-              const picked=WKTS.find(w=>w.type===sesType);
-              const on=!!picked;
-              return(
-              <div style={{borderRadius:12,overflow:"hidden",
-                background:on?STEEL_SEL:STEEL,
-                border:`1px solid ${on?C.red:C.bdr}`,
-                borderTop:`1px solid ${on?"#f03010":C.bdrTop}`,
-                boxShadow:on
-                  ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
-                  :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
+          </>)}
 
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 6px 0 14px"}}>
-                  <div style={{flex:1,minWidth:0,padding:"14px 0",display:"flex",
-                    alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
-                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                      letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
-                      whiteSpace:"nowrap"}}>Pick A Workout</span>
-                  </div>
-                  {on&&wktOpen&&(
-                    <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
-                      width:22,height:22,display:"flex",alignItems:"center",
-                      justifyContent:"center",flexShrink:0}}>
-                      <IChk s={12}/>
-                    </div>
-                  )}
-                  <button className="t" onClick={()=>setWktOpen(o=>!o)}
-                    aria-label={wktOpen?"Collapse workouts":"Expand workouts"}
-                    aria-expanded={wktOpen}
-                    style={{width:40,height:44,flexShrink:0,background:"none",border:"none",
-                      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-                      color:on?"#fff":C.md,fontSize:13}}>
-                    <span style={{display:"inline-block",
-                      transform:wktOpen?"none":"rotate(-90deg)",
-                      transition:"transform 160ms ease"}}>&#9660;</span>
-                  </button>
-                </div>
-
-                {wktOpen&&(
-                <div style={{background:STEEL,padding:12,
-                  borderTop:"1px solid rgba(0,0,0,0.55)",
-                  boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)",
-                  display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {WKTS.map(w=>(
-                    <TypeCard key={w.type} type={w.type} label={w.label}
-                      compact={sesType==="custom"} muscles={w.muscles}
-                      selected={sesType}
-                      onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);}}/>
-                  ))}
-                </div>
-                )}
+          {/* F-HOMEWIZ1 — STEP 2: muscle group chips (Custom path only) */}
+          {wizStep===2 && (
+          <div style={{marginBottom:18}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:"0.08em",
+              marginBottom:3,color:C.wht}}>Muscle Groups</div>
+            <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:11,
+              color:C.md,marginBottom:12}}>Tap to select · {customGroups.length} selected</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {CHIP_ROWS.map((row,ri)=>(
+                <div key={ri} style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {row.map(gid=>GROUP_BY_ID[gid]).filter(Boolean).map(g=>{
+                    const sel=customGroups.includes(g.id);
+                    return(
+                      <button key={g.id} className="t"
+                        onClick={()=>{setCustomOpener(null);setDraftList(null);
+                          setCustomGroups(gs=>sel?gs.filter(x=>x!==g.id):[...gs,g.id]);}}
+                        style={{padding:"9px 14px",borderRadius:20,cursor:"pointer",
+                          background:sel?`linear-gradient(180deg,${C.red},${C.redDk})`:"rgba(255,255,255,0.05)",
+                          border:`1px solid ${sel?"#f03010":C.bdr}`,
+                          fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,
+                          color:sel?"#fff":C.lt,letterSpacing:"0.08em",textTransform:"uppercase",
+                          boxShadow:sel?`0 2px 12px ${C.redGlow}`:"none"}}>
+                        {g.label}
+                      </button>);})}
+                </div>))}
+            </div>
+            <div style={{display:"flex",gap:10,marginTop:18}}>
+              <button className="t" onClick={()=>setWizStep(1)} style={{
+                background:C.inner,border:`1px solid ${C.bdr}`,borderRadius:11,color:C.lt,
+                fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:12,letterSpacing:"0.1em",
+                textTransform:"uppercase",padding:"16px 20px",cursor:"pointer"}}>Back</button>
+              <div style={{flex:1}}>
+                <GoBtn h={52} disabled={customGroups.length===0} onClick={()=>setWizStep(3)}>
+                  {customGroups.length?"Next":"Pick At Least One"}
+                </GoBtn>
               </div>
-              );
-            })()}
-
-            {!!sesType && sesType!=="custom" && previewEl}
-
+            </div>
           </div>
+          )}
 
 
 
+
+          {/* F-HOMEWIZ1 — STEP 3: preview + format + launch */}
+          {wizStep===3 && (<>
+          <button className="t" onClick={()=>setWizStep(sesType==="custom"?2:1)} style={{
+            alignSelf:"flex-start",background:"none",border:"none",padding:"0 0 12px",
+            cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+            color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>‹ Back</button>
+          {previewEl}
+          <div style={{height:14}}/>
           {/* FORMAT — time constrained vs flexible (below workout picker) */}
           <div style={{marginBottom:18}}>
             <div style={{display:"flex",gap:10}}>
@@ -2879,20 +2865,15 @@ export default function IronGame(){
 
           <div style={{flex:1}}/>
 
-          {/* F-JUSTSTART1 — START is always available. With a valid selection
-              it launches it; with nothing selected it launches the PPL-rotation
-              recommendation. Only an explicitly edited-to-empty draft blocks. */}
-          {/* F-JUSTSTART2 caption removed 2026-07-27 — START stands alone; the
-              PPL-rotation recommendation still powers a blind Start. */}
-          {(ready||!(draftList!==null&&draftList.length===0))&&(()=>{
-            const rec=ready?null:recommendType();
-            return <GoBtn onClick={()=>ready?launch():launch(rec.type)}>Start</GoBtn>;
-          })()}
+          {/* F-HOMEWIZ1 — Start gated on ready; blind PPL-rotation start
+              (F-JUSTSTART1) retired by the wizard: Step 3 is only reachable
+              with a valid selection. */}
+          <GoBtn disabled={!ready} onClick={()=>ready&&launch()}>Start</GoBtn>
 
 
           {/* Reset — only shows after selections made */}
           {sesType && (
-            <button className="t" onClick={()=>{ setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setDraftList(null); setShowSessionEditor(false); setTcMode(true); setTcEdit(false); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
+            <button className="t" onClick={()=>{ setWizStep(1); setSesType(null); setExt(false); setCustomOpener(null); setCustomGroups([]); setDraftList(null); setShowSessionEditor(false); setTcMode(true); setTcEdit(false); setDepTime((()=>{const d=new Date(Date.now()+60*60000);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;})());  }}
               style={{
                 width:"100%", marginTop:14, height:44,
                 background:"transparent",
@@ -2904,6 +2885,7 @@ export default function IronGame(){
               ← Reset Selections
             </button>
           )}
+          </>)}
 
           {/* Version stamp — fixed to bottom of screen */}
           <div onClick={async()=>{
