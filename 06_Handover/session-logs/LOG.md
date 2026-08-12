@@ -1,3 +1,16 @@
+## 2026-08-11 — F-HOMEWIZ1: setup screen 3-step wizard — RESOLVED
+
+- Shipped `4364c14` (iPad). Setup screen restructured: Step rail + Step 1 TYPE
+  (Custom entry card, Pick A Workout 2x2, F-HIST2) / Step 2 GROUPS (chip grid,
+  custom path only) / Step 3 GO (Preview, Format, Start). Max 1-2 decisions
+  per screen per Christian's directive.
+- Tagline correction: production header is "AI BODY EVOLUTION" + gold day/date;
+  "SCIENCE + AI = RESULTS" retired (memory updated).
+- RETIRED: F-JUSTSTART1 blind PPL-rotation start; F-GRPCARD1 collapsible lid.
+- OPEN (candidate F-HIST3): tap-to-repeat on Last Workout rows — deferred from
+  signed-off mockup to protect F-HIST2 expand/backfill behavior.
+- Gates: build PASS 4.99s, smoke.mjs 3/3, A1 SS5 GO (session states untouched).
+
 # IRONGAME — Device Handoff Log
 
 Running bridge between the **iPhone "IronGame" Chat Project** and the **laptop "IronGame" Cowork Project**.
