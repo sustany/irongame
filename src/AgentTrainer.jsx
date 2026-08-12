@@ -2731,6 +2731,13 @@ export default function IronGame(){
           {/* F-HOMEWIZ1 — STEP 2: muscle group chips (Custom path only) */}
           {wizStep===2 && (
           <div style={{marginBottom:18}}>
+            {/* F-BACKNAV1 (08/12): top-left ‹ Back added for consistency with Step 3 —
+                every screen offers a back path where the eye lands first.
+                Bottom Back button retained. */}
+            <button className="t" onClick={()=>setWizStep(1)} style={{
+              background:"none",border:"none",padding:"0 0 12px",
+              cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+              color:C.md,letterSpacing:"0.12em",textTransform:"uppercase"}}>‹ Back</button>
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:"0.08em",
               marginBottom:3,color:C.wht}}>Muscle Groups</div>
             <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:11,
