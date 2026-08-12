@@ -3703,11 +3703,33 @@ export default function IronGame(){
                   everywhere else (PR keys, picker, logging). */}
               {displayName(ex.name)}
               {phase==="ready"&&(
-                /* F-CHANGEEX1: swap icon (lucide ArrowLeftRight path, inlined —
-                   no lucide-react dependency). Entire title row opens picker. */
+                /* F-CHANGEEX2 (08/12): swap icon is now a one-tap reroll — each press
+                   advances to the next alternative for this slot (template alts ring,
+                   skipping exercises already in the session, cycling back around).
+                   Falls back to the full picker when the slot has no usable alts.
+                   Tapping the exercise NAME still opens the full picker (F-CHANGEEX1). */
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                   stroke={C.md} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{flexShrink:0,alignSelf:"center"}} aria-label="Change exercise">
+                  style={{flexShrink:0,alignSelf:"center",cursor:"pointer"}} aria-label="Next exercise suggestion"
+                  onClick={(e)=>{
+                    e.stopPropagation();
+                    const tmpl=(TMPLS[sesType]||[])[exIdx]||{};
+                    const ring=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
+                    const usable=ring.filter(n=>!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
+                    if(usable.length<2){setShowExPicker(true);return;}
+                    const cur=usable.indexOf(exList[exIdx].name);
+                    const next=usable[(cur+1)%usable.length];
+                    if(!next||next===exList[exIdx].name){setShowExPicker(true);return;}
+                    const tmplEntry=(TMPLS[sesType]||[]).find(e2=>e2.name===next);
+                    const updated=[...exList];
+                    updated[exIdx]={...updated[exIdx],name:next,
+                      sets:       tmplEntry?.sets       ?? updated[exIdx].sets,
+                      repRange:   tmplEntry?.repRange   ?? (META[next]?.compound?"6–10":"10–15"),
+                      targetReps: tmplEntry?.targetReps ?? (META[next]?.compound?8:12)};
+                    setExList(updated);
+                    setSetIdx(0);setLastRes(null);setLastWt(null);
+                    setWeightAdj(0);setPlateLedger(null);
+                  }}>
                   <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
                   <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
                 </svg>
