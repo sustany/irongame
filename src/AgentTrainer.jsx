@@ -2342,15 +2342,12 @@ export default function IronGame(){
                 boxShadow:sesType==="custom"
                   ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
                   :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
+              {/* F-CUSTCARD1 (08/12): card carries only "Pick your muscle groups" —
+                  "Custom" title and "Build your own ·" prefix removed; arrow 2.5x (20→50) */}
               <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
-                lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Custom</div>
-              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:9,
-                letterSpacing:"0.14em",textTransform:"uppercase",
-                color:sesType==="custom"?"rgba(255,255,255,0.75)":C.md,marginTop:5}}>
-                Build your own · pick muscle groups
-              </div>
+                lineHeight:1,color:sesType==="custom"?C.wht:C.red,paddingRight:44}}>Pick Your Muscle Groups</div>
               <div style={{position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",
-                fontSize:20,color:sesType==="custom"?"#fff":C.md}}>›</div>
+                fontSize:50,lineHeight:1,color:sesType==="custom"?"#fff":C.md}}>›</div>
             </button>
             {/* F-WKTCARD1 — same shell as the muscle-group card so the two
                 selection paths read as siblings. Header strip is the lid, its
