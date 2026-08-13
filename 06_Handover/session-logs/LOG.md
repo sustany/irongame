@@ -1,3 +1,18 @@
+## 2026-08-13 — F-CHANGEEX3: confirm step for swap-icon reroll — OPEN (verify)
+
+- Shipped `4598494` (iPhone session). Supersedes F-CHANGEEX2 instant apply
+  per 2026-08-11 confirm-step sign-off: ⇄ previews (gold name + last WxR
+  caption), ✓ commits via applyExerciseChoice, ✕ reverts, Begin Set gated
+  during preview. Candidate ring + name-tap picker kept from F-CHANGEEX2.
+- COLLISION NOTE: two sessions built the same feature in parallel
+  (F-EXCYCLE1 local vs F-CHANGEEX2 remote). Resolved by supersede on
+  remote head; local f927e26 discarded, no force push. Process lesson:
+  check origin/main before implementing features flagged in a live chat.
+- OPEN: on-device verification pending (Christian will test later).
+  Expected: build stamp 08/13; ⇄ -> gold preview + "Confirm Exercise
+  First" until ✓/✕.
+- Gates: build PASS 5.14s, smoke.mjs 3/3, A1 SS5 GO.
+
 ## 2026-08-11 — F-HOMEWIZ1: setup screen 3-step wizard — RESOLVED
 
 - Shipped `4364c14` (iPad). Setup screen restructured: Step rail + Step 1 TYPE
