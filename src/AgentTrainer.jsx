@@ -2419,7 +2419,7 @@ export default function IronGame(){
                   Chevron is a drawn SVG spanning the exact cap height of the letters (20px)
                   so glyph and text read as one unit — approved via preview v4. */}
               <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
-                lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Pick Your Muscle Groups</span>
+                lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Pick Muscle Groups</span>
               <svg width="13" height="20" viewBox="0 0 13 20" fill="none" style={{display:"block",flexShrink:0}}>
                 <path d="M2.5 2 L10.5 10 L2.5 18" stroke={sesType==="custom"?C.wht:C.red}
                   strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
