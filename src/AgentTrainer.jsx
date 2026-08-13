@@ -1077,6 +1077,11 @@ export default function IronGame(){
   // F-CUSTOM1 — selected muscle groups for the Custom session type
   const [customGroups,  setCustomGroups]  = useState(()=> _saved?.customGroups ?? []);
   const [wizStep, setWizStep] = useState(1); // F-HOMEWIZ1 — setup wizard step (1 TYPE / 2 GROUPS / 3 GO)
+  // F-CHANGEEX3 — confirm step for the swap-icon reroll (supersedes
+  // F-CHANGEEX2's instant apply, per 2026-08-11 sign-off: displayed must
+  // never silently become picked). {slot, name} while previewing; null
+  // when committed. Preview is name-only: exList untouched until ✓.
+  const [cyclePrev, setCyclePrev] = useState(null);
   // F-HIST1 — per-calendar-day session history (survives session lifecycle).
   // Shape: { "YYYY-MM-DD": {status:'logged'|'recovery', groups:[gid], sesType?,
   //          exercises?:[{name, sets:[{w,r}]}], source:'auto'|'backfill'} }
@@ -2068,6 +2073,7 @@ export default function IronGame(){
     setExList(updated);
     setSetIdx(0);setLastRes(null);setLastWt(null);
     setWeightAdj(0);setPlateLedger(null);setShowExPicker(false);setExSearch("");setExFilter("");setExpandedMv(null);
+    setCyclePrev(null); // F-CHANGEEX3 — any committed swap ends preview
   };
 
   // B-CPSRCH1 (2026-08-06) — an exercise occupying ANOTHER slot in this
@@ -3756,15 +3762,22 @@ export default function IronGame(){
 
             </div>
 
-            <div onClick={()=>{if(phase==="ready")setShowExPicker(true);}}
+            {(()=>{
+              /* F-CHANGEEX3 wrapper: previewing = a candidate is shown but
+                 not committed. Title renders the candidate in gold; card
+                 data below stays on the committed exercise. */
+              const previewing = phase==="ready" && cyclePrev && cyclePrev.slot===exIdx;
+              const shownName  = previewing ? cyclePrev.name : ex.name;
+              return (<>
+            <div onClick={()=>{if(phase==="ready"&&!previewing)setShowExPicker(true);}}
               style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:"0.04em",
-              lineHeight:1.05,color:C.wht,
-              fontSize:displayName(ex.name).length>20?34:44,marginBottom:6,
+              lineHeight:1.05,color:previewing?"#eab308":C.wht,
+              fontSize:displayName(shownName).length>20?34:44,marginBottom:6,
               display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",
-              cursor:phase==="ready"?"pointer":"default"}}>
+              cursor:phase==="ready"&&!previewing?"pointer":"default"}}>
               {/* F-LBLSTRIP1: display label only. ex.name stays canonical
                   everywhere else (PR keys, picker, logging). */}
-              {displayName(ex.name)}
+              {displayName(shownName)}
               {phase==="ready"&&(
                 /* F-CHANGEEX2 (08/12): swap icon is now a one-tap reroll — each press
                    advances to the next alternative for this slot (template alts ring,
@@ -3776,27 +3789,38 @@ export default function IronGame(){
                   style={{flexShrink:0,alignSelf:"center",cursor:"pointer"}} aria-label="Next exercise suggestion"
                   onClick={(e)=>{
                     e.stopPropagation();
+                    /* F-CHANGEEX3: reroll advances a PREVIEW; commit happens
+                       only via the ✓ button (applyExerciseChoice). Candidate
+                       ring unchanged from F-CHANGEEX2 (template alts, minus
+                       names used by other slots). */
                     const tmpl=(TMPLS[sesType]||[])[exIdx]||{};
                     const ring=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
-                    const usable=ring.filter(n=>!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
-                    if(usable.length<2){setShowExPicker(true);return;}
-                    const cur=usable.indexOf(exList[exIdx].name);
-                    const next=usable[(cur+1)%usable.length];
-                    if(!next||next===exList[exIdx].name){setShowExPicker(true);return;}
-                    const tmplEntry=(TMPLS[sesType]||[]).find(e2=>e2.name===next);
-                    const updated=[...exList];
-                    updated[exIdx]={...updated[exIdx],name:next,
-                      sets:       tmplEntry?.sets       ?? updated[exIdx].sets,
-                      repRange:   tmplEntry?.repRange   ?? (META[next]?.compound?"6–10":"10–15"),
-                      targetReps: tmplEntry?.targetReps ?? (META[next]?.compound?8:12)};
-                    setExList(updated);
-                    setSetIdx(0);setLastRes(null);setLastWt(null);
-                    setWeightAdj(0);setPlateLedger(null);
+                    const usable=ring.filter(n=>n!==ex.name&&!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
+                    if(!usable.length){setShowExPicker(true);return;}
+                    const cur=previewing?usable.indexOf(cyclePrev.name):-1;
+                    setCyclePrev({slot:exIdx,name:usable[(cur+1)%usable.length]});
                   }}>
                   <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
                   <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
                 </svg>
               )}
+              {previewing&&(<>
+                <button className="t" aria-label="Confirm exercise"
+                  onClick={(e)=>{e.stopPropagation();
+                    applyExerciseChoice(cyclePrev.name);setCyclePrev(null);}}
+                  style={{flexShrink:0,alignSelf:"center",width:38,height:38,
+                    borderRadius:10,cursor:"pointer",border:"1px solid #35ff85",
+                    background:"linear-gradient(170deg,#22dd66 0%,#149944 100%)",
+                    color:"#04220f",fontSize:18,fontWeight:900,padding:0,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    boxShadow:"0 0 14px rgba(34,221,102,0.45)"}}>✓</button>
+                <button className="t" aria-label="Keep current exercise"
+                  onClick={(e)=>{e.stopPropagation();setCyclePrev(null);}}
+                  style={{flexShrink:0,alignSelf:"center",width:38,height:38,
+                    borderRadius:10,cursor:"pointer",border:`1px solid ${C.bdr}`,
+                    background:C.inner,color:C.md,fontSize:16,padding:0,
+                    display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+              </>)}
               {m.brand&&(
                 <button className="t" onClick={(e)=>{e.stopPropagation();setShowBrandInfo(v=>!v);}}
                   style={{fontFamily:"'Inter',sans-serif",fontWeight:700,
@@ -3808,6 +3832,17 @@ export default function IronGame(){
                 </button>
               )}
             </div>
+            {previewing&&(
+              <div style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                color:"#eab308",letterSpacing:"0.14em",textTransform:"uppercase",
+                marginBottom:6}}>
+                Suggestion — ✓ confirm · ⇄ next · ✕ keep current
+                {prs[cyclePrev.name]&&!prs[cyclePrev.name].bw&&
+                  ` · last ${prs[cyclePrev.name].weight}×${prs[cyclePrev.name].reps}`}
+              </div>
+            )}
+              </>);
+            })()}
             {m.brand&&showBrandInfo&&(
               <div style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${C.bdr}`,
                 borderRadius:8,padding:"8px 12px",marginBottom:6,
@@ -4014,9 +4049,13 @@ export default function IronGame(){
                   the weight card, above the HR card. NEXT EXERCISE and
                   END SESSION stay bottom-anchored per user decision. */}
               {phase==="ready"&&(
-                <div style={{marginBottom:12}}>
+                <div style={{marginBottom:12,
+                  /* F-CHANGEEX3: displayed ≠ committed while previewing —
+                     a logged set must never land on an unconfirmed name */
+                  opacity:(cyclePrev&&cyclePrev.slot===exIdx)?0.35:1,
+                  pointerEvents:(cyclePrev&&cyclePrev.slot===exIdx)?"none":"auto"}}>
                   <RedBtn onClick={()=>setPhase("logging")} h={70}>
-                    {`Begin Set ${setIdx+1}`}
+                    {(cyclePrev&&cyclePrev.slot===exIdx)?"Confirm Exercise First":`Begin Set ${setIdx+1}`}
                   </RedBtn>
                 </div>
               )}
