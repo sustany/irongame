@@ -2367,7 +2367,9 @@ export default function IronGame(){
               jump back; current/future steps are not. House glyph is drawn
               inside a 24x24 viewBox with equal margins top/left/right so it
               sits dead-center in the circle. Replaces the separate ‹ Back rows. */}
-          {(()=>{const STEPS=[[1,"TYPE"],[2,"GROUPS"],[3,"GO"]];return(
+          {/* B-WIZRAIL1 — rail hidden on Step 1 (visual noise on first screen);
+              retained on Steps 2/3 where it carries F-BACKNAV2 navigation. */}
+          {wizStep>1&&(()=>{const STEPS=[[1,"TYPE"],[2,"GROUPS"],[3,"GO"]];return(
             <div style={{display:"flex",alignItems:"center",marginBottom:16}}>
               {wizStep>1&&(
                 <button className="t" aria-label="Home"
