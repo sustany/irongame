@@ -2501,15 +2501,25 @@ export default function IronGame(){
               B-HISTGLANCE1: collapsed one-liner replaced by a last-3-calendar-
               days glance (logged → group labels, recovery → OFF, empty → —).
               Tapping a glance row opens the back-fill editor for that day.
-              "(show more)" still expands the last five LOGGED workouts + Add. */}
+              "(show more)" expands OLDER logged workouts (glance days
+              excluded — B-HISTGLANCE1-dedup) + the Add stepper. */}
           {(()=>{
+            // B-HISTGLANCE1-dedup — last 3 calendar days are always shown as
+            // glance rows, so the expanded list must EXCLUDE them or the same
+            // days render twice. "(show more)" now reveals only OLDER logged
+            // workouts + the Add stepper.
+            const glanceKeys=[0,1,2].map(n=>{
+              const d=new Date(); d.setDate(d.getDate()-n);
+              return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            });
             const loggedKeys=Object.keys(hist)
-              .filter(k=>hist[k]?.status==='logged')
+              .filter(k=>hist[k]?.status==='logged'&&!glanceKeys.includes(k))
               .sort().reverse();
             // B-HISTADD1 — the editor only ever rendered from a loggedKeys row,
             // so the empty state (and any day outside the last five) had no
             // route to the back-fill editor that already existed. Splice the
-            // day under edit into the row list so the same editor renders.
+            // day under edit into the row list so the same editor renders —
+            // including glance days, whose row appears only while under edit.
             const rowKeys=[...new Set([
               ...(histEdit?[histEdit]:[]),
               ...loggedKeys.slice(0,5),
@@ -2517,10 +2527,9 @@ export default function IronGame(){
             return(
           <div style={{marginTop:12}}>
             {(()=>{ /* B-HISTGLANCE1 — last-3-days glance rows */
-              const glance=[0,1,2].map(n=>{
-                const d=new Date(); d.setDate(d.getDate()-n);
-                const dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                return {dk,d,e:hist[dk]};
+              const glance=glanceKeys.map(dk=>{
+                const [gy,gm,gd]=dk.split('-').map(Number);
+                return {dk,d:new Date(gy,gm-1,gd),e:hist[dk]};
               });
               const openDay=(dk)=>{
                 const e=hist[dk];
