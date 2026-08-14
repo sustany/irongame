@@ -50,10 +50,16 @@ const rootEl = window.document.getElementById("root");
 const text = rootEl ? rootEl.textContent.trim() : "";
 const mounted = rootEl && rootEl.children.length > 0 && text.length > 20;
 
+// B-HIST3STRAY1 lesson: orphaned JSX tokens ('); })()}', '=>{', '${...}')
+// render as literal text and pass compile + mount checks. Scan rendered
+// text for code-fragment leakage.
+const strayLeak = /\)\s*;?\s*\}\s*\)\s*\(\s*\)\s*\}|=>\s*\{|\$\{[^}]*\}/.test(text);
+
 const checks = [
   ["root mounted (non-empty #root)", !!mounted],
   ["no uncaught runtime errors", errors.length === 0],
   ["IRONQ brand text present", /IRONQ/i.test(text)],
+  ["no stray code tokens in rendered text", !strayLeak],
 ];
 
 let pass = true;
