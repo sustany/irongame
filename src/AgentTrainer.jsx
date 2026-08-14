@@ -2422,72 +2422,10 @@ export default function IronGame(){
               <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
                 lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Pick Muscle Groups</span>
             </button>
-            {/* F-WKTCARD1 — same shell as the muscle-group card so the two
-                selection paths read as siblings. Header strip is the lid, its
-                own collapse triangle. Collapsed shows the triangle ONLY — no
-                summary label, no check badge; the card's red fill is the sole
-                selection cue. F-FULLBODY1 adds a fourth option; four across on a
-                phone squeezes each card to ~82px and wraps "Full Body", so the
-                cards move to a 2x2 grid. */}
-            <div style={{marginTop:16}}/>
-            {(()=>{
-              const WKTS=[
-                {type:"push", label:"Push", muscles:"Chest\nShoulders · Triceps"},
-                {type:"pull", label:"Pull", muscles:"Back\nBiceps · Rear Delts"},
-                {type:"legs", label:"Legs", muscles:"Quads · Hams\nGlutes · Calves"},
-                {type:"fullbody", label:"Full Body", muscles:"Legs · Chest\nBack · Delts"},
-              ];
-              const picked=WKTS.find(w=>w.type===sesType);
-              const on=!!picked;
-              return(
-              <div style={{borderRadius:12,overflow:"hidden",
-                background:on?STEEL_SEL:STEEL,
-                border:`1px solid ${on?C.red:C.bdr}`,
-                borderTop:`1px solid ${on?"#f03010":C.bdrTop}`,
-                boxShadow:on
-                  ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
-                  :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
-
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"0 6px 0 14px"}}>
-                  <div style={{flex:1,minWidth:0,padding:"14px 0",display:"flex",
-                    alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
-                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,
-                      letterSpacing:"0.12em",lineHeight:1,color:on?C.wht:C.lt,
-                      whiteSpace:"nowrap"}}>Pick A Workout</span>
-                  </div>
-                  {on&&wktOpen&&(
-                    <div style={{color:"#fff",background:"rgba(255,255,255,0.18)",borderRadius:"50%",
-                      width:22,height:22,display:"flex",alignItems:"center",
-                      justifyContent:"center",flexShrink:0}}>
-                      <IChk s={12}/>
-                    </div>
-                  )}
-                  <button className="t" onClick={()=>setWktOpen(o=>!o)}
-                    aria-label={wktOpen?"Collapse workouts":"Expand workouts"}
-                    aria-expanded={wktOpen}
-                    style={{width:40,height:44,flexShrink:0,background:"none",border:"none",
-                      cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
-                      color:on?"#fff":C.md,fontSize:13}}>
-                    <span style={{display:"inline-block",
-                      transform:wktOpen?"none":"rotate(-90deg)",
-                      transition:"transform 160ms ease"}}>&#9660;</span>
-                  </button>
-                </div>
-
-                {wktOpen&&(
-                <div style={{background:STEEL,padding:12,
-                  borderTop:"1px solid rgba(0,0,0,0.55)",
-                  boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05)",
-                  display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                  {WKTS.map(w=>(
-                    <TypeCard key={w.type} type={w.type} label={w.label}
-                      compact={sesType==="custom"} muscles={w.muscles}
-                      selected={sesType}
-                      onClick={t=>{setSesType(t);setCustomOpener(null);setDraftList(null);setWizStep(3);}}/>
-                  ))}
-                </div>
-                )}
-              </div>
+            {/* F-WKTCARD1 retired (F-HIST3, 08/14): PUSH/PULL/LEGS/FULL BODY
+                picker removed from Step 1. Entry paths are now Pick Muscle
+                Groups (custom) and REPEAT on history rows. TMPLS/TypeCard/
+                launch(typeOverride) logic retained — unreachable from UI. */}
               );
             })()}
 
