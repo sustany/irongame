@@ -2564,10 +2564,6 @@ export default function IronGame(){
                           whiteSpace:"nowrap",flex:1}}>
                           {lbl}
                         </span>
-                        <span aria-hidden="true" style={{fontFamily:"'Bebas Neue',sans-serif",
-                          fontSize:14,color:C.red,flexShrink:0,lineHeight:1}}>
-                          &#9998;
-                        </span>
                       </button>);})}
                   <button className="t" onClick={()=>setHistOpen(o=>!o)}
                     style={{background:"none",border:"none",padding:"3px 0",margin:0,
