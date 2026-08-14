@@ -143,6 +143,31 @@ These must render regardless of equipment type, warm-up vs. working set, or set 
 
 ## 5. Pre-commit verification protocol (Rule A2)
 
+### 5.0 Automated gate (ALL commits, not just session-screen)
+
+Every commit must pass the automated jsdom smoke harness before push:
+
+```
+npm run build 2>&1 | tail -4
+node smoke.mjs        # expects 4/4 PASS
+```
+
+The four assertions (smoke.mjs at repo root):
+
+1. root mounted (non-empty #root)
+2. no uncaught runtime errors
+3. IRONQ brand text present
+4. no stray code tokens in rendered text — added 2026-08-14 after
+   B-HIST3STRAY1: orphaned JSX closers (`); })()}`), arrow leaks
+   (`=>{`), and template-literal leaks (`${...}`) render as literal
+   text and pass compile + mount checks. This assertion scans the
+   rendered #root text for those patterns.
+
+A FAIL on any assertion **blocks the push**. The commit message embeds
+the 4-line PASS block plus `RESULT: GO (4/4)`.
+
+### 5.1 Manual JSX walk (session-screen commits)
+
 Before any push that modifies a file flagged as session-screen (currently: `src/AgentTrainer.jsx` and any future split files implementing the above states):
 
 1. Read the diff and identify which screen states could be affected.
@@ -187,3 +212,4 @@ Result: GO / BLOCK
 ## 8. Revision history
 
 - 2026-05-27 — Initial version. Created in response to the catastrophic regression session of 2026-05-27 (Change Exercise button missing, Calf Press weight input missing).
+- 2026-08-14 — §5 split into 5.0 (automated smoke.mjs gate, now 4/4 with stray-code-token assertion after B-HIST3STRAY1) and 5.1 (manual JSX walk). Note: Home Step 1 restructured same day (F-HIST3: workout picker retired, 5-day history with REPEAT/ADD); REPEAT enters the session screen via launch()-equivalent seeding — session-screen classification of §1–§4 unchanged.
