@@ -2417,15 +2417,10 @@ export default function IronGame(){
                 boxShadow:sesType==="custom"
                   ?`0 0 0 1px ${C.red},0 6px 28px ${C.redGlow},inset 0 1px 0 rgba(255,255,255,0.1)`
                   :`0 4px 16px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.05)`}}>
-              {/* F-CUSTCARD1 (08/12): single centered row "Pick Your Muscle Groups" + chevron.
-                  Chevron is a drawn SVG spanning the exact cap height of the letters (20px)
-                  so glyph and text read as one unit — approved via preview v4. */}
+              {/* F-CUSTCARD1 (08/12): single centered row "Pick Muscle Groups".
+                  Chevron removed per user annotation (08/14). */}
               <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:"0.1em",
                 lineHeight:1,color:sesType==="custom"?C.wht:C.red}}>Pick Muscle Groups</span>
-              <svg width="13" height="20" viewBox="0 0 13 20" fill="none" style={{display:"block",flexShrink:0}}>
-                <path d="M2.5 2 L10.5 10 L2.5 18" stroke={sesType==="custom"?C.wht:C.red}
-                  strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
             </button>
             {/* F-WKTCARD1 — same shell as the muscle-group card so the two
                 selection paths read as siblings. Header strip is the lid, its
