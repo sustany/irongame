@@ -2441,7 +2441,7 @@ export default function IronGame(){
             // glance rows, so the expanded list must EXCLUDE them or the same
             // days render twice. "(show more)" now reveals only OLDER logged
             // workouts + the Add stepper.
-            const glanceKeys=[0,1,2].map(n=>{
+            const glanceKeys=[0,1,2,3,4].map(n=>{
               const d=new Date(); d.setDate(d.getDate()-n);
               return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             });
@@ -2464,6 +2464,31 @@ export default function IronGame(){
                 const [gy,gm,gd]=dk.split('-').map(Number);
                 return {dk,d:new Date(gy,gm-1,gd),e:hist[dk]};
               });
+              /* F-HIST3 — REPEAT: relaunch a logged day's exercise list as a
+                 fresh session. Mirrors launch() seeding via the draftList/custom
+                 path. Openers/weights come from the engine's existing PR/openwt
+                 logic, NOT from the historical weights (backfills never wrote
+                 ig_prs — known limitation, unchanged). */
+              const repeatDay=(dk)=>{
+                const e=hist[dk]; if(!(e?.exercises?.length)) return;
+                const list=e.exercises.map(x=>{
+                  const m=META[x.name]||userMeta[x.name]||{};
+                  return {name:x.name,sets:Math.min(Math.max(x.sets?.length||4,3),5),
+                    repRange:m.compound?"6\u201310":"10\u201315",
+                    targetReps:m.compound?8:12};
+                });
+                setSesType("custom");
+                setCustomGroups(e.groups?[...e.groups]:[]);
+                setCustomOpener(null);
+                setDraftList(list);
+                const now=new Date();
+                const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                setSessionDate(`${MO[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`);
+                setExList([...list]);setExIdx(0);setSetIdx(0);setLog([]);
+                setLastRes(null);setLastWt(null);setPhase("ready");
+                setSessionStart(Date.now());
+                setScreen("session");
+              };
               const openDay=(dk)=>{
                 const e=hist[dk];
                 setHistOpen(true); setHistEdit(dk); setHistExpanded(null);
@@ -2480,24 +2505,58 @@ export default function IronGame(){
                     const lbl=e?.status==='logged'
                       ? (histGroupLabels(e.groups)||"LOGGED")
                       : e?.status==='recovery' ? "OFF" : "\u2014";
+                    const hasExs=!!(e?.status==='logged'&&e.exercises&&e.exercises.length);
+                    /* F-HIST3 — second line: exercise count + opener top set,
+                       or the add-exercises hint on groups-only backfills. */
+                    let sub=null;
+                    if(hasExs){
+                      const x0=e.exercises[0];
+                      const top=(x0.sets||[]).reduce((b,t)=>(t.w>(b?.w||0)?t:b),null);
+                      sub=`${e.exercises.length} exercise${e.exercises.length>1?"s":""}`+
+                        (top?` \u00b7 ${displayName(x0.name)} ${top.w}\u00d7${top.r}`:"");
+                    } else if(e?.status==='logged'){
+                      sub="groups only \u2014 tap to add exercises";
+                    }
                     return(
-                      <button key={dk} className="t" onClick={()=>openDay(dk)}
-                        style={{display:"flex",alignItems:"center",gap:8,width:"100%",
-                          background:C.inner,border:`1px solid ${C.bdr}`,borderRadius:8,
-                          padding:"10px 12px",margin:"0 0 6px 0",
+                      <div key={dk} onClick={()=>openDay(dk)}
+                        style={{display:"flex",alignItems:"center",gap:10,width:"100%",
+                          boxSizing:"border-box",
+                          background:C.inner,border:`1px solid ${C.bdr}`,borderRadius:12,
+                          padding:"0 10px 0 14px",margin:"0 0 8px 0",minHeight:56,
                           cursor:"pointer",textAlign:"left"}}>
-                        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                          color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",
-                          flexShrink:0,minWidth:78}}>
+                        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:11,
+                          color:C.md,letterSpacing:"0.12em",textTransform:"uppercase",
+                          flexShrink:0,minWidth:74}}>
                           {DAYS[d.getDay()].slice(0,3)} {d.getMonth()+1}/{d.getDate()}
                         </span>
-                        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                          color:e?.status==='logged'?C.wht:C.md,letterSpacing:"0.14em",
-                          textTransform:"uppercase",overflow:"hidden",textOverflow:"ellipsis",
-                          whiteSpace:"nowrap",flex:1}}>
-                          {lbl}
+                        <span style={{flex:1,minWidth:0,padding:"9px 0"}}>
+                          <span style={{display:"block",fontFamily:"'Inter',sans-serif",
+                            fontWeight:800,fontSize:11.5,
+                            color:e?.status==='logged'?C.wht:C.md,letterSpacing:"0.1em",
+                            textTransform:"uppercase",overflow:"hidden",
+                            textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {lbl}
+                          </span>
+                          {sub&&(
+                            <span style={{display:"block",fontFamily:"'Inter',sans-serif",
+                              fontWeight:700,fontSize:10,color:C.md,marginTop:2,
+                              overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                              {sub}
+                            </span>
+                          )}
                         </span>
-                      </button>);})}
+                        {hasExs&&(
+                          <button className="t"
+                            onClick={(ev)=>{ev.stopPropagation();repeatDay(dk);}}
+                            style={{flexShrink:0,padding:"9px 13px",cursor:"pointer",
+                              background:"transparent",border:`1px solid ${C.red}`,
+                              borderRadius:9,color:C.red,
+                              fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                              letterSpacing:"0.12em",textTransform:"uppercase"}}>
+                            Repeat
+                          </button>
+                        )}
+                      </div>);})}
                   <button className="t" onClick={()=>setHistOpen(o=>!o)}
                     style={{background:"none",border:"none",padding:"3px 0",margin:0,
                       cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:700,
