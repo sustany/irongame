@@ -2497,17 +2497,15 @@ export default function IronGame(){
             })()}
 
           </div>
-          {/* F-HIST2 — LAST WORKOUT: collapsed one-liner under the muscle picker.
-              "(show more)" expands to the last five LOGGED workouts (recovery/off
-              days excluded). Replaces the old last-4-calendar-days list. */}
+          {/* F-HIST2 — history block under the muscle picker.
+              B-HISTGLANCE1: collapsed one-liner replaced by a last-3-calendar-
+              days glance (logged → group labels, recovery → OFF, empty → —).
+              Tapping a glance row opens the back-fill editor for that day.
+              "(show more)" still expands the last five LOGGED workouts + Add. */}
           {(()=>{
             const loggedKeys=Object.keys(hist)
               .filter(k=>hist[k]?.status==='logged')
               .sort().reverse();
-            const lastGroups=loggedKeys[0]
-              ? (MUSCLE_GROUPS.filter(g=>(hist[loggedKeys[0]].groups||[]).includes(g.id))
-                  .map(g=>g.label).join(", ")||"Logged")
-              : null;
             // B-HISTADD1 — the editor only ever rendered from a loggedKeys row,
             // so the empty state (and any day outside the last five) had no
             // route to the back-fill editor that already existed. Splice the
@@ -2518,22 +2516,53 @@ export default function IronGame(){
             ])].sort().reverse();
             return(
           <div style={{marginTop:12}}>
-            <button className="t" onClick={()=>setHistOpen(o=>!o)} style={{
-              display:"flex",alignItems:"baseline",flexWrap:"wrap",gap:6,background:"none",border:"none",
-              padding:0,margin:0,marginBottom:histOpen?8:0,cursor:"pointer",textAlign:"left"}}>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                color:C.md,letterSpacing:"0.18em",textTransform:"uppercase"}}>
-                Last Workout:
-              </span>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
-                color:C.wht,letterSpacing:"0.18em",textTransform:"uppercase"}}>
-                {lastGroups||"None logged"}
-              </span>
-              <span style={{fontFamily:"'Inter',sans-serif",fontWeight:700,fontSize:10,
-                color:C.red,letterSpacing:"0.08em"}}>
-                ({histOpen?"show less":"show more"})
-              </span>
-            </button>
+            {(()=>{ /* B-HISTGLANCE1 — last-3-days glance rows */
+              const glance=[0,1,2].map(n=>{
+                const d=new Date(); d.setDate(d.getDate()-n);
+                const dk=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return {dk,d,e:hist[dk]};
+              });
+              const openDay=(dk)=>{
+                const e=hist[dk];
+                setHistOpen(true); setHistEdit(dk); setHistExpanded(null);
+                setHistEditGroups(e?.groups?[...e.groups]:[]);
+                setHistEditExs(e?.exercises
+                  ? e.exercises.map(x=>({name:x.name,
+                      sets:(x.sets||[]).map(t=>`${t.w}x${t.r}`).join(", ")}))
+                  : []);
+                setHistShowExAdd(!!(e?.exercises&&e.exercises.length));
+              };
+              return(
+                <div style={{marginBottom:histOpen?8:0}}>
+                  {glance.map(({dk,d,e})=>{
+                    const lbl=e?.status==='logged'
+                      ? (histGroupLabels(e.groups)||"LOGGED")
+                      : e?.status==='recovery' ? "OFF" : "\u2014";
+                    return(
+                      <button key={dk} className="t" onClick={()=>openDay(dk)}
+                        style={{display:"flex",alignItems:"baseline",gap:8,width:"100%",
+                          background:"none",border:"none",padding:"3px 0",margin:0,
+                          cursor:"pointer",textAlign:"left"}}>
+                        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                          color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",
+                          flexShrink:0,minWidth:86}}>
+                          {DAYS[d.getDay()].slice(0,3)} {d.getMonth()+1}/{d.getDate()}
+                        </span>
+                        <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
+                          color:e?.status==='logged'?C.wht:C.md,letterSpacing:"0.14em",
+                          textTransform:"uppercase",overflow:"hidden",textOverflow:"ellipsis",
+                          whiteSpace:"nowrap"}}>
+                          {lbl}
+                        </span>
+                      </button>);})}
+                  <button className="t" onClick={()=>setHistOpen(o=>!o)}
+                    style={{background:"none",border:"none",padding:"3px 0",margin:0,
+                      cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:700,
+                      fontSize:10,color:C.red,letterSpacing:"0.08em"}}>
+                    ({histOpen?"show less":"show more"})
+                  </button>
+                </div>
+              );})()}
             {histOpen && loggedKeys.length===0 && !histEdit && (
               <div style={{fontFamily:"'Inter',sans-serif",fontWeight:600,fontSize:12,
                 color:C.md,padding:"4px 0 2px"}}>
