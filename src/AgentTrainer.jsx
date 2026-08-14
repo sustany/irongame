@@ -2426,8 +2426,6 @@ export default function IronGame(){
                 picker removed from Step 1. Entry paths are now Pick Muscle
                 Groups (custom) and REPEAT on history rows. TMPLS/TypeCard/
                 launch(typeOverride) logic retained — unreachable from UI. */}
-              );
-            })()}
 
           </div>
           {/* F-HIST2 — history block under the muscle picker.
