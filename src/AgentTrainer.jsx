@@ -2500,9 +2500,10 @@ export default function IronGame(){
               return(
                 <div style={{marginBottom:histOpen?8:0}}>
                   {glance.map(({dk,d,e})=>{
+                    const isEmpty=!e;
                     const lbl=e?.status==='logged'
                       ? (histGroupLabels(e.groups)||"LOGGED")
-                      : e?.status==='recovery' ? "OFF" : "\u2014";
+                      : e?.status==='recovery' ? "OFF" : "";
                     const hasExs=!!(e?.status==='logged'&&e.exercises&&e.exercises.length);
                     /* F-HIST3 — second line: exercise count + opener top set,
                        or the add-exercises hint on groups-only backfills. */
@@ -2552,6 +2553,19 @@ export default function IronGame(){
                               fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
                               letterSpacing:"0.12em",textTransform:"uppercase"}}>
                             Repeat
+                          </button>
+                        )}
+                        {isEmpty&&(
+                          /* B-HISTADD2 — explicit ADD affordance on empty days;
+                             same action as the row tap (back-fill editor). */
+                          <button className="t"
+                            onClick={(ev)=>{ev.stopPropagation();openDay(dk);}}
+                            style={{flexShrink:0,padding:"9px 13px",cursor:"pointer",
+                              background:"transparent",border:`1px solid ${C.bdr}`,
+                              borderRadius:9,color:C.md,
+                              fontFamily:"'Inter',sans-serif",fontWeight:900,fontSize:10,
+                              letterSpacing:"0.12em",textTransform:"uppercase"}}>
+                            Add
                           </button>
                         )}
                       </div>);})}
