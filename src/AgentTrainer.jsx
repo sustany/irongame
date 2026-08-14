@@ -2540,19 +2540,24 @@ export default function IronGame(){
                       : e?.status==='recovery' ? "OFF" : "\u2014";
                     return(
                       <button key={dk} className="t" onClick={()=>openDay(dk)}
-                        style={{display:"flex",alignItems:"baseline",gap:8,width:"100%",
-                          background:"none",border:"none",padding:"3px 0",margin:0,
+                        style={{display:"flex",alignItems:"center",gap:8,width:"100%",
+                          background:C.inner,border:`1px solid ${C.bdr}`,borderRadius:8,
+                          padding:"10px 12px",margin:"0 0 6px 0",
                           cursor:"pointer",textAlign:"left"}}>
                         <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                           color:C.md,letterSpacing:"0.14em",textTransform:"uppercase",
-                          flexShrink:0,minWidth:86}}>
+                          flexShrink:0,minWidth:78}}>
                           {DAYS[d.getDay()].slice(0,3)} {d.getMonth()+1}/{d.getDate()}
                         </span>
                         <span style={{fontFamily:"'Inter',sans-serif",fontWeight:800,fontSize:10,
                           color:e?.status==='logged'?C.wht:C.md,letterSpacing:"0.14em",
                           textTransform:"uppercase",overflow:"hidden",textOverflow:"ellipsis",
-                          whiteSpace:"nowrap"}}>
+                          whiteSpace:"nowrap",flex:1}}>
                           {lbl}
+                        </span>
+                        <span aria-hidden="true" style={{fontFamily:"'Bebas Neue',sans-serif",
+                          fontSize:14,color:C.red,flexShrink:0,lineHeight:1}}>
+                          &#9998;
                         </span>
                       </button>);})}
                   <button className="t" onClick={()=>setHistOpen(o=>!o)}
