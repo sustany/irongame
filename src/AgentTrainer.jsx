@@ -3848,8 +3848,8 @@ export default function IronGame(){
                        normalized — REPEAT copies names verbatim from
                        ig_history, which may carry load tokens or case drift
                        that the exact-string CANON_TO_MOVEMENT lookup missed. */
+                    const norm=(n)=>displayName(String(n||"")).trim().toLowerCase();
                     if(!usable.length){
-                      const norm=(n)=>displayName(String(n||"")).trim().toLowerCase();
                       let mv=CANON_TO_MOVEMENT[ex.name];
                       if(!mv){
                         const t=norm(ex.name);
@@ -3857,6 +3857,22 @@ export default function IronGame(){
                         mv=hit?CANON_TO_MOVEMENT[hit]:null;
                       }
                       usable=pick(mv?(MOVEMENT_CLUSTERS[mv]||[]):[]);
+                    }
+                    if(!usable.length){
+                      /* B-SWAPRING3 tier 3: no cluster (e.g. "Shoulder Press",
+                         canonical but uncluster-ed) — suggest same PRIMARY
+                         muscle from the master DB. Same-compoundness first,
+                         PR'd names next, capped at 6 so cycling stays short. */
+                      const t=norm(ex.name);
+                      const db=getMasterDB();
+                      const hit=db.find(c=>norm(c.canonical)===t);
+                      const prim=hit?.primary||(userMeta[ex.name]||{}).primary;
+                      if(prim){
+                        const curComp=(hit?.type==="compound")||!!(META[ex.name]||{}).compound;
+                        const sc=(e)=>(((e.type==="compound")===curComp)?2:0)+(prs[e.canonical]?1:0);
+                        usable=pick(db.filter(e=>e.primary===prim)
+                          .sort((a,b)=>sc(b)-sc(a)).map(e=>e.canonical)).slice(0,6);
+                      }
                     }
                     if(!usable.length){setShowExPicker(true);return;}
                     const cur=previewing?usable.indexOf(cyclePrev.name):-1;

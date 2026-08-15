@@ -1,3 +1,17 @@
+## 2026-08-15 — B-SWAPRING3: tier-3 same-primary fallback for uncluster-ed exercises — OPEN (verify)
+
+- Screenshots showed the real failing case: "Shoulder Press" — canonical
+  library entry (primary "front delts") with NO movement cluster, so
+  B-SWAPRING1/2 fallbacks correctly found nothing and punted to picker.
+- FIX: third tier — same PRIMARY muscle from getMasterDB(), ranked
+  same-compoundness > PR'd, capped at 6, in-session names excluded.
+- NOT DONE (deliberate): adding a "Shoulder Press" MOVEMENT_CLUSTERS key —
+  it would collide with the canonical name (B-MVCOLL1 pattern, would be
+  collision #7). Cluster coverage gaps go to the DB audit backlog instead.
+- OPEN: on-device verify — dice on "Shoulder Press" should now preview
+  front-delt siblings (Shoulder Press, Dumbbell / Machine / Military
+  Press variants), compounds first.
+
 ## 2026-08-15 — B-SWAPRING2: harden reroll fallback (normalized lookup, usable-empty trigger) — OPEN (verify)
 
 - B-SWAPRING1 shipped but on-device reroll still opened the picker.
