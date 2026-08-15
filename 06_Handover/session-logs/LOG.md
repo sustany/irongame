@@ -1,3 +1,19 @@
+## 2026-08-15 — B-SWAPRING1: reroll ring fallback for custom/REPEAT + dice glyph — OPEN (verify)
+
+- ROOT CAUSE: F-CHANGEEX3 was intact, not rolled back. Its candidate ring
+  came only from TMPLS[sesType][exIdx]; REPEAT (F-HIST3) launches with
+  sesType="custom" so the ring was empty and every ⇄ tap hit the
+  setShowExPicker(true) fallback. Regression-by-coverage-gap, not revert.
+- FIX: when the template ring is empty, fall back to
+  MOVEMENT_CLUSTERS[CANON_TO_MOVEMENT[ex.name]] (same source the opener
+  seeder uses). Picker fallback preserved for exercises with no cluster.
+- ICON: swap arrows → dice glyph (rect + 5 pips, fill C.md), option D
+  signed off 08/15. Same stroke/size/handler; render conditions unchanged.
+- Ships alone per A3 (single UI element: reroll icon + its onClick).
+- OPEN: on-device verify — REPEAT a logged day, tap dice on
+  "Bench Press, Barbell" → gold "Bench Press, Dumbbell" preview →
+  tap again → Smith Machine → ✓ commits / ✕ keeps current.
+
 ## 2026-08-13 — F-CHANGEEX3: confirm step for swap-icon reroll — OPEN (verify)
 
 - Shipped `4598494` (iPhone session). Supersedes F-CHANGEEX2 instant apply

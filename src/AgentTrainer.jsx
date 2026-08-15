@@ -3839,14 +3839,25 @@ export default function IronGame(){
                        ring unchanged from F-CHANGEEX2 (template alts, minus
                        names used by other slots). */
                     const tmpl=(TMPLS[sesType]||[])[exIdx]||{};
-                    const ring=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
+                    let ring=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
+                    /* B-SWAPRING1: custom/REPEAT sessions have no TMPLS entry —
+                       fall back to the movement cluster before punting to picker. */
+                    if(!ring.length){
+                      const mv=CANON_TO_MOVEMENT[ex.name];
+                      ring=mv?(MOVEMENT_CLUSTERS[mv]||[]):[];
+                    }
                     const usable=ring.filter(n=>n!==ex.name&&!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
                     if(!usable.length){setShowExPicker(true);return;}
                     const cur=previewing?usable.indexOf(cyclePrev.name):-1;
                     setCyclePrev({slot:exIdx,name:usable[(cur+1)%usable.length]});
                   }}>
-                  <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
-                  <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+                  {/* B-SWAPRING1: dice glyph (reroll) replaces swap arrows per 08/15 sign-off */}
+                  <rect x="3" y="3" width="18" height="18" rx="4"/>
+                  <circle cx="8.5" cy="8.5" r="1.4" fill={C.md} stroke="none"/>
+                  <circle cx="15.5" cy="8.5" r="1.4" fill={C.md} stroke="none"/>
+                  <circle cx="8.5" cy="15.5" r="1.4" fill={C.md} stroke="none"/>
+                  <circle cx="15.5" cy="15.5" r="1.4" fill={C.md} stroke="none"/>
+                  <circle cx="12" cy="12" r="1.4" fill={C.md} stroke="none"/>
                 </svg>
               )}
               {previewing&&(<>
