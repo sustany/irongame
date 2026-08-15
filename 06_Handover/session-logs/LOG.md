@@ -1,3 +1,17 @@
+## 2026-08-15 — B-SWAPRING2: harden reroll fallback (normalized lookup, usable-empty trigger) — OPEN (verify)
+
+- B-SWAPRING1 shipped but on-device reroll still opened the picker.
+  Two gaps: (1) exact-string CANON_TO_MOVEMENT[ex.name] misses when the
+  REPEATed ig_history name carries load tokens / case drift vs the
+  cluster member string; (2) fallback only fired on EMPTY template ring,
+  not on a ring that filters to zero usable candidates.
+- FIX: fallback now fires whenever usable is empty; cluster lookup
+  normalized via displayName().trim().toLowerCase() on both sides.
+- OPEN: on-device verify on the live REPEAT session (Bench Press,
+  Barbell slot). If picker STILL opens, next diagnostic is the actual
+  stored ex.name string from ig_history — request a screenshot of the
+  history edit view or a console dump.
+
 ## 2026-08-15 — B-SWAPRING1: reroll ring fallback for custom/REPEAT + dice glyph — OPEN (verify)
 
 - ROOT CAUSE: F-CHANGEEX3 was intact, not rolled back. Its candidate ring

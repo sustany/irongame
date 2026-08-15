@@ -3839,14 +3839,25 @@ export default function IronGame(){
                        ring unchanged from F-CHANGEEX2 (template alts, minus
                        names used by other slots). */
                     const tmpl=(TMPLS[sesType]||[])[exIdx]||{};
-                    let ring=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
-                    /* B-SWAPRING1: custom/REPEAT sessions have no TMPLS entry —
-                       fall back to the movement cluster before punting to picker. */
-                    if(!ring.length){
-                      const mv=CANON_TO_MOVEMENT[ex.name];
-                      ring=mv?(MOVEMENT_CLUSTERS[mv]||[]):[];
+                    const ring0=[...(tmpl.name?[tmpl.name]:[]),...(tmpl.alts||[])];
+                    const pick=(r)=>r.filter(n=>n!==ex.name&&!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
+                    let usable=pick(ring0);
+                    /* B-SWAPRING2 (hardens B-SWAPRING1): fallback now fires
+                       whenever the template ring yields NO usable candidate
+                       (empty OR fully filtered), and the cluster lookup is
+                       normalized — REPEAT copies names verbatim from
+                       ig_history, which may carry load tokens or case drift
+                       that the exact-string CANON_TO_MOVEMENT lookup missed. */
+                    if(!usable.length){
+                      const norm=(n)=>displayName(String(n||"")).trim().toLowerCase();
+                      let mv=CANON_TO_MOVEMENT[ex.name];
+                      if(!mv){
+                        const t=norm(ex.name);
+                        const hit=Object.keys(CANON_TO_MOVEMENT).find(c=>norm(c)===t);
+                        mv=hit?CANON_TO_MOVEMENT[hit]:null;
+                      }
+                      usable=pick(mv?(MOVEMENT_CLUSTERS[mv]||[]):[]);
                     }
-                    const usable=ring.filter(n=>n!==ex.name&&!exList.some((e2,i)=>e2.name===n&&i!==exIdx));
                     if(!usable.length){setShowExPicker(true);return;}
                     const cur=previewing?usable.indexOf(cyclePrev.name):-1;
                     setCyclePrev({slot:exIdx,name:usable[(cur+1)%usable.length]});
