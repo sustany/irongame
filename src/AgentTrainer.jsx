@@ -3829,9 +3829,14 @@ export default function IronGame(){
                    skipping exercises already in the session, cycling back around).
                    Falls back to the full picker when the slot has no usable alts.
                    Tapping the exercise NAME still opens the full picker (F-CHANGEEX1). */
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                  stroke={C.md} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  style={{flexShrink:0,alignSelf:"center",cursor:"pointer"}} aria-label="Next exercise suggestion"
+                /* B-SWAPICON1 (08/15 round-2 sign-off, option 1): single
+                   rotate arrow in a 38px chip — matches the ✓/✕ chip family
+                   and triples the old bare-icon tap target. */
+                <div aria-label="Next exercise suggestion" className="t"
+                  style={{flexShrink:0,alignSelf:"center",cursor:"pointer",
+                    width:38,height:38,borderRadius:10,
+                    border:`1px solid ${C.bdr}`,background:C.inner,
+                    display:"flex",alignItems:"center",justifyContent:"center"}}
                   onClick={(e)=>{
                     e.stopPropagation();
                     /* F-CHANGEEX3: reroll advances a PREVIEW; commit happens
@@ -3878,14 +3883,11 @@ export default function IronGame(){
                     const cur=previewing?usable.indexOf(cyclePrev.name):-1;
                     setCyclePrev({slot:exIdx,name:usable[(cur+1)%usable.length]});
                   }}>
-                  {/* B-SWAPRING1: dice glyph (reroll) replaces swap arrows per 08/15 sign-off */}
-                  <rect x="3" y="3" width="18" height="18" rx="4"/>
-                  <circle cx="8.5" cy="8.5" r="1.4" fill={C.md} stroke="none"/>
-                  <circle cx="15.5" cy="8.5" r="1.4" fill={C.md} stroke="none"/>
-                  <circle cx="8.5" cy="15.5" r="1.4" fill={C.md} stroke="none"/>
-                  <circle cx="15.5" cy="15.5" r="1.4" fill={C.md} stroke="none"/>
-                  <circle cx="12" cy="12" r="1.4" fill={C.md} stroke="none"/>
-                </svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke={C.md} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v5h-5"/>
+                  </svg>
+                </div>
               )}
               {previewing&&(<>
                 <button className="t" aria-label="Confirm exercise"

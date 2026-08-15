@@ -1,3 +1,15 @@
+## 2026-08-15 — B-SWAPICON1: reroll icon = rotate arrow in 38px chip — OPEN (verify)
+
+- Dice glyph was a sign-off misread ("D" read as mockup option D, user
+  meant otherwise). Round-2 mockup produced sign-off: option 1, single
+  clockwise rotate arrow inside a 38px bordered chip (C.bdr/C.inner),
+  matching the ✓/✕ chip family and ~3x the bare-icon tap target.
+- Handler byte-identical; only the visual wrapper + glyph changed.
+- GATE LESSON: smoke.mjs ran green against a STALE dist after a failed
+  build (first attempt had invalid {/* */} comment in expression
+  context). Order is build THEN smoke; a failed build must halt the
+  lane before smoke is consulted. Consider a dist-freshness assertion.
+
 ## 2026-08-15 — B-SWAPRING3: tier-3 same-primary fallback for uncluster-ed exercises — OPEN (verify)
 
 - Screenshots showed the real failing case: "Shoulder Press" — canonical
