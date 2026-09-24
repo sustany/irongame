@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IronQ Founding Member</title>
+<meta name="description" content="IronQ is a strength-training app for people who lift for decades, not for likes. 300 founding memberships, one payment, no subscription.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF0F1; --ink:#22262A; --steel:#4A5A68; --line:#C9CFD4; --blue:#1F5FA8; --blue-ink:#164780; --plate:#DADEE1;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --paper:#1B1F23; --ink:#E6E9EB; --steel:#A9B4BE; --line:#3A424A; --blue:#6FA6E6; --blue-ink:#8FBCF0; --plate:#252B31; } }
+:root[data-theme="dark"]{ --paper:#1B1F23; --ink:#E6E9EB; --steel:#A9B4BE; --line:#3A424A; --blue:#6FA6E6; --blue-ink:#8FBCF0; --plate:#252B31; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+*{ box-sizing:inherit; margin:0; }
+body{ background:var(--paper); color:var(--ink); font-family:"Barlow",Helvetica,Arial,sans-serif; font-size:18px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+main{ max-width:640px; margin:0 auto; padding:56px 22px 96px; }
+h1,h2{ font-family:"Barlow Condensed","Arial Narrow",Impact,sans-serif; font-weight:800; line-height:.92; letter-spacing:-.01em; }
+h1{ font-size:clamp(58px,15vw,112px); margin:24px 0 32px; }
+h1 span{ display:block; }
+h2{ font-size:clamp(34px,7vw,46px); margin:64px 0 18px; }
+p{ margin:0 0 18px; max-width:34em; }
+.lead{ font-size:21px; font-weight:500; }
+.brand{ font-family:"Barlow Condensed",sans-serif; font-weight:600; font-size:22px; letter-spacing:.02em; }
+ul{ padding-left:0; list-style:none; margin:0 0 18px; }
+li{ padding:14px 0; border-top:1px solid var(--line); }
+li:last-child{ border-bottom:1px solid var(--line); }
+li b{ display:block; font-weight:500; }
+li small{ color:var(--steel); font-size:16px; }
+.offer{ background:var(--plate); padding:28px 24px 26px; margin:40px 0 8px; }
+.offer .price{ font-family:"Barlow Condensed",sans-serif; font-weight:800; font-size:56px; line-height:1; }
+.offer .price s{ font-weight:600; font-size:28px; color:var(--steel); margin-left:10px; }
+.offer .terms{ color:var(--steel); font-size:16px; margin:8px 0 20px; }
+.btn{ display:inline-block; background:var(--blue); color:#fff; text-decoration:none; font-weight:500; font-size:19px; padding:16px 26px; border:0; cursor:pointer; }
+.btn:hover{ background:var(--blue-ink); }
+.btn:focus-visible{ outline:3px solid var(--ink); outline-offset:3px; }
+.btn[aria-disabled="true"]{ background:var(--steel); cursor:default; }
+.note{ font-size:16px; color:var(--steel); margin-top:12px; }
+details{ border-top:1px solid var(--line); padding:14px 0; }
+details:last-of-type{ border-bottom:1px solid var(--line); }
+summary{ cursor:pointer; font-weight:500; list-style:none; }
+summary::-webkit-details-marker{ display:none; }
+summary::before{ content:"+"; display:inline-block; width:22px; font-family:"Barlow Condensed",sans-serif; font-weight:800; }
+details[open] summary::before{ content:"–"; }
+details p{ margin-top:12px; padding-left:22px; }
+footer{ margin-top:72px; font-size:15px; color:var(--steel); }
+a{ color:var(--blue-ink); }
+@media (prefers-reduced-motion: no-preference){ details p{ animation:show .18s ease-out; } @keyframes show{ from{opacity:0} to{opacity:1} } }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">IronQ</div>
+  <h1><span>Lift for</span><span>decades,</span><span>not likes.</span></h1>
+
+  <p class="lead">IronQ is a strength-training app built by two men in their fifties and sixties who have trained most of their lives. It logs your sets, reads your heart rate from your Apple Watch, times your rest, and stays out of your way.</p>
+  <p>No feed. No influencers. No streaks to keep up. A workout log that behaves like a good training partner: quiet, exact, and there every session.</p>
+
+  <h2>Founding membership</h2>
+  <p>We are opening 300 founding spots before the App Store launch. One payment. No subscription, ever.</p>
+  <ul>
+    <li><b>Lifetime access to IronQ</b><small>Every version, every feature, for as long as the app exists. Founders never pay a monthly fee.</small></li>
+    <li><b>Early access now</b><small>Install the current build through Apple's TestFlight within days of joining and train with it before anyone else.</small></li>
+    <li><b>A direct line to the builders</b><small>Your bug reports and feature requests reach John and Christian, not a support queue. Founders decide what gets built next.</small></li>
+    <li><b>Founder badge</b><small>Your member number is permanent and visible in the app. Number 1 is still open.</small></li>
+  </ul>
+
+  <div class="offer">
+    <div class="price">$149 <s>$9.99 / month</s></div>
+    <p class="terms">One payment. 300 spots. Full refund for 30 days if it isn't for you.</p>
+    <a class="btn" id="join" href="#" aria-disabled="true">Reserve founding spot</a>
+    <p class="note" id="join-note">Reservations open shortly.</p>
+  </div>
+
+  <h2>Who is building it</h2>
+  <p><strong>John Feitz</strong> has trained for roughly fifty years, from Indiana to Orange County, California. He is the co-founder and the person whose training philosophy shaped every screen. You will hear from him directly.</p>
+  <p><strong>Christian Kameir</strong> is a lifter, engineer, and entrepreneur who wrote the first version of IronQ for himself because nothing on the market respected how experienced lifters actually train.</p>
+
+  <h2>How a session works</h2>
+  <ul>
+    <li><b>Pick the exercise, enter weight and reps</b><small>Your full history for that lift is one glance away, so you always know what to beat.</small></li>
+    <li><b>Rest timer runs itself</b><small>Set it once per exercise. It counts down without you touching the phone.</small></li>
+    <li><b>Heart rate from your wrist</b><small>Open IronQ on your Apple Watch and your heart rate shows up on the phone during the set.</small></li>
+    <li><b>Done means done</b><small>End the session and the log is saved. Nothing to share, post, or rate.</small></li>
+  </ul>
+
+  <h2>Questions</h2>
+  <details><summary>Which devices does it run on?</summary><p>iPhone, with an optional Apple Watch companion for heart rate. Android is not available yet; founders will be the first to know when it is.</p></details>
+  <details><summary>When do I get access?</summary><p>You receive a TestFlight invitation by email within a few days of reserving. The public App Store release follows; your founding access carries over automatically.</p></details>
+  <details><summary>What if I don't like it?</summary><p>Email us within 30 days and you receive a full refund, no questions asked.</p></details>
+  <details><summary>Why lifetime for $149?</summary><p>Because we would rather have 300 people who actually lift telling us what to build than a marketing budget. Founders fund the launch and never pay again.</p></details>
+  <details><summary>Is there really no subscription?</summary><p>Founding members: none, ever. Everyone who joins after the App Store launch pays $9.99 a month.</p></details>
+
+  <footer>
+    <p>IronQ is published by Decentralized Publishing LLC, California.</p>
+  </footer>
+</main>
+<script>
+  // Paste the Stripe Payment Link between the quotes below. Nothing else on the page needs to change.
+  var PAYMENT_LINK = "";
+  (function(){
+    var b=document.getElementById('join'), n=document.getElementById('join-note');
+    if(PAYMENT_LINK){ b.href=PAYMENT_LINK; b.removeAttribute('aria-disabled'); b.target='_blank'; b.rel='noopener'; n.textContent='Secure checkout by Stripe. Apple Pay and cards accepted.'; }
+    else{ b.addEventListener('click',function(e){e.preventDefault();}); }
+  })();
+</script>
+</body>
+</html>

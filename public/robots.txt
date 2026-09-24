@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://iron-game.netlify.app/sitemap.xml
