@@ -26,13 +26,16 @@ jobs:
               with urllib.request.urlopen(req,context=ctx,timeout=60) as r: return json.load(r)
           def note(kind,msg): print(f"::{kind}::"+str(msg).replace("\n"," ")[:900])
           try:
-              all_=uapi("DomainInfo/list_domains",{}); note("notice","domains: "+json.dumps(all_.get("data")))
-              d=uapi("DomainInfo/domains_data",{"domain":"ironq.app","format":"hash"}); note("notice","ironq data: "+json.dumps(d)[:800])
+              d=uapi("DomainInfo/domains_data",{"domain":"ironq.app","format":"hash"})
           except Exception as e:
               note("error","API call failed: "+repr(e)); sys.exit(1)
           data=d.get("data") or {}
-          if isinstance(data,list): data=data[0] if data else {}
-          root=data.get("documentroot")
+          root=None
+          for grp in ("addon_domains","sub_domains","main_domain"):
+              items=data.get(grp) or []
+              items=items if isinstance(items,list) else [items]
+              for it in items:
+                  if isinstance(it,dict) and it.get("domain")=="ironq.app": root=it.get("documentroot")
           if not root or "ironq" not in root: note("error",f"docroot not found for ironq.app: {d.get('errors')}"); sys.exit(1)
           note("notice","docroot: "+root)
           files=[f for f in glob.glob("public/*.html") if not f.endswith("session-test.html")]+["public/robots.txt","public/sitemap.xml"]
