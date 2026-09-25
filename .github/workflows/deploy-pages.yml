@@ -2,7 +2,7 @@ name: Deploy marketing pages to ironq.app
 on:
   push:
     branches: [main]
-    paths: ['public/*.html', 'public/robots.txt', 'public/sitemap.xml', '.github/workflows/deploy-pages.yml']
+    paths: ['public/*.html', 'public/robots.txt', 'public/sitemap.xml', 'public/indexnow-*.txt', '.github/workflows/deploy-pages.yml']
   workflow_dispatch: {}
 jobs:
   deploy:
@@ -38,7 +38,7 @@ jobs:
                   if isinstance(it,dict) and it.get("domain")=="ironq.app": root=it.get("documentroot")
           if not root or "ironq" not in root: note("error",f"docroot not found for ironq.app: {d.get('errors')}"); sys.exit(1)
           note("notice","docroot: "+root)
-          files=[f for f in glob.glob("public/*.html") if not f.endswith("session-test.html")]+["public/robots.txt","public/sitemap.xml"]
+          files=[f for f in glob.glob("public/*.html") if not f.endswith("session-test.html")]+["public/robots.txt","public/sitemap.xml"]+glob.glob("public/indexnow-*.txt")
           for f in files:
               res=uapi("Fileman/save_file_content",{"dir":root,"file":os.path.basename(f),"content":open(f,encoding="utf-8").read(),"from_charset":"utf-8","to_charset":"utf-8"})
               note("notice" if res.get("status")==1 else "error", os.path.basename(f)+": "+("ok" if res.get("status")==1 else str(res.get("errors"))))
@@ -49,3 +49,15 @@ jobs:
           sleep 5
           curl -fsS https://ironq.app/about.html | grep -q "What IronQ is" && echo "LIVE: https://ironq.app/about.html" || (echo "about.html not visible yet"; exit 1)
           curl -fsS https://ironq.app/robots.txt
+      - name: Tell search engines about the pages (IndexNow → Bing, Yandex, DuckDuckGo and others)
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, re, glob, os
+          key=os.path.basename(glob.glob("public/indexnow-*.txt")[0])[9:-4]
+          urls=re.findall(r"<loc>(.*?)</loc>", open("public/sitemap.xml").read())
+          body=json.dumps({"host":"ironq.app","key":key,"keyLocation":f"https://ironq.app/indexnow-{key}.txt","urlList":urls}).encode()
+          req=urllib.request.Request("https://api.indexnow.org/indexnow",data=body,headers={"Content-Type":"application/json; charset=utf-8"})
+          try:
+              with urllib.request.urlopen(req,timeout=30) as r: print("::notice::IndexNow accepted", r.status, len(urls), "urls")
+          except urllib.error.HTTPError as e: print("::error::IndexNow", e.code, e.read().decode()[:300])
+          PY
