@@ -1,0 +1,41 @@
+name: Deploy marketing pages to ironq.app
+on:
+  push:
+    branches: [main]
+    paths: ['public/*.html', 'public/robots.txt', 'public/sitemap.xml', '.github/workflows/deploy-pages.yml']
+  workflow_dispatch: {}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload pages via hosting API (never touches the app itself)
+        env:
+          CPANEL_HOST: 15.204.206.156
+          CPANEL_USER: greendat
+          CPANEL_TOKEN: ${{ secrets.CPANEL_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, ssl, json, sys, glob, urllib.request, urllib.parse
+          HOST=os.environ['CPANEL_HOST']; USER=os.environ['CPANEL_USER']; TOKEN=os.environ['CPANEL_TOKEN']
+          if not TOKEN: sys.exit("no token")
+          ctx=ssl.create_default_context(); ctx.check_hostname=False; ctx.verify_mode=ssl.CERT_NONE
+          H={"Authorization":f"cpanel {USER}:{TOKEN}","Content-Type":"application/x-www-form-urlencoded"}
+          def uapi(ep,params):
+              req=urllib.request.Request(f"https://{HOST}:2083/execute/{ep}",data=urllib.parse.urlencode(params).encode(),headers=H)
+              with urllib.request.urlopen(req,context=ctx,timeout=60) as r: return json.load(r)
+          d=uapi("DomainInfo/domains_data",{"domain":"ironq.app","format":"hash"})
+          root=(d.get("data") or {}).get("documentroot")
+          if not root or "ironq" not in root: sys.exit(f"docroot not found for ironq.app: {d}")
+          print("docroot:",root)
+          files=[f for f in glob.glob("public/*.html") if not f.endswith("session-test.html")]+["public/robots.txt","public/sitemap.xml"]
+          for f in files:
+              res=uapi("Fileman/save_file_content",{"dir":root,"file":os.path.basename(f),"content":open(f,encoding="utf-8").read(),"from_charset":"utf-8","to_charset":"utf-8"})
+              print(os.path.basename(f),"ok" if res.get("status")==1 else res.get("errors"))
+              if res.get("status")!=1: sys.exit(1)
+          PY
+      - name: Verify live
+        run: |
+          sleep 5
+          curl -fsS https://ironq.app/about.html | grep -q "What IronQ is" && echo "LIVE: https://ironq.app/about.html" || (echo "about.html not visible yet"; exit 1)
+          curl -fsS https://ironq.app/robots.txt
